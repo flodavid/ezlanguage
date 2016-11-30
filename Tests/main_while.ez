@@ -1,0 +1,12 @@
+program TestWhile
+
+procedure TestWhile
+    variable x is integer
+    x = 0
+    
+    while x < 10 do
+        x = x +1
+    end while
+    
+    print x
+end procedure

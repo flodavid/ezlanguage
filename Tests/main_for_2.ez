@@ -1,0 +1,16 @@
+program TestFor
+
+procedure TestFor
+    variable a, b are integer
+    a = 0
+    b = 10
+    
+    variable var is integer
+    var = 0
+    
+    for i is integer in a..b step 1 do
+        var = var +1
+    end for
+
+    print var
+end procedure

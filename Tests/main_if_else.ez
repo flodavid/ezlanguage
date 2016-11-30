@@ -1,0 +1,12 @@
+program TestIfElse
+
+procedure TestIfElse
+   variable var is integer
+    var = 2
+    if var > 3 then
+        print “variable supérieur à 3”
+   else
+        print “variable inférieur à 3”
+   end if
+end procedure
+

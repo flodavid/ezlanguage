@@ -1,0 +1,11 @@
+program main_operateurs_soustraction
+
+procedure main_operateurs_soustraction
+	a, b, sum are integer
+	a = 3
+	b = 2
+
+	sum = a - b
+	print a + " - " + b + " = " + sum // Sum should be equal to 1
+
+end procedure
