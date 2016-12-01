@@ -1,8 +1,0 @@
-program TestPrintRead
-
-procedure TestPrintRead
-   variable m is string
-   print "Message :"
-   read m
-   print "Saisie : ", m
-end procedures

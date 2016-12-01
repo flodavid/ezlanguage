@@ -1,9 +1,0 @@
-program main_operateurs_addition
-
-procedure main_operateurs_addition
-	a, b, sum are integer
-	a = 3
-	b = 2
-	sum = a + b
-	print a + " - " + b + " = " + sum // Sum should be equal to 5
-end procedure

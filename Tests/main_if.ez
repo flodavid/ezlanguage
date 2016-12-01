@@ -1,9 +1,0 @@
-program TestIf
-
-procedure TestIf
-   variable Var is integer
-   Var = 5
-   if Var > 3 then
-       print Var
-   end if
-end procedures
