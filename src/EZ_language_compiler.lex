@@ -40,7 +40,7 @@ minus     [-]
 {separateurs}   { /* On ignore */ }
 {commentaire}   { /* On ignore */ cout << "Commentaire"<<endl; }
 {entier}	{ yylval.numerical_value=atoi(yytext); return(NUM_INTEGER);}  // integer
-{reel}      { yylval.reel_value=atof(yytext); return(NUM_REAL);}		 // reel
+{reel}      { yylval.real_value=atof(yytext); return(NUM_REAL);}		 // reel
 
 {backLine}	return(BACK_LINE);
 

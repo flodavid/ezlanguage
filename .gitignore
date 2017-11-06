@@ -8,6 +8,8 @@ docs/html/
 
 # Build results
 *.cmake
+CMakeCache*
+CMakeFiles/*
 bin/*
 !bin/*.md
 obj/*
@@ -19,6 +21,7 @@ obj/*
 # User-specific files
 *.user
 
-#CLion files
+#Editor-specific files
 .idea/*
+.vscode/*
 

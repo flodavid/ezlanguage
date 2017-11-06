@@ -18,10 +18,10 @@
 extern FILE* yyin;
 using namespace std;
 
- int yyparse (void);
- extern "C" int yylex();
- extern "C" void yyerror(const std::string&);
- extern int yylineno;
+int yyparse (void);
+extern "C" int yylex();
+extern "C" void yyerror(const std::string&);
+extern int yylineno;
 
 // Return the string value without quotation_marks
 string delete_quote(string & str ){
@@ -33,35 +33,34 @@ string get_argument_value(string & str ){
   return str.substr(str.find_last_of("-")+1,str.size()-4);
 }
 
-
 %}
 
 
-%token<numerical_value>	NUM_INTEGER			// ENTIER
-%token<reel_value>	NUM_REAL			// REEL
-%token<texte>	NAME RETOUR STRING STRING_PARAM		
+%token<numerical_value>	NUM_INTEGER // ENTIER
+%token<real_value>	NUM_REAL			  // REEL
+%token<texte> NAME RETOUR STRING STRING_PARAM		
 %token<texte>	COMMA  DEGRE POURCENT DIESE POINT QUOTATION_MARKS		// Caractères
 %token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN			// variables type
 %token  EGAL NE LT LE GT GE PLUS MINUS MULT DIVISE
 %token<texte>	LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
 %token<texte> CONSTANT  VARIABLE  GLOBAL  IS  ARE SHARED          	      // variables declaration
-%token IMPORT INCLUDE LIBRARY  EXTERN						 // importe module - code c++
-%token IF THEN ELSE   						 // if else 
-%token WHEN CASE  DEFAULT ENDWHEN				 // switch case ...
-%token WHILE ENDWHILE							 // while .. do ..
-%token REPEAT UNTIL ENDREPEAT 						 // do .. while ...
+%token IMPORT INCLUDE LIBRARY  EXTERN						 // module import - c++ code
+%token IF THEN ELSE   						  // if else 
+%token WHEN CASE  DEFAULT ENDWHEN	  // switch case ...
+%token WHILE ENDWHILE							  // while .. do ..
+%token REPEAT UNTIL ENDREPEAT 			// do .. while ...
 %token FOR IN DO STEP 
-%token FUNCTION PROCEDURE RETURN	 				 // functions
+%token FUNCTION PROCEDURE RETURN	 	// functions
 %token PRINT
-%token BEGINN END						       // can't use  'BEGIN'
+%token BEGINN END						        // can not use 'BEGIN'
 %token END_OF_FILE
-%token CLASS PROGRAM  DESTRUCT						//class
-%token ARGUMENTS AS							// arguments	
+%token CLASS PROGRAM  DESTRUCT			//class
+%token ARGUMENTS AS							    // arguments	
 %token REGEX SEARCH MATCH 					// Regular expression
 
 %token LENGTH TOUPPERCASE TOLOWERCASE     
-%token SUBSTRING SPLIT STRIP    
-%token REPLACE CONTAINS     
+%token SUBSTRING SPLIT STRIP
+%token REPLACE CONTAINS
 %token FIND FINDFIRSTOF FINDLASTOF     
 
 %token ARRAY VECTOR LIST SET MAP OF     
@@ -76,54 +75,56 @@ string get_argument_value(string & str ){
 %left PLUS MINUS EGAL
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS OPERATOR		// Operators
 
-%type<reel_value> expression single_expression designator statement_sequence function_call function_string map_declaration array_declaration vector_declaration list_declaration set_declaration    
-%type<texte>  function procedure  string operators noms portee type  nbrOrName  params param_args param_type  
+%type<real_value> expression single_expression designator statement_sequence function_call function_string map_declaration array_declaration vector_declaration list_declaration set_declaration    
+%type<texte> function procedure string operators names portee type nbrOrName params param_args param_type
 
 
 %start ROOT
 %%
 
 ROOT:
-  next_line_null PROGRAM NAME  next_line  import  declaration_arguments declaration_class  statement_sequence END_OF_FILE { cout << "Fichier parsé." << endl; return 0;} 
-;
-
-// zero or several new lines
-next_line_null:
-| next_line {}
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes statement_sequence END_OF_FILE {
+    /* TODO program logic */
+    cout << "File parsed !" << endl;
+    return 0;
+  }
 ;
 
 // one or several new lines
 next_line:  
-  BACK_LINE {}
-| next_line BACK_LINE {}
+  BACK_LINE { /* Nothing to do */ }
+| next_line BACK_LINE { /* Nothing to do */ }
 ;
 
-// import modules ou librarys
-import:
+/* ******************
+ *  PROGRAM MODULES *
+ * ******************/
+
+// import modules or libraries
+imports:
 /* Nothing to import */
-| import IMPORT NAME next_line    { cout << "importation du module " << $3 << endl; }
-| import INCLUDE string next_line { cout << " inclusion de la bibliothèque " << delete_quote($3) << endl ; }
-| import LIBRARY string next_line { cout << " inclusion de la LIBRARY " << delete_quote($3) << endl ; }
+| imports import  { /* TODO import logic */ }
 ;
 
 declaration_arguments:
 /* No declarations */
-| ARGUMENTS next_line param_args END next_endargument next_line {  cout << "delcaration des arguments " << endl;}
+| ARGUMENTS next_line param_args END next_endargument next_line {  cout << "arguments declaration" << endl; }
 ;
 
-declaration_class: 
-| declaration_class class next_line {} 
+declaration_classes:
+/* empty */
+| declaration_class class next_line { /* TODO class declaration logic */ } 
 ;
 
 declaration_methods:
 /* empty */
-| declaration_methods function next_line {}  
-| declaration_methods procedure next_line {}
+| declaration_methods function next_line { /* TODO method declaration logic 1 */ }  
+| declaration_methods procedure next_line { /* TODO class declaration logic 2 */ }
 ;
 
 param_args:
-  NAME IS param_type AS STRING_PARAM next_line { cout << "parametre " << get_argument_value($5) << endl;} //ex: x is integer as "--x"
-| NAME IS param_type AS STRING_PARAM next_line param_args { cout << "parametre " << get_argument_value($5) << endl; }
+  NAME IS param_type AS STRING_PARAM next_line { cout << "paramètre " << get_argument_value($5) << endl;} // ex: x is integer as "--x"
+| NAME IS param_type AS STRING_PARAM next_line param_args { cout << "paramètre " << get_argument_value($5) << endl; }
 ;
 
 // Past arguments should be of only one of the following types: 
@@ -133,8 +134,18 @@ param_type:
 | TYPE_STRING  {$$ = $1; } 
 ;
 
+/* ******************
+ *    SUBMODULES    *
+ * ******************/
+import:
+/* Nothing to import */
+| IMPORT NAME next_line    { cout << "importation du module " << $3 << endl; }
+| INCLUDE string next_line { cout << " inclusion de la bibliothèque " << delete_quote($3) << endl ; }
+| LIBRARY string next_line { cout << " inclusion de la LIBRARY " << delete_quote($3) << endl ; }
+;
+
 class:
-CLASS NAME next_line begin  statement_sequence END next_endclass { cout << "declaration de la class" << $2 << endl; }
+CLASS NAME next_line begin  statement_sequence END next_endclass { cout << "déclaration de la classe" << $2 << endl; }
 ;
 
 begin:
@@ -149,39 +160,39 @@ start_with_name:
 ;
 
 variable_without_scope:
-     NAME IS  type affect  { cout << "Declaration de la variable1 " << $1 << endl; }
-|    NAME noms ARE  type affect  { cout << "Declaration des variables1 "<< $1 << endl; }
-|    NAME IS SHARED type affect  { cout << "Declaration de la variable1 " << $1 << endl; }
-|    NAME noms ARE SHARED type affect  { cout << "Declaration des variables1 "<< $1 << endl; }
-//|    NAME IS REGEX next_line { cout << " Declaration l'expression réguliere  " << $1 << endl; }
-//|    NAME IS REGEX EGAL string next_line { cout << " Declaration  l'expression réguliere " << $1 << endl; }
-|    declaration_construct  { cout << " declaration de contructeur " << endl ;}
+     NAME IS  type affect  { cout << "Déclaration de la variable1 " << $1 << endl; }
+|    NAME names ARE type affect  { cout << "Déclaration des variables1 "<< $1 << endl; }
+|    NAME names ARE SHARED type affect  { cout << "Déclaration des variables1 "<< $1 << endl; }
+|    NAME IS SHARED type affect  { cout << "Déclaration de la variable1 " << $1 << endl; }
+//|    NAME IS REGEX next_line { cout << "regular expression declaration " << $1 << endl; }
+//|    NAME IS REGEX EGAL string next_line { cout << "regular expression declaration " << $1 << endl; }
+|    declaration_construct  { cout << "constructor declaration" << endl ;}
 ;
 
 variable_with_scope:
-    portee NAME IS type affect next_line { cout << "= Declaration de la variable avec portee " << $2 << endl; }
-|   portee NAME noms ARE type next_line { cout << "  Declaration des variables  avec portee "<< $2 << endl; }
-|   portee NAME IS SHARED type affect next_line { cout << "= Declaration de la variable avec portee " << $2 << endl; }
-|   portee NAME noms ARE SHARED type next_line { cout << "  Declaration des variables  avec portee "<< $2 << endl; }
+    portee NAME IS type affect next_line { cout << "= Déclaration de la variable avec portee " << $2 << endl; }
+|   portee NAME names ARE type next_line { cout << "  Déclaration des variables avec portee "<< $2 << endl; }
+|   portee NAME IS SHARED type affect next_line { cout << "= Déclaration de la variable avec portee " << $2 << endl; }
+|   portee NAME names ARE SHARED type next_line { cout << "  Déclaration des variables  avec portee "<< $2 << endl; }
 /* regular expression */
-|    portee NAME IS REGEX next_line { cout << " Declaration l'expression réguliere  " << $2 << endl; }
-|    portee NAME IS REGEX EGAL string next_line { cout << " Declaration  l'expression réguliere " << $2 << endl; }
+|    portee NAME IS REGEX next_line { cout << " Déclaration l'expression régulière  " << $2 << endl; }
+|    portee NAME IS REGEX EGAL string next_line { cout << " Déclaration  l'expression régulière " << $2 << endl; }
 ;
 
 variable_constant:
-     CONSTANT NAME IS  type affect  { cout << "Declaration de la variable constante " << $1 << endl; }
-|    CONSTANT NAME noms ARE  type affect  { cout << "Declaration des variables constante "<< $1 << endl; }
-|    CONSTANT NAME IS SHARED type affect  { cout << "Declaration de la variable constante " << $1 << endl; }
-|    CONSTANT NAME noms ARE SHARED type affect  { cout << "Declaration des variables constante "<< $1 << endl; }
+     CONSTANT NAME IS  type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
+|    CONSTANT NAME names ARE  type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
+|    CONSTANT NAME IS SHARED type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
+|    CONSTANT NAME names ARE SHARED type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
 /* regular expression */
-|    CONSTANT NAME IS REGEX next_line { cout << " Declaration l'expression réguliere  " << $2 << endl; }
-|    CONSTANT NAME IS REGEX EGAL string next_line { cout << " Declaration  l'expression réguliere " << $2 << endl; }
+|    CONSTANT NAME IS REGEX next_line { cout << " Déclaration l'expression régulière  " << $2 << endl; }
+|    CONSTANT NAME IS REGEX EGAL string next_line { cout << " Déclaration  l'expression régulière " << $2 << endl; }
 ;
 
 declaration_construct:
    NAME IS NAME {}  // ex: c is Maclasse
 |  NAME IS NAME LEFT_PARENTHESIS class_liste_argument RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
-|  NAME IS NAME LEFT_PARENTHESIS class_liste_argument_with_assignment RIGHT_PARENTHESIS {} // p is Person(nom="nom")
+|  NAME IS NAME LEFT_PARENTHESIS class_liste_argument_with_assignment RIGHT_PARENTHESIS {} // p is Person(name="name")
 ;
 
 affect:
@@ -214,15 +225,15 @@ class_liste_argument_with_assignment:
 
 
 function:
-SHARED FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS RETURN type next_line  begin   statement_sequence RETURN expression next_line END next_endfunction { cout << "declaration de la fonction" << $3 << endl;}
-| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS RETURN type next_line  begin   statement_sequence RETURN expression next_line END next_endfunction { cout << "declaration de la fonction" << $2 << endl;}
-| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS IS EXTERN NAME { cout << "declaration d'une fonction externe " << endl;  }
+SHARED FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS RETURN type next_line  begin   statement_sequence RETURN expression next_line END next_endfunction { cout << "déclaration de la fonction" << $3 << endl;}
+| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS RETURN type next_line  begin   statement_sequence RETURN expression next_line END next_endfunction { cout << "déclaration de la fonction" << $2 << endl;}
+| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS IS EXTERN NAME { cout << "déclaration d'une fonction externe " << endl;  }
 ;
 
 procedure:
-  PROCEDURE NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Declaration de la procedure " << $2 << endl;}
+  PROCEDURE NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Déclaration de la procedure " << $2 << endl;}
 | PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Surcharge de la methode d'affichage \"print\" "  << endl;}
-| SHARED PROCEDURE NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS next_line begin  statement_sequence END next_endprocedure {cout << "Declaration de la procedure " << $3 << endl;}
+| SHARED PROCEDURE NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS next_line begin  statement_sequence END next_endprocedure {cout << "Déclaration de la procedure " << $3 << endl;}
 | SHARED PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Surcharge de la methode d'affichage \"print\" "  << endl;}
 ;
 
@@ -291,7 +302,7 @@ liste_argument:
  // No argument
  | NAME IS type { }
  | NAME IS type COMMA liste_argument { }
- | NAME noms ARE type {}
+ | NAME names ARE type {}
 ;
 
 destruct:
@@ -424,43 +435,43 @@ NAME POINT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \
 ;
 
 
-//    -----------------------------array Declaration----------------------------------------
+//    -----------------------------array Déclaration----------------------------------------
 array_declaration :
 portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
 | portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
 | portee NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
 | portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
 | portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
+| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
+| portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
 ;
 
-//    -----------------------------vector Declaration----------------------------------------
+//    -----------------------------vector declaration----------------------------------------
 vector_declaration : 
 portee NAME IS VECTOR OF type { printf("vector declaration  \n"); }
 | portee NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
 | portee NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| portee NAME IS VECTOR OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+| portee NAME IS VECTOR OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
 ;
 
-//    -----------------------------list Declaration----------------------------------------
+//    -----------------------------list declaration----------------------------------------
 list_declaration : 
 portee NAME IS LIST OF type { printf("list declaration  \n"); }
-| portee NAME IS LIST OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
+| portee NAME IS LIST OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
 ;
 
-//    -----------------------------set Declaration----------------------------------------
+//    -----------------------------set declaration----------------------------------------
 set_declaration : 
 portee NAME IS SET OF type { printf("set declaration  \n"); }
 | portee NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
 | portee NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| portee NAME IS SET OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
+| portee NAME IS SET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
 ;
 
-//    -----------------------------map Declaration----------------------------------------
+//    -----------------------------map declaration----------------------------------------
 map_declaration : 
 portee NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
-| map_declaration EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
+| map_declaration EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
 ;
 
 
@@ -530,11 +541,10 @@ type:
 ;
 
 
-noms:
+names:
   NAME {$$ = $1;}
-| COMMA NAME noms {$$ = $1;}
+| COMMA NAME names {$$ = $1;}
 | COMMA NAME {$$ = $1;}
-
 ;
 
 whenbody: /* whenbody can't be empty */
