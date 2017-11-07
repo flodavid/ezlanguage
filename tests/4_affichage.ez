@@ -1,0 +1,16 @@
+program Print
+
+procedure printVar()
+    variable m is string = "print variable OK"
+    print m
+end procedure
+
+procedure printValue()
+    print "print valeur OK"
+end procedure
+
+procedure Print()
+   printVar()
+   printValue()
+end procedure
+
