@@ -1,0 +1,55 @@
+program person
+// Fichier permettant de tester la compilation :
+// + d'une structure
+// + l'utilisation d'un vecteur
+// + l'utilisation de boucles for
+// + le flux de sortie
+//La syntaxe reste à valider
+
+// definition of a person
+structure Person is
+  name is string
+  age is integer
+end
+
+procedure person()
+local p is Person
+local v is vector of Person
+local i, max are integer
+
+begin
+
+  for i in 1..10
+  do
+    p.name = "p" + i
+    p.age = rand(1,100)
+    v.insert(p)
+  endfor
+
+  // sort by name
+  v.sort(name);
+
+  print v
+
+  v.store("persons.txt")
+
+  v.empty()
+
+  v.restore("persons.txt")
+
+  v.sort(age)
+
+  // compute maximum of ages (detailed version)
+  max = 0
+  for i in 1..v.size()
+  do
+    on v[i].age > max do max = v[i].age
+  endfor
+
+  // or use built-in function
+  max = v.max(age)
+
+  print "maximum of ages = ", max
+
+end
+

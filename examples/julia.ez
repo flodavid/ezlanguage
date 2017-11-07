@@ -1,0 +1,82 @@
+program julia
+// Fichier permettant de tester la compilation d'un programme utilisant :
+// + parallel
+// + boucles for et while
+// + matrix
+// + sortie sur flux
+// + condition if
+
+//Syntaxe non valide (le parsing doit échouer) :
+// + l'implémentation parallel n'est pas prévue
+// + il y a une erreur de syntaxe sur un return : "retrun"
+
+global K is integer // number of processors
+
+// function that computes the integral
+function parallel_integrate() return real
+begin
+	for k in parallel 1..K do
+		integrate(a + (k-1) * (N/K+1) * delta_x, a + k * (N/K) * delta_x , N/K)
+	endfor	
+end
+
+global X_MIN is integer = -256
+global X_MAX is integer = 256
+global Y_MIN is integer = -256
+global Y_MAX is integer = 256
+
+global ITERATIONS is integer = 1000
+global c is complex = complex(1,2)
+global PRISONERS_LIMIT is real = 4.0
+
+global jset is matrix [Y_MIN..Y_MAX][X_MIN..X_MAX] of character
+
+// -----------------------------
+// julia function
+// -----------------------------
+function julia(z is complex) return complex
+begin
+	retrun z * z + c
+end
+
+// -----------------------------
+// check if function converge or not
+// -----------------------------
+function is_prisoner(z_0 is complex) return bool 
+local z is complex
+begin
+	z = z_0
+	while z.norm() < PRISONERS_LIMIT do
+		z = z * z + c
+	endwhile
+	return z.norm()
+end
+
+// -----------------------------
+// 
+// -----------------------------
+procedure julia_set()
+local z is complex
+begin	
+	for y in Y_MAX..Y_MIN do
+		for x in X_MIN..X_MAX do
+			z = complex(x,y)
+			if is_prioner(z) then
+				jset[y][x] = 'X'
+			else
+				jset[y][x] = '.'
+			endif 
+			endfor 
+		endfor
+	endfor	
+end
+
+// -----------------------------
+// program
+// -----------------------------
+procedure julia()
+begin
+	jset.fill('_')
+	julia_set()
+	print jset
+end 

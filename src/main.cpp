@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
+#include "aide.h"
 
 using namespace std;
 
@@ -13,48 +14,11 @@ extern int yyparse();
 extern FILE* yyout;
 
 //FLAGS
-static int verbose_flag;
+int verbose_flag;
 int directinput = 0;
 int no_execution = 0;
 int no_cpp = 0;
 int help = 0;
-
-
-//aide
-string AIDE_PROG = "\
-EZL \n\
-	 \n\
-SYNOPSIS \n\
-	EZL [options] files.. \n\
-	for the options list, see the options section below. \n\
-	 \n\
-DESCRIPTION \n\
-	This is the EZ language compiler, a C based language for beginners. \n\
-	 \n\
-EXAMPLES \n\
-	Some xamples of common usage : \n\
-	EZL example1.ez example2.ez -o example.exe \n\
-	 \n\
-OPTIONS \n\
-	--directinput			: Enable direct input for EZ language \n\
-	-h, --help			: Displays this information \n\
-	--noexec			: Do not launch the executable \n\
-	--nocpp				: Do not convert to cpp \n\
-	-o <file>, --output=<file>	: Name the executable <file> \n\
-	-O1, --optimisation=1		: Reduces the execution time, first level of optimization \n\
-	-O2, --optimisation=2		: Same as O1 lvl2 \n\
-	-O3, --optimisation=3		: Same as O2 lvl3 \n\
-	-v, --verbose			: Displays all the compilation steps in the command prompt \n\
-	-w, --warning			: Displays all the warning messages \n\
- \n\
-SEE ALSO \n\
-   	Full documentation at ezlanguage.com \n\
-   	 \n\
-AUTHOR \n\
-   	M2 SILI 2016 - 2017  \n\
-   	 \n\
-COPYRIGHT \n\
-	Specify your copyright information.\n";
 
 //functions
 //arguments qui ne sont pas prévus, donc des fichiers si la bonne extension, erreur sinon
@@ -101,55 +65,76 @@ bool file_test_exists(string filename){
  * @param fic_ezl
  * @param input_files
  */
-
 void parse_to_cpp(vector<char*> fic_ezl, string &input_files){
-    for(unsigned int i=0; i<fic_ezl.size(); ++i){
-        cout << "\033[1;36m=====================================\033[0m" << endl;
-        cout << "\033[1;36mFile parsing : \033[1;37m" << fic_ezl[i] << endl;
-        cout << "\033[1;36m=====================================\033[0m" << endl;
-        yyin = fopen(fic_ezl[i], "r");
+	if(!directinput){
+		for(unsigned int i=0; i<fic_ezl.size(); ++i){
+		    cout << "\033[1;36mFile parsing : \033[1;37m" << fic_ezl[i] << endl;
+		    cout << "\033[1;36m=====================================\033[0m" << endl;
+		    yyin = fopen(fic_ezl[i], "r");
 
-        if(!directinput){
-            if(!yyin){
-                cerr <<  fic_ezl[i] << ": file opening failed." << endl;
-            }
-            else{
-                // creation des fichiers cpp
-                string fichier_tmp = string(fic_ezl[i]);
+	        if(!yyin){
+	            cerr <<  fic_ezl[i] << ": file opening failed." << endl;
+	        }else{
+	            // creation des fichiers cpp
+	            string fichier_tmp = string(fic_ezl[i]);
 
-                fichier_tmp = fichier_tmp.substr(fichier_tmp.find_last_of("/")+1, fichier_tmp.find_last_of(".") - fichier_tmp.find_last_of("/"));
-                fichier_tmp +="cpp";
-                FILE * cpp_file = fopen(fichier_tmp.c_str(), "w");
-				
-				// cas où la création du fichier échoue
-                if(cpp_file == NULL){
-                    cerr << fichier_tmp << ": creation failed;" << endl;
-                    break;
-                }
+	            fichier_tmp = fichier_tmp.substr(fichier_tmp.find_last_of("/")+1, fichier_tmp.find_last_of(".") - fichier_tmp.find_last_of("/"));
+	            fichier_tmp +="cpp";
+	            FILE * cpp_file = fopen(fichier_tmp.c_str(), "w");		
 
-                // parsing du fichiers ez en fichier cpp
-                yyparse();
+		    	// cas où la création du fichier échoue
+	            if(cpp_file == NULL){
+	                cerr << fichier_tmp << ": creation failed;" << endl;
+	                break;
+	            }
 
-                yyout = cpp_file;
+	            // parsing du fichiers ez en fichier cpp
+	            yyparse();
 
-                // fermerture du fichier cpp
-                fclose(cpp_file);
-                input_files+=fichier_tmp + " ";
-                
-	            cout << "\033[1;36m=====================================\033[0m" << endl;
-       			cout << endl; 
-            }
-        }
-        else{
-            cout << "\033[1;36m=====================================\033[0m" << endl;
-            cout << "\033[1;36mParsing begining : \033[1;37m" << endl;
-            cout << "\033[1;36m=====================================\033[0m" << endl;
-            yyparse();
-            cout << "\033[1;36m=====================================\033[0m" << endl;
-        }
+	            yyout = cpp_file;
+
+	            // fermerture du fichier cpp
+	            fclose(cpp_file);
+	            input_files+=fichier_tmp + " ";
+	            
+         		cout << "\033[1;36m=====================================\033[0m" << endl;
+         		cout << endl;
+	        }
+		}
     }
 }
 
+void display(vector<char*> fic_ezl){
+	for(unsigned int i = 0; i < fic_ezl.size(); i++){
+		cout << fic_ezl[i] << endl;
+	}
+}
+
+/**
+ * Compiles les fichiers cpp générer
+ * @brief exec_cpp
+ * @param commande_gpp commande gpp execute
+ * @param output_name nom de l'output
+ */
+void exec_cpp(std::string commande_gpp, std::string output_name){
+	//cout << "commande cpp: " << commande_gpp << endl;
+	if(help != 1){
+		if(directinput != 1){
+			cout << commande_gpp << endl;
+			system(commande_gpp.c_str());
+			if(no_execution != 1){
+				if(output_name != ""){
+					string tmp_output= "./" + output_name;	
+					system(tmp_output.c_str());
+				}else{
+					string tmp_output= "./a.out";	
+					system(tmp_output.c_str());
+				}
+			}
+		}
+		cout << "\033[1;36mParsing ended.\033[0m" << endl;
+	}
+}
 
 /**
  * Point d'entrée
@@ -158,21 +143,15 @@ void parse_to_cpp(vector<char*> fic_ezl, string &input_files){
  * @return
  */
 int main(int argc , char ** argv){
+	int no_options = 0;
     int opt;
     string output_name = "";
 
-	// Ligne de commande g++
-	string commande_gpp = "g++ ";
+    // Ligne de commande g++
+    string commande_gpp = "g++ ";
 
-    //vecteurs des fichiers a traiter
+    // vecteurs des fichiers EZ à traiter
     vector<char*> fic_ezl;
-
-
-	// name of the file to test in the test repository after option --test
-	string test_file_name;
-
-	// emplacement du répertoire contenant les fichiers de tests
-	string test_rep_path = "../tests/";
 
 	//boucle pour les arguments en ligne de commande programmés
 	while(1){
@@ -190,7 +169,6 @@ int main(int argc , char ** argv){
 			{"optimisation",	required_argument,	0, 	'O'},
 			{"warning",			no_argument,		0, 	'w'},
 			{"output",			required_argument,	0, 	'o'},
-			{"test",			required_argument,	0, 	't'},
 			{0, 0, 0, 0}
 		};
 		
@@ -208,111 +186,100 @@ int main(int argc , char ** argv){
 		switch(opt){
 			//flags
 			case 0:
-				if (long_options[option_index].flag != 0)
-					break;
+				no_options = 1;
 				// flag indiquant que l' exécutable ne doit pas être lancé après la compilation
 				if (string(long_options[option_index].name) == "noexec"){
-					//cout << "Not launching .exe file..." << endl;
+					clog << "Not launching .exe file after compiling..." << endl;
 				}
-				if (string(long_options[option_index].name) == "nocpp"){
-					//cout << "Not creating cpp file..." << endl;
-				}
+				if(string(long_options[option_index].name) == "directinput"){
+					no_execution = 1;
+		        	cout << "\033[1;36m Manual parsing begining : \033[1;37m" << endl;
+         		   	cout << "\033[1;36m=====================================\033[0m" << endl;
+         		   	yyparse();
+         		   	cout << "\033[1;36m=====================================\033[0m" << endl;
+        		}
 				break;
+
 			// Compiler options computing
-				
 			// Affiche l'aide
 			case 'h':
-				help = 1;
-				
+				no_options = 1;
+				help = 1;		
 				// teste l'existence du fichier d'aide
 				cout << AIDE_PROG << endl;
 				break;
 
 			// Ajoute le fichier de sortie au compilateur g++
 			case 'o':
+				no_options = 1;
 				//cout << "Indicates the name of the output file" << endl;
 				commande_gpp += "-o "+string(optarg)+" ";
 				output_name = string(optarg);
 				break;
+			case 'v':
+				no_options = 1;
+				verbose_flag = 1;
+				break;
 			case 'w':
 				//cout << "Displays warning messages" << endl;
+				no_options = 1;
+				commande_gpp += "-Wall ";
 				break;
+
 			// Ajoute l'option -o(1..3) au compilateur g++
 			case 'O':
+				no_options = 1;
 				//cout << "Optimization option level: " << optarg << endl;
 				if(atoi(optarg) >= 1 && atoi(optarg) <= 3){
 					commande_gpp += "-O"+string(optarg)+" "; 
 				}
 				break;
-			case 't':
-				//cout << "option de test reconnue" << endl;
-				test_file_name = test_rep_path+optarg;
-				if(file_test_exists(test_file_name)){
-					fic_ezl.push_back((char*)test_file_name.c_str());
-				}
-				else{
-					cerr << "fichier test: " << test_rep_path+test_file_name << " introuvable." << endl;
-					exit(EXIT_FAILURE);
-				}
-				break;
 			// Option inconnue, s'il y a une option avec un tiret ou deux, c'est forcement autre chose qu'un fichier donc erreur
 			case '?':
-				cout << "Unknown option : " << option_index << endl;
-				exit(EXIT_FAILURE);
+				//exit(EXIT_FAILURE);
+				break;
 			//defaut
 			default:
-				abort ();
+				//exit(EXIT_FAILURE);
+				break;
 		}
 	}
 	
-	// fic_ezl.push_back("/home/etudiant/Cl…/ezlanguage/tests/exemple.ez");
     // tableaux des extensions des fichiers a traiter
     int nb_ext = 2;
     const string ext_ez[nb_ext] = {".ez", ".ezl"};
 
     //ajout des fichiers a parser
-	for(int i=0; i<nb_ext; ++i){
-		for(int j=optind; j<argc; ++j){
+	for(int i = 0; i < nb_ext; ++i){
+		for(int j = optind; j < argc; ++j){
 			parse_argv_ext(ext_ez[i].c_str(), fic_ezl, argv[j]);
 			//cout << "ajout" << fic_ezl.size() << endl;
 		}
-	}        
+	}     
     
     //test des arguments restant
 	for(int i=optind+1; i<argc; ++i){
-		//cout<< "Parsing the file : "<< argv[i]<< endl;
+		//cout<< "Parsing the "<< i<< " file : "<< argv[i]<< endl;
 		if(!(find(fic_ezl.begin(), fic_ezl.end(), argv[i]) != fic_ezl.end())){
 			cerr << "Invalid file or unknown option : " << argv[i] << endl;
 			exit(EXIT_FAILURE);
 		}
 	}
 
-	string input_files ="";
+	string input_files = "";
 
 	// Parse tous les fichiers ez contenus dans fic_ez en fichier cpp et les ajoute dans input_files 
 	parse_to_cpp(fic_ezl, input_files);
 
-	commande_gpp += input_files;
+	commande_gpp += " " + input_files;
 
-	if(help != 1){
-		if(no_cpp != 1){
-			cout << commande_gpp << endl;
-			int ret_value = system((commande_gpp).c_str());
-			if(ret_value != 0 ){
-				cerr << "Error during c++ compilation" << endl;
-			}
-			if(no_execution != 1){
-				if(output_name != ""){
-					string tmp_output= "./" + output_name;	
-					system(tmp_output.c_str());
-				}else{
-					string tmp_output= "./a.out";	
-					system(tmp_output.c_str());
-				}
-			}
-		}
-		cout << "\033[1;36mFin du parsing\033[0m" << endl;
+	//execution des cpp
+	if(no_options == 0 && fic_ezl.size() == 0){
+				cout << "Usage : EZ_language_compiler [OPTION]... FILE [FILES]..." << endl;
+				cout << "Try « EZ_language_compiler --help » for more information." << endl;
+				cout << endl;
 	}
+	if(fic_ezl.size() != 0)	exec_cpp(commande_gpp, output_name);
 
     exit(EXIT_SUCCESS);
 }

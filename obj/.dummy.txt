@@ -1,0 +1,2 @@
+This file is only present to create the obj/ folder on git.
+Ce fichier est présent seulement pour créer le dossier obj/ on git.

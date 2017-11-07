@@ -4,7 +4,7 @@ dist: trusty
 cache: apt
 
 notifications:
-  slack: ezlanguage:Lx6iO5M1QzE01l4om91A36fo
+  # slack: ezlanguage:Lx6iO5M1QzE01l4om91A36fo
   webhooks:
     urls:
       - https://webhooks.gitter.im/e/c8aafc19661a5dc78922
@@ -34,9 +34,11 @@ install:
 script:
   - make --file makefile -j2
   - ./bin/EZ_language_compiler tests/fichier_de_test.ezl
+  - cd examples
+# Launch valid tests
+  - sh ./valid_tests.sh
 
 after_success:
-# Launch tests
-  - cd tests
-  - ./all_tests.sh
+# Launch other tests
+  - sh ./unvalid_tests.sh
 

@@ -1,78 +1,256 @@
 <?xml version="1.0"?>
-
-<!DOCTYPE MODE SYSTEM "xmode.dtd">
-
 <!-- Edit mode for ezlanguage properties file              -->
 <!-- contributed by BARRY Mamadou <barrybhoye05@gmail.com> -->
-<!-- 23/11/2016: initial version                           -->
-
+<!-- 08/02/2017: final version  -->    
+<!-- Extension of cplusplus.xml add ezlanguage specific syntax. -->
+<!DOCTYPE MODE SYSTEM "xmode.dtd">
 
 <MODE>
-    <PROPS>
-        <PROPERTY NAME="lineComment" VALUE="//" />
-	<PROPERTY NAME="commentStart" VALUE="/*" />
-	<PROPERTY NAME="commentEnd" VALUE="*/" />
-    </PROPS>
+	<PROPS>
+		<PROPERTY NAME="commentStart" VALUE="/*" />
+		<PROPERTY NAME="commentEnd" VALUE="*/" />
+		<PROPERTY NAME="lineComment" VALUE="//" />
+		<PROPERTY NAME="wordBreakChars" VALUE=",+-=&lt;&gt;/?^&amp;*" />
 
-    <RULES DEFAULT="KEYWORD3" HIGHLIGHT_DIGITS="TRUE">
-        <SPAN TYPE="LITERAL1" DELEGATE="DOUBLEQUOTE_LITERAL" NO_LINE_BREAK="TRUE">
+		<!-- Auto indent -->
+		<PROPERTY NAME="indentOpenBrackets" VALUE="{" />
+		<PROPERTY NAME="indentCloseBrackets" VALUE="}" />
+		<PROPERTY NAME="unalignedOpenBrackets" VALUE="(" />
+		<PROPERTY NAME="unalignedCloseBrackets" VALUE=")" />
+		<PROPERTY NAME="indentNextLine"
+			VALUE="\s*(((if|while)\s*\(|else\s*|else\s+if\s*\(|for\s*\(.*\))[^{;]*)" />
+		<PROPERTY NAME="unindentThisLine"
+			VALUE="^.*(default:\s*|case.*:.*)$" />
+		<PROPERTY NAME="electricKeys" VALUE=":" />
+	</PROPS>
+	<RULES IGNORE_CASE="FALSE"
+		HIGHLIGHT_DIGITS="TRUE"
+		DIGIT_RE="(0[lL]?|[1-9]\d{0,9}(\d{0,9}[lL])?|0[xX]\p{XDigit}{1,8}(\p{XDigit}{0,8}[lL])?|0[0-7]{1,11}([0-7]{0,11}[lL])?|([0-9]+\.[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?[fFdD]?|[0-9]+([eE][+-]?[0-9]+[fFdD]?|([eE][+-]?[0-9]+)?[fFdD]))">
+
+		<!-- Silly comment -->
+		<SEQ TYPE="COMMENT1">/**/</SEQ>
+
+		<!-- Javadoc comment -->
+		<SPAN TYPE="COMMENT3" DELEGATE="JAVADOC">
+			<BEGIN>/**</BEGIN>
+			<END>*/</END>
+		</SPAN>
+
+		<!-- Java comment  (C multilines style) -->
+		<SPAN TYPE="COMMENT1">
+			<BEGIN>/*</BEGIN>
+			<END>*/</END>
+		</SPAN>
+
+		<SPAN TYPE="LITERAL1" DELEGATE="DOUBLEQUOTE_LITERAL" NO_LINE_BREAK="TRUE">
 			<BEGIN>"</BEGIN>
 			<END>"</END>
-	</SPAN>
+		</SPAN>
+		<SPAN TYPE="LITERAL3" DELEGATE="SIMPLEQUOTE_LITERAL" NO_LINE_BREAK="TRUE">
+			<BEGIN>'</BEGIN>
+			<END>'</END>
+		</SPAN>
 
-	<!-- Function calls -->
-	<MARK_PREVIOUS TYPE="FUNCTION" MATCH_TYPE="OPERATOR">(</MARK_PREVIOUS>
-	<SEQ TYPE="OPERATOR">)</SEQ>
+		
+		<SEQ_REGEXP TYPE="COMMENT2">[/][/](.*?)$</SEQ_REGEXP>
 
-	<KEYWORDS>
-			<!--{{{ modifiers -->
-			<KEYWORD1>if</KEYWORD1>
-			<KEYWORD1>else</KEYWORD1>
-			<KEYWORD1>for</KEYWORD1>
-			<KEYWORD1>while</KEYWORD1>
-			<KEYWORD1>return</KEYWORD1>
-			<KEYWORD1>when</KEYWORD1>
+		<SEQ TYPE="OPERATOR">=</SEQ>
+		<SEQ TYPE="OPERATOR">!</SEQ>
+		<SEQ TYPE="OPERATOR">&gt;=</SEQ>
+		<SEQ TYPE="OPERATOR">&lt;=</SEQ>
+		<SEQ TYPE="OPERATOR">+</SEQ>
+		<SEQ TYPE="OPERATOR">-</SEQ>
+		
+		
+		<SEQ_REGEXP TYPE="OPERATOR">/(?![/])</SEQ_REGEXP>
+
+		
+		<SEQ TYPE="NULL">.*</SEQ>
+
+		<SEQ TYPE="OPERATOR">*</SEQ>
+		<SEQ TYPE="OPERATOR">&gt;</SEQ>
+		<SEQ TYPE="OPERATOR">&lt;</SEQ>
+		<SEQ TYPE="OPERATOR">%</SEQ>
+		<SEQ TYPE="OPERATOR">&amp;</SEQ>
+		<SEQ TYPE="OPERATOR">|</SEQ>
+		<SEQ TYPE="OPERATOR">^</SEQ>
+		<SEQ TYPE="OPERATOR">~</SEQ>
+		<SEQ TYPE="OPERATOR">}</SEQ>
+		<SEQ TYPE="OPERATOR">{</SEQ>		
+		
+		<MARK_PREVIOUS TYPE="LABEL" MATCH_TYPE="OPERATOR"
+			AT_WHITESPACE_END="TRUE">:</MARK_PREVIOUS>
+
+		<!-- Function calls -->
+		<MARK_PREVIOUS TYPE="FUNCTION" MATCH_TYPE="OPERATOR">(</MARK_PREVIOUS>
+		<SEQ TYPE="OPERATOR">)</SEQ>
+
+		<MARK_FOLLOWING TYPE="KEYWORD4">@</MARK_FOLLOWING>
+
+		<KEYWORDS>
+			<!--{{{ Keywords modifiers cpp -->
+			<KEYWORD1>assert</KEYWORD1>
+			<KEYWORD1>break</KEYWORD1>
 			<KEYWORD1>case</KEYWORD1>
+			<KEYWORD1>catch</KEYWORD1>
+			<KEYWORD1>continue</KEYWORD1>
 			<KEYWORD1>default</KEYWORD1>
 			<KEYWORD1>do</KEYWORD1>
-			<KEYWORD1>repeat</KEYWORD1>
-			<KEYWORD1>until</KEYWORD1>
-			<KEYWORD1>end</KEYWORD1>
-			<KEYWORD1>procedure</KEYWORD1>
-			<KEYWORD1>function</KEYWORD1>
-			<KEYWORD1>print</KEYWORD1>
-			<KEYWORD1>program</KEYWORD1> 
-			<KEYWORD1>endif</KEYWORD1> 
-  
+			<KEYWORD1>else</KEYWORD1>
+			<KEYWORD1>for</KEYWORD1>
+			<KEYWORD1>if</KEYWORD1>
+			<KEYWORD1>new</KEYWORD1>
+			<KEYWORD1>return</KEYWORD1>
+			<KEYWORD1>switch</KEYWORD1>
+			<KEYWORD1>throw</KEYWORD1>
+			<KEYWORD1>try</KEYWORD1>
+			<KEYWORD1>while</KEYWORD1>
+			<KEYWORD1>when</KEYWORD1>
+			<KEYWORD1>endfor</KEYWORD1>
+			<KEYWORD1>static_cast</KEYWORD1>
+			<KEYWORD1>dynamic_cast</KEYWORD1>
+			<KEYWORD1>reinterpret_cast</KEYWORD1>
+			<KEYWORD1>conc_cast</KEYWORD1>
+			
+			<!--}}}-->
 
-			<!--{{{ structure keywords -->
-			<KEYWORD2>constant</KEYWORD2>
-			<KEYWORD2>string</KEYWORD2>
-			<KEYWORD2>integer</KEYWORD2>
-			<KEYWORD2>real</KEYWORD2>
-			<KEYWORD2>class</KEYWORD2>
+			<!--{{{ structure keywords cpp -->
+			<KEYWORD2>final</KEYWORD2>
+			<KEYWORD2>native</KEYWORD2>
+			<KEYWORD2>private</KEYWORD2>
+			<KEYWORD2>protected</KEYWORD2>
+			<KEYWORD2>public</KEYWORD2>
+			<KEYWORD2>static</KEYWORD2>
+			<KEYWORD2>synchronized</KEYWORD2>
+			<KEYWORD2>throws</KEYWORD2>			
+			<KEYWORD2>import</KEYWORD2> 			
+			<KEYWORD2>enum</KEYWORD2>
+			<KEYWORD2>program</KEYWORD2>
+			<KEYWORD2>structure</KEYWORD2>
+			<KEYWORD2>procedure</KEYWORD2>
+			<KEYWORD2>function</KEYWORD2>
+			<KEYWORD2>enum</KEYWORD2>
+			<KEYWORD2>begin</KEYWORD2>
+			<KEYWORD2>end</KEYWORD2>			
+						
+			<!--}}}-->
 
-			<!--{{{ structure keywords -->
+			<!--{{{ types -->
+			<KEYWORD3>boolean</KEYWORD3>
+			<KEYWORD3>byte</KEYWORD3>
+			<KEYWORD3>char</KEYWORD3>
+			<KEYWORD3>class</KEYWORD3>
+			<KEYWORD3>double</KEYWORD3>
+			<KEYWORD3>float</KEYWORD3>
+			<KEYWORD3>int</KEYWORD3>
+			
+			<!--{{{ structuretypes ezlanguage-->
+			<KEYWORD3>constant</KEYWORD3>
+			<KEYWORD3>string</KEYWORD3>
+			<KEYWORD3>integer</KEYWORD3>
+			<KEYWORD3>real</KEYWORD3>
+			<KEYWORD3>vector</KEYWORD3>
+			<KEYWORD3>list</KEYWORD3>
+			<KEYWORD3>map</KEYWORD3>
+			<KEYWORD3>set</KEYWORD3>			
+			<KEYWORD3>variable</KEYWORD3>
+			<KEYWORD3>uint</KEYWORD3>
+			<KEYWORD3>unsigned</KEYWORD3>
+			<KEYWORD3>signed</KEYWORD3>
+			
+			<!--}}}-->
+			
+			<KEYWORD3>regex</KEYWORD3>
+			<KEYWORD3>bool</KEYWORD3>
+			<KEYWORD3>void</KEYWORD3>			
+			<KEYWORD3>long</KEYWORD3>
+			<KEYWORD3>short</KEYWORD3>
+			<KEYWORD3>real</KEYWORD3>
+			<KEYWORD3>local</KEYWORD3>
+			<KEYWORD3>global</KEYWORD3>
+			<!--}}}-->
+
+			<!--{{{ literals -->
+			<LITERAL2>false</LITERAL2>
+			<LITERAL2>null</LITERAL2>
+			<LITERAL2>this</LITERAL2>
+			<LITERAL2>true</LITERAL2>
 			
 			
-			
-	</KEYWORDS>
+			<!--}}}-->
 
-	<IMPORT DELEGATE="LEX"/>
+			<INVALID>goto</INVALID>
+			<INVALID>const</INVALID>			
+		</KEYWORDS>
+	</RULES>
 
-        <!-- Directives -->
-        <KEYWORDS>
-		       <MARKUP>program</MARKUP>
-		       <MARKUP>structure</MARKUP>
-		       <MARKUP>local</MARKUP>
-		       <MARKUP>procedure</MARKUP>
-		       <MARKUP>line</MARKUP>
-		       <MARKUP>undef</MARKUP>
-		       <MARKUP>warning</MARKUP>
-        </KEYWORDS>
+	<!--{{{ DOUBLEQUOTE_LITERAL rule -->
+	<RULES SET="DOUBLEQUOTE_LITERAL" DEFAULT="LITERAL1" IGNORE_CASE="TRUE">
+		<SEQ TYPE="LITERAL4">\\</SEQ>
+		<SEQ TYPE="LITERAL4">\"</SEQ>
+		<SEQ TYPE="LITERAL4">\n</SEQ>
+		<SEQ TYPE="LITERAL4">\r</SEQ>
+		<SEQ TYPE="LITERAL4">\t</SEQ>
+		<SEQ_REGEXP HASH_CHAR="\u" TYPE="LITERAL4">\\u[a-f\d]{4}</SEQ_REGEXP>
+	</RULES> <!--}}}-->
+	
+	<!--{{{ SIMPLEUOTE_LITERAL rule -->
+	<RULES SET="SIMPLEQUOTE_LITERAL" DEFAULT="LITERAL3" IGNORE_CASE="TRUE">
+		<SEQ TYPE="LITERAL4">\\</SEQ>
+		<SEQ TYPE="LITERAL4">\'</SEQ>
+		<SEQ TYPE="LITERAL4">\n</SEQ>
+		<SEQ TYPE="LITERAL4">\r</SEQ>
+		<SEQ TYPE="LITERAL4">\t</SEQ>
+		<SEQ_REGEXP HASH_CHAR="\u" TYPE="LITERAL4">\\u[a-f\d]{4}</SEQ_REGEXP>
+	</RULES> <!--}}}-->
 
-    </RULES>
+	<!--{{{ JAVADOC rules -->
+	<RULES SET="JAVADOC" DEFAULT="COMMENT3" IGNORE_CASE="TRUE">
 
-        
+		<!-- so that *@param is highlighted -->
+		<SEQ TYPE="COMMENT3">*</SEQ>
 
+		<!-- HTML comments -->
+		<SPAN TYPE="COMMENT1">
+			<BEGIN>&lt;!--</BEGIN>
+			<END>--&gt;</END>
+		</SPAN>
+
+		<!-- Javadoc allows this -->
+		<SEQ TYPE="COMMENT3">&lt;&lt;</SEQ>
+		<SEQ TYPE="COMMENT3">&lt;=</SEQ>
+		<SEQ TYPE="COMMENT3">&lt; </SEQ>
+
+		<!-- strings in quotes -->
+		<SPAN TYPE="LITERAL1" ESCAPE="\" NO_LINE_BREAK="TRUE">
+		<BEGIN>&quot;</BEGIN>
+		<END>&quot;</END>
+		</SPAN>
+
+		<!-- HTML tags -->
+		<SPAN TYPE="MARKUP" DELEGATE="xml::TAGS"
+			NO_LINE_BREAK="TRUE">
+			<BEGIN>&lt;</BEGIN>
+			<END>&gt;</END>
+		</SPAN>
+
+		
+		<SPAN_REGEXP TYPE="LABEL" HASH_CHAR="{@" NO_WORD_BREAK="FALSE" DELEGATE="JAVADOC_PARAM">
+			<BEGIN>\{@(link|linkplain|docRoot|code|literal)\s</BEGIN>
+			<END>}</END>
+		</SPAN_REGEXP>
+
+	
+		<SPAN_REGEXP TYPE="LABEL" HASH_CHAR="@version" NO_WORD_BREAK="FALSE" DELEGATE="JAVADOC_PARAM">
+			<BEGIN>@version\s+\$</BEGIN>
+			<END>$</END>
+		</SPAN_REGEXP>
+
+		<SPAN_REGEXP TYPE="LABEL" HASH_CHAR="@" NO_WORD_BREAK="FALSE" DELEGATE="JAVADOC_PARAM">
+			<BEGIN>@(?:param|throws|exception|serialField)(\s)</BEGIN>
+			<END>$1</END>
+		</SPAN_REGEXP>
+
+		
+	</RULES> <!--}}}-->	
 </MODE>

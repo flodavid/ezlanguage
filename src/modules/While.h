@@ -1,38 +1,50 @@
-//@author Antoine GARNIER
 #ifndef WHILE_H
 #define WHILE_H
 
-//essential libraries
-#include <vector>
-#include <string.h>
+#include "Node.h"
 
-//special files no to forget to import
-#include "Iterative_instruction.h"
-
-/*
- * Using :
+/**
+ * @brief Represent a node of the tree which will traduct the loop while
+ * @details Using :
  * while condition do
  *    instruction_1
  *    instruction_2
  *    ...
  *    instruction_n
  * end while
+ * 
+ * @author Antoine GARNIER
  */
-class While :
-        public Iterative_instruction {
+class While : public Node {
+	
 protected:
-    Condition while_condition; // iteration condition of the loop
-    std::vector<std::string> instructions; //vector containing all the instructions of the loop
-
+	Node * condition;
+	
 public:
-    //TODO : constructeur par recopie dans la classe Condition
-    While(Condition while_cond, std::vector<std::string> instructions);
+    
+	/**
+     * @brief constructor with parameters
+     * @param left : left son
+     * @param right : right son
+     * @param cond : condition of the loop
+     */
+    While(Node * left, Node * right, Node * cond);
 
-    //getters
-    Condition get_condition(){ return while_condition; }
-    std::vector<std::string> get_instructions(){ return instructions; }
 
-    std::string translate();
+    
+    /*** Translations ***/
+    
+    /**
+     * @brief Translate the begining part of the While
+     * @return a string containing the C++ code of the instruction
+     */
+    virtual std::string preTranslate() const;
+    
+    /**
+     * @brief Translate the end part of the While
+     * @return a string containing the C++ code of the instruction
+     */
+    virtual std::string postTranslate() const;
 };
 
 #endif

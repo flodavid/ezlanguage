@@ -1,0 +1,23 @@
+program affectations_calculs
+// Fichier permettant de tester la compilation :
+// + de différentes opérations arithmétiques 
+// + d'affections à partir du résultats des opérations
+//Syntaxe validée
+
+procedure affectations_calculs()
+local x is integer
+local y is integer
+local a is integer
+local d is integer
+local s is integer
+
+	d = 0
+	x = 5 && 2
+	y = 4 || 2
+	a = d
+	a = y mod a
+	s = abs 8
+	s = a pow 5
+	x =  a+ 5
+end procedure
+

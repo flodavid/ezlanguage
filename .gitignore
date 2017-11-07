@@ -3,17 +3,25 @@
 *~
 .directory
 
+# Generated documentation
+docs/html/
+
 # Build results
 *.cmake
+CMakeCache*
+CMakeFiles/*
 bin/*
 !bin/*.md
 obj/*
 !obj/*.md
 *.o
 *.gch
+*.output
 
 # User-specific files
 *.user
 
-#CLion files
+#Editor-specific files
 .idea/*
+.vscode/*
+

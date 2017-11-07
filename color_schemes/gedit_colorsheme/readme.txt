@@ -1,12 +1,3 @@
-pour activez la coloration syntaxique dans gedit 
-
-1- recuperer le fichier "ezlanguage.lang"
-2- copier le dans /usr/share/gtksourceview-3.0/language-specs
-3- redémarrer gedit
-
-le plus souvent pour ceux qui ont une version de linux gnome le dossier est
- 
-~/.local/share/gtksourceview-3.0/language-specs
-
-
+#pour utiliser le fichier de coloration syntaxique pour gedit
+copier le fichier "ezlanguage.lang" dans  /usr/share/gtksourceview-*.0/language-specs/
 

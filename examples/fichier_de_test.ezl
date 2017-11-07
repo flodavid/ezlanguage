@@ -1,0 +1,22 @@
+global a is integer
+local a,b,c are real
+
+function adam(ismail is boolean) return real
+    print 5
+    return 6
+endfunction
+
+procedure dadam() 
+    print a
+endprocedure
+
+function adam(ismail is boolean) return real
+    print 5
+    return 6
+endfunction
+
+global b,c,d are real
+while x<5 do z=7
+
+endwhile
+

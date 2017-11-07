@@ -1,6 +1,5 @@
 //@author : GARNIER Antoine
 #include "Operator.h"
-#include <iostream>
 
 using namespace std;
 
@@ -14,7 +13,7 @@ Operator::Operator(int ope_type, string ope) {
     ope= ope;
 }
 
-string Operator::translate() {
+string Operator::preTranslate() const {
     string res= "";
 
     switch(ope_type){
@@ -49,6 +48,7 @@ string Operator::translate() {
                 case UNARY:
                     //Unary operator
                     if(ope == "-"){res= "-" + getOperande_1(); }
+                    if(ope == "abs"){res= "abs(" + getOperande_1() + ")"; }
                     else {};//unknown operator
                     break;
 
@@ -59,7 +59,7 @@ string Operator::translate() {
                     if(ope == "*"){res= getOperande_1() + "*" + getOperande_2();} else
                     if(ope == "/"){res= getOperande_1() + "/" + getOperande_2();} else
                     if(ope == "mod"){res= getOperande_1() + "%" + getOperande_2();} else
-                    if(ope == "pow"){res= getOperande_1() + "pow" + getOperande_2();}
+                    if(ope == "pow"){"pow(" + getOperande_1() + "," + getOperande_2() + ")";}
                     else {};//unknown operator
                     break;
 
@@ -69,26 +69,27 @@ string Operator::translate() {
             }
             break;
 
-        //Allocation's operators (=, +=, -=, *=, /=)
+        //Allocation's operators (=, +=, -=, *=, /=, .)
         case ALLOCATION:
             cout << "Operator's type : allocation" << endl;
-            if(ope == "="){res= getOperande_1() + "=" + getOperande_2();} else
-            if(ope == "+="){res= getOperande_1() + "+=" + getOperande_2();} else
-            if(ope == "-"){res= getOperande_1() + "-=" + getOperande_2();} else
-            if(ope == "*="){res= getOperande_1() + "*=" + getOperande_2();} else
-            if(ope == "/="){res= getOperande_1() + "/=" + getOperande_2();}
+            if(ope == "="){res= getOperande_1() + "= " + getOperande_2();} else
+            if(ope == "+="){res= getOperande_1() + "+= " + getOperande_2();} else
+            if(ope == "-"){res= getOperande_1() + "-= " + getOperande_2();} else
+            if(ope == "*="){res= getOperande_1() + "*= " + getOperande_2();} else
+            if(ope == "/="){res= getOperande_1() + "/= " + getOperande_2();} else
+            if(ope == "."){res= getOperande_1() + " + " + getOperande_2();}
             else {};//unknown operator
             break;
 
         //Comparison's operators (==, !=, <, >, <=, >=)
         case COMPARISON:
             cout << "Operator's type : comparison" << endl;
-            if(ope == "=="){res= getOperande_1() + "==" + getOperande_2();} else
-            if(ope == "!="){res= getOperande_1() + "!=" + getOperande_2();} else
-            if(ope == "<"){res= getOperande_1() + "<" + getOperande_2();} else
-            if(ope == ">"){res= getOperande_1() + ">" + getOperande_2();} else
-            if(ope == "<="){res= getOperande_1() + "<=" + getOperande_2();} else
-            if(ope == ">="){res= getOperande_1() + ">=" + getOperande_2();}
+            if(ope == "=="){res= getOperande_1() + " == " + getOperande_2();} else
+            if(ope == "!="){res= getOperande_1() + " != " + getOperande_2();} else
+            if(ope == "<"){res= getOperande_1() + " < " + getOperande_2();} else
+            if(ope == ">"){res= getOperande_1() + " > " + getOperande_2();} else
+            if(ope == "<="){res= getOperande_1() + " <= " + getOperande_2();} else
+            if(ope == ">="){res= getOperande_1() + " >= " + getOperande_2();}
             else {};//unknown operator
             break;
 

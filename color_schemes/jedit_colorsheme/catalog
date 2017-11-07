@@ -4,5 +4,5 @@
 <MODES>
 <!-- Add lines like the following, one for each edit mode you add: -->
 <!-- <MODE NAME="foo" FILE="foo.xml" FILE_NAME_GLOB="*.foo" /> -->
-  <MODE NAME="ezlanguage" FILE="ezlanguage.xml" FILE_NAME_GLOB="*.ezl" /> 
+<!--<MODE NAME="ezlanguage" FILE="ezlanguage.xml" FILE_NAME_GLOB="*.ezl" /> -->
 </MODES>

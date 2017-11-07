@@ -1,32 +1,19 @@
 //@author Antoine GARNIER
 #include "Repeat.h"
-#include "String_addon.h"
 
-Repeat::Repeat(Condition repeat_cond, std::vector<std::string> instructions)
-        :repeat_condition(repeat_cond){
-    std::vector<std::string> res;
-    for(unsigned int i= 0; i < instructions.size(); ++i){
-        res[i]= instructions[i];
-    }
-    instructions= res;
+using namespace std;
+
+Repeat::Repeat(Node * left, Node* right , Node * cond) : Node(left, right), condition(cond)
+{}
+
+string Repeat::preTranslate() const
+{
+    return "do {";
 }
 
-std::string Repeat::translate() {
-    std::string res;
-    Condition repeat_condition= get_condition();
-    std::vector<std::string> instructions= get_instructions();
-
-    res= "do{\n";
-
-    for(unsigned int i= 0; i < instructions.size(); ++i){
-        std::string instruction_raw;
-        //white spaces here or not ?
-        instruction_raw= "   "+instructions[i]+";\n";
-        res+= instruction_raw;
-    }
-    std::string condition_raw;
-    condition_raw= "}while(" + repeat_condition.translate() + ")\n";
-    res+= condition_raw;
+string Repeat::postTranslate() const
+{   
+	string res = "} while(" + condition->translate() + ");";
     return res;
 }
 

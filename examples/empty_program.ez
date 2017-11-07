@@ -1,0 +1,7 @@
+program empty_program
+// Fichier permettant de tester la compilation d'un programme vide
+// Syntaxe validée
+
+procedure empty_program()
+
+end procedure

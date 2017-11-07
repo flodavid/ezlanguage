@@ -1,38 +1,48 @@
-//@author Antoine GARNIER
 #ifndef REPEAT_H
 #define REPEAT_H
 
-//essential libraries
-#include <vector>
-#include <string.h>
-
 //special files no to forget to import
-#include "Iterative_instruction.h"
+#include "Node.h"
 
-/*
- * Using :
+/**
+ * @brief Represent a node of the tree whcih will traduct the loop repeat (do ... while in c++)
+ * 
+ * @details Using :
  * repeat
  *    instruction_1
  *    instruction_2
  *    ...
  *    instruction_n
  * until condition
+ * 
+ * @author Antoine GARNIER
  */
-class Repeat :
-        public Iterative_instruction {
+class Repeat : public Node {
+	
 protected:
-    Condition repeat_condition; // iteration condition of the loop
-    std::vector<std::string> instructions; //vector containing all the instructions of the loop
+	Node * condition;
 
 public:
-    //TODO : constructeur par recopie dans la classe Condition
-    Repeat(Condition repeat_cond, std::vector<std::string> instructions);
-
-    //getters
-    Condition get_condition(){ return repeat_condition; }
-    std::vector<std::string> get_instructions(){ return instructions; }
-
-    std::string translate();
+    
+    /**
+     * @brief constructor with parameters
+     * @param left : left son
+     * @param right : right son
+     * @param cond : condition of the loop
+     */
+    Repeat(Node * left, Node* right , Node * cond);
+    
+    /**
+     * @brief Translate the begining part of the Repeat
+     * @return a string containing the C++ code of the instruction
+     */
+    virtual std::string preTranslate() const;
+    
+    /**
+     * @brief Translate the end part of the Repeat
+     * @return a string containing the C++ code of the instruction
+     */
+    virtual std::string postTranslate() const;
 
 };
 #endif

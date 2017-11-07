@@ -1,0 +1,12 @@
+program test_class
+//test_class
+
+class MaClasse
+begin
+    a is shared integer = 0
+end class
+
+procedure main()
+    p is Person("dupont","laurent",25)
+    print p
+end procedure
