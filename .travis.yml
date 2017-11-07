@@ -4,7 +4,7 @@ dist: trusty
 cache: apt
 
 notifications:
-  slack: ezlanguage:Lx6iO5M1QzE01l4om91A36fo
+  # slack: ezlanguage:Lx6iO5M1QzE01l4om91A36fo
   webhooks:
     urls:
       - https://webhooks.gitter.im/e/c8aafc19661a5dc78922
