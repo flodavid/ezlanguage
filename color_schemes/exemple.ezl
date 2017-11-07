@@ -47,3 +47,4 @@ begin
 
   print "maximum of ages = ", max
 end
+

@@ -1,6 +1,5 @@
 //@author : GARNIER Antoine
 #include "Operator.h"
-#include <iostream>
 
 using namespace std;
 
@@ -49,7 +48,7 @@ string Operator::preTranslate() const {
                 case UNARY:
                     //Unary operator
                     if(ope == "-"){res= "-" + getOperande_1(); }
-                    if(ope == "abs"){res= "abs " + getOperande_1(); }
+                    if(ope == "abs"){res= "abs(" + getOperande_1() + ")"; }
                     else {};//unknown operator
                     break;
 
@@ -60,7 +59,7 @@ string Operator::preTranslate() const {
                     if(ope == "*"){res= getOperande_1() + "*" + getOperande_2();} else
                     if(ope == "/"){res= getOperande_1() + "/" + getOperande_2();} else
                     if(ope == "mod"){res= getOperande_1() + "%" + getOperande_2();} else
-                    if(ope == "pow"){res= getOperande_1() + "pow" + getOperande_2();}
+                    if(ope == "pow"){"pow(" + getOperande_1() + "," + getOperande_2() + ")";}
                     else {};//unknown operator
                     break;
 

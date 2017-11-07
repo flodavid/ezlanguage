@@ -1,23 +1,22 @@
+program test
 local test is integer
 
 procedure person()
 local i, max are integer
 
-  for i in 1..10 step 1
-  do
+  for i in 1..10 step 1 do
    
-  endfor
+  end for
 
   // compute maximum of ages (detailed version)
   max = 0
-  for i in 1..v.size() step 1
-  do
+  for i in 1..v.size() step 1 do
     
-  endfor
+  end for
 
   // or use built-in function
 
   print "maximum of ages = "
-endprocedure
+end procedure
 
-test = 2
+test = a.ok().size()

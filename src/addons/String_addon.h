@@ -1,7 +1,7 @@
 #ifndef STRING_ADDON_H
 #define STRING_ADDON_H
 
-//@author : CHARLOT Rodolphe, ELFAQIR Ismail
+//@author : CHARLOT Rodolphe, ELFAQIR Ismail, LAHYANI Zakaria
 #include <iostream>
 #include <string>
 #include <vector>

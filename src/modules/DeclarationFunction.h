@@ -2,8 +2,6 @@
 #define DECLARATION_FUNCTION_H
 
 #include "Node.h"
-#include "../hash_table/Variable.h"
-
 #include <vector>
 
 /**
@@ -16,31 +14,24 @@
  *              return variable;
  *          end function
  */
-class DeclarationFunction
-    : public Node {
+class DeclarationFunction : public Node {
 
 protected:
     std::string function_name;
+    std::vector<std::pair<std::string, std::string> > arguments;
     std::string return_type;
-    std::vector<Variable> arguments;
-    std::string return_variable;
 
 public:
 
     /**
-     * @brief Default constructor
-     */
-    DeclarationFunction();
-
-    /**
-     * @brief Constructor
+     * @brief Constructor with parameters
+     * @param left : left son
+     * @param right : right son
      * @param name : function's name
      * @param arguments : arguments list of the function
      * @param type : return type of the function
-     * @param instructions : instructions of the function
-     * @param return_variable : name of the variable used as a return value
      */
-    DeclarationFunction(std::string name, std::vector<Variable> arguments, std::string type, Node* instructions, std::string return_variable);
+    DeclarationFunction(Node * left, Node * right, const std::string & name, const std::vector<std::pair<std::string, std::string> > & arguments, const std::string & type);
 
     /**
      * @brief Getter for the function's name
@@ -58,38 +49,26 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<Variable> getArguments() const {return arguments;}
-
-    /**
-     * @brief Getter for the name of the variable used as the return variable
-     * @return name of the variable returned by the function
-     */
-    std::string getVariable() const {return return_variable;}
+    std::vector<std::pair<std::string, std::string> > getArguments() const {return arguments;}
 
     /**
      * @brief Setter of the function's name
      * @param name : name of the function
      */
-    void setFunctionName(std::string name){function_name= name;}
+    void setFunctionName(const std::string & name){function_name= name;}
 
     /**
      * @brief Setter of the return type
      * @param type : return type of the function
      */
-    void setReturnType(std::string type){return_type= type;}
+    void setReturnType(const std::string & type){return_type= type;}
 
     /**
      * @brief Setter of the list of arguments
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(std::vector<Variable> args){arguments= args;}
-//    void setArguments(Node* args){arguments= args;}
+    void setArguments(const std::vector<std::pair<std::string, std::string>> & args){arguments= args;}
 
-    /**
-     * @brief Setter of the variable's name used as the return value
-     * @param variable : variable's name used as the return value of the function
-     */
-    void setVariable(std::string variable){return_variable= variable;}
     
     /**
      * @brief Translate the begining part of the DeclarationFunction

@@ -14,8 +14,7 @@
  * @author : Ismail ELFAQIR
  * 
  */
-class Class :
-        public Node {
+class Class : public Node {
 protected:
 
     ClassDeclaration *m_class;

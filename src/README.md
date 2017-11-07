@@ -6,37 +6,20 @@ Don't move these files, they are needed in the makefile !
 
 Implemented classes :
  + ArrayAccess : Array access operator `[..]`
- + ArrayDeclaration : Array Declaration
- + Class :
- + Declaration : Variable declaration
+ + Class : Class declaration
+ + ConditionalExpression : Expression of a condition (ex : (a or b) and (b and c) )
+ + DeclarationContainer : Declaration of all container (vector, set, map, list and array)
+ + DeclarationVariable : Variable declaration
+ + DeclarationMultipleVariable : Multiple variable declaration
  + DeclarationFunction : Function declaration
- + Forall : `forall` loop
- + Foreach : `foreach` loop
+ + DeclarationProcedure : Procedure declaration
+ + For : `for` loop
  + If : `if` instruction
  + Operator : Operators (or, and, not, xor, ||, &&, ^, !, abs, -, +, /, *, mod, pow, <, >, ==, =, ++, --...)
- + Program : `program [program_name]` declaration
- + Range : `..` range operator
  + Repeat : `repeat ... until` loop
  + While : `while` loop
- + DeclarationContainer : Mother class for caontainers déclaration
- + DeclarationVector : class representing the vector data structer
- + DeclarationList : class representing the list data structer
- + DeclarationMap : class representing the map data structer
- + DeclarationSet : class representing the set data structer
-
-
-Non implemented classes :
- + Condition :
- + Conditionnal_Instruction :
- + DConstants :
- + DTypes :
- + Iterative_instruction :
- + PDFunctions :
- + PDInstructions :
- + PDVariables :
+ + Node : abstract class which represent a node of the tree
  
-Other
- + Holder :
  
 Hash table related classes are in the [hash_table folder](hash_table)
 

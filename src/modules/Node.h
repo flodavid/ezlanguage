@@ -1,6 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include <iostream>
 #include <string>
 using namespace std;
 
@@ -10,8 +11,11 @@ using namespace std;
  *
  */
 class Node {
+
 protected:
     std::string name;
+
+private:
     Node* left_son;
     Node* right_son;
 

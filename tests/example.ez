@@ -1,0 +1,43 @@
+program person_main
+
+import person
+include "usr/include/math.h"
+library "/usr/lib/src -lm"
+
+ // ceci est un programme main qui utilise le module « person »
+ procedure person_main()
+    driss is person(1,"Driss", 40)
+    hossam is person(2, "Hossam", 20)
+    if driss.isOlderThan(hossam.age) then
+       print driss.name," is older than ", hossam.name
+    else
+    print hossam.name," is older than ", driss.name
+    end // il est tout à fait possible d’écrire end if aussi
+ end procedure
+
+function cos(x is real) is extern cos
+
+procedure p()
+begin
+
+ // declarations
+ variable a,b,c are integer
+
+ // initialisation
+ a = 10
+ b = 12 
+ c = a +b 
+ print "C=" , c
+
+end procedure
+
+variable s is string = "there ok"
+variable e is regex = "\\b(sub)"
+
+print e.replace(s,"ok")
+s.search(s,m)
+s.match(s)
+
+constant adam is integer = 1
+
+

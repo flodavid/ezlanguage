@@ -9,6 +9,7 @@ private:
   std::string _type;
   unsigned int _scope;
   bool _const;
+  bool _static;
   
 public:
   
@@ -35,6 +36,17 @@ public:
    * @author Johan Defaye
    */
   Variable(const std::string & i, const std::string & t, bool c = false);
+  
+  /**
+   * Constructor with parameters
+   * @brief Set the identifier and the type by those passed as parameters
+   * @param i : id of the Variable
+   * @param t : type of the Variable
+   * @param c : if the Variable is const
+   * @param s : if the Variable is static
+   * @author Johan Defaye
+   */
+  Variable(const std::string & i, const std::string & t, bool c, bool s);
   
   /**
    * Copy constructor
@@ -97,6 +109,20 @@ public:
    * @author Johan Defaye
    */
    void set_const(bool c) { _const = c;}
+   
+  /**
+   * @brief Return true if the Variable is static
+   * @return bool
+   * @author Johan Defaye
+   */
+   bool is_static() const { return _static;}
+   
+  /**
+   * @brief Set the _static attribute of the Variable
+   * @param s : static or not
+   * @author Johan Defaye
+   */
+   void set_static(bool s) { _static = s;}
   
   
   /* * * * * * * * * * * * *

@@ -1,34 +1,31 @@
 //@author : Ismail ELFAQIR
-#include <string>
 #include "If.h"
 
 using namespace std;
 
-If::If():Conditionnal_instruction(), block_type(3)
-{}
 
-If::If(int bt):Conditionnal_instruction(), block_type(bt)
-{}
 
-If::If(Condition *c):Conditionnal_instruction(c), block_type(3)
-{}
+If::If(Node * left, Node * right, Node * condition, const string & bt): Node(left, right), cond(condition)
+{
+	if (bt == "elseif") block_type = 2;
+	else if (bt == "else") block_type = 3;
+	else block_type = 1;
+}
 
-If::If(Condition *c, int bt):Conditionnal_instruction(c),block_type(bt)
-{}
 
-If::If(const If &obj):Conditionnal_instruction(obj),block_type(obj.block_type)
-{}
-
-If::~If()
-{}
+If::If(Node * left, Node * right, const string & bt): Node(left, right)
+{
+	block_type = 3;
+}
 
 int If::get_block_type() const{
 	return block_type;
 }
 
 void If::set_block_type(int bt){
-	block_type=bt;
+	block_type = bt;
 }
+
 
 string If::preTranslate() const
 {
@@ -36,28 +33,19 @@ string If::preTranslate() const
 
     switch (block_type) {
 	case block_if :
-	    block="if("+ get_condition().translate()+")";
+	    block="if(" + cond->translate() + ") ";
 	    break;
 	case block_else_if :
-	    block= "else if("+get_condition().translate()+")";
+	    block= "else if(" + cond->translate() + ") ";
 	    break;
 	case block_else :
-	    block= "else";
-	    break;
+        block= "else";
+        break;
     }
 
     res=block+"{\n";
-    /*
-     * here the first instruction is in the left_son the other are in his right_son ( of the left_son)
-     */
-    if(this->getLeftSon() != nullptr) {
-	res += this->getLeftSon()->translate()+"\n";
-	Node *my_instruction = this->getLeftSon()->getRightSon();
-	while(my_instruction != nullptr) {
-	    res += my_instruction->translate()+"\n";
-	    my_instruction = my_instruction->getRightSon();
-	}
-    }
+    
+    // the instructions are in the left_son (the first one IS the left son)
 
     return res;
 }

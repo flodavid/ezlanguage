@@ -1,21 +1,22 @@
 #ifndef IF_H
 #define IF_H
 
-#include "Conditionnal_instruction.h"
+#include "Node.h"
 
 #define block_if 1  
 #define block_else_if 2 
 #define block_else 3
 
 /**
- * @brief 
+
+ * @brief Node of the tree which represent a condition if, else or elseif
  * @author : Ismail ELFAQIR
- * 
  */
-class If 
-	: public Conditionnal_instruction {
+
+class If : Node {
 		
 protected:
+	Node * cond;
     int block_type;
 	
 public:
@@ -25,49 +26,25 @@ public:
 
 
     /**
-    * Default constructor
-    * Set block_type to block_else
-    * @author Ismail ELFAQIR
-    */
-    If();
-
-    /**
     * Constructor with parameters
     * Set the block_type to the parameter passed to the constructor
-    * @param bt : the block_type
+    * @param condition : the condition of the if
+    * @param left : left son
+    * @param right : right son
+    * @param bt : block if, else or elseif
     * @author Ismail ELFAQIR
     */
-    If(int bt);
+    If (Node * left, Node * right, Node * condition, const std::string & bt = "if");
 
-    /**
+	/**
     * Constructor with parameters
-    * Set the condition to the parameter passed to the constructor and the block_type to block_else
-    * @param c : pointer to the condition
+    * Set the block_type to the parameter passed to the constructor
+    * @param left : left son
+    * @param right : right son
+    * @param bt : block if, else or elseif
     * @author Ismail ELFAQIR
     */
-    If(Condition *c);
-
-    /**
-    * Constructor with parameters
-    * Set the block_type and the condition to the parameter passed to the constructor
-    * @param c : pointer to the condition
-    * @param bt : the block_type
-    * @author Ismail ELFAQIR
-    */
-    If(Condition *c, int bt);
-
-    /**
-    * Copy constructor
-    * @param obj : the If to copy
-    * @author Ismail ELFAQIR
-    */
-    If(const If &obj);
-
-    /**
-    * Destructor
-    * @author Ismail ELFAQIR
-    */
-    virtual ~If();
+    If(Node * left, Node * right, const std::string & bt = "else");
 
     /* * * * * * * * * * * * * *
     * ACCESSORS  AND MUTATORS *
@@ -79,6 +56,7 @@ public:
     */
     int get_block_type() const;
 
+
     /**
     * setter of block_type
     * @param bt : the block_type
@@ -86,9 +64,10 @@ public:
     */
     void set_block_type(int bt);
 
+
     /* * * * * * * *
-    * Translation  *
-    * * * * * * * **/
+     * Translation *
+     * * * * * * * */
     
     /**
      * @brief Translate the begining part of the If
