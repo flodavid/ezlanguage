@@ -1,0 +1,12 @@
+program main_simple_vide
+//author: Valentin GINISTY
+//+ test commentaires
+
+procedure main_simple_vide
+/*
+this is
+
+a multiple lignes commentaires
+*/
+//this is a test
+endprocedure

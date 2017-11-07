@@ -82,30 +82,29 @@ void parse_to_cpp(vector<char*> fic_ezl, string &input_files){
 	            // creation des fichiers cpp
 	            string fichier_tmp = string(fic_ezl[i]);
 
-
                 fichier_tmp = fichier_tmp.substr(fichier_tmp.find_last_of("/")+1, fichier_tmp.find_last_of(".") - fichier_tmp.find_last_of("/"));
                 fichier_tmp +="cpp";
                 FILE * cpp_file = fopen(fichier_tmp.c_str(), "w");
 
-				// cas où la création du fichier échoue
-                if(cpp_file == NULL){
-                    cerr << fichier_tmp << ": creation failed;" << endl;
-                    break;
-                }
+		    	// cas où la création du fichier échoue
+	            if(cpp_file == NULL) {
+	                cerr << fichier_tmp << ": creation failed;" << endl;
+	                break;
+	            }
 
-	            // parsing du fichiers ez en fichier cpp
-	            yyparse();
+                // parsing du fichiers ez en fichier cpp
+                yyparse();
 
-	            yyout = cpp_file;
+                yyout = cpp_file;
 
-	            // fermerture du fichier cpp
-	            fclose(cpp_file);
-	            input_files+=fichier_tmp + " ";
+                // fermerture du fichier cpp
+                fclose(cpp_file);
+                input_files+=fichier_tmp + " ";
 
-         		cout << "\033[1;36m=====================================\033[0m" << endl;
-         		cout << endl;
-	        }
-		}
+                cout << "\033[1;36m=====================================\033[0m" << endl;
+                cout << endl;
+            }
+        }
     }
 }
 
