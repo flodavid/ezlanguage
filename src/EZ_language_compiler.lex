@@ -159,7 +159,6 @@ minus     [-]
 (regex|REGEX)        	return(REGEX);
 (match|MATCH)        	return(MATCH);
 (search|SEARCH)         return(SEARCH);
-(replace|REPLACE)       return(REPLACE);
 
 
 (size|SIZE)             return(SIZE);
