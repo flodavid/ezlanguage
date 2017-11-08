@@ -2,6 +2,7 @@
 #define DECLARATION_FUNCTION_H
 
 #include "Node.h"
+#include "../hash_table/Variable.h"
 #include <vector>
 
 /**
@@ -18,8 +19,9 @@ class DeclarationFunction : public Node {
 
 protected:
     std::string function_name;
-    std::vector<std::pair<std::string, std::string> > arguments;
+    std::vector<Variable> arguments;
     std::string return_type;
+    Node* funReturn;
 
 public:
 
@@ -31,7 +33,7 @@ public:
      * @param arguments : arguments list of the function
      * @param type : return type of the function
      */
-    DeclarationFunction(Node * left, Node * right, const std::string & name, const std::vector<std::pair<std::string, std::string> > & arguments, const std::string & type);
+    DeclarationFunction(Node * left, Node * right, const std::string & name, const std::vector< Variable > & arguments, const std::string & type);
 
     /**
      * @brief Getter for the function's name
@@ -49,7 +51,7 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<std::pair<std::string, std::string> > getArguments() const {return arguments;}
+    std::vector<Variable> getArguments() const {return arguments;}
 
     /**
      * @brief Setter of the function's name
@@ -67,7 +69,7 @@ public:
      * @brief Setter of the list of arguments
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(const std::vector<std::pair<std::string, std::string>> & args){arguments= args;}
+    void setArguments(const std::vector<Variable> & args){arguments= args;}
 
     
     /**
