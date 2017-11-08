@@ -3,6 +3,11 @@ program example
 // Test when, case, comparaison, affectation, flux de sortie
 // Syntaxe validée
 
+shared function name() return integer
+BEGIN
+	return 5
+end
+
 procedure example()
 local i, max are integer
 
@@ -18,9 +23,3 @@ local i, max are integer
 		end case
 	end when
 end procedure
-
-shared function name() return integer
-BEGIN
-	return 5
-end
-

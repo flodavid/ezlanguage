@@ -29,6 +29,11 @@ std::string DeclarationProcedure::preTranslate() const {
 		res += ") {";
 	}
 
+    //translation of the instructions
+    res+= " "+ this->getLeftSon()->translate();
+    res+= "}";
+
+    res= this->getRightSon()->translate();
     return res;
 }
 

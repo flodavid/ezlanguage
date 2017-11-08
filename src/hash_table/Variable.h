@@ -3,7 +3,6 @@
 
 #include "HashElement.h"
 
-
 class Variable : public HashElement {
 private:
   
@@ -56,7 +55,13 @@ public:
    */
   Variable(const Variable & v);
   
-  
+
+  /**
+   * Default destructor
+   * @author Johan Defaye
+   */
+  ~Variable();
+
   
   /* * * * * * * * * * * * * *
    * ACCESSORS  AND MUTATORS *
@@ -133,8 +138,8 @@ public:
   bool is_equal(const Variable & v) const;
   
   /**
-   * @brief Print the Variable 
-   * @param flux : flux where the Variable will be print 
+   * @brief Print the Variable
+   * @param flux : flux where the Variable will be print
    * @author Johan Defaye
    */
   void print(std::ostream & flux) const;
@@ -155,13 +160,12 @@ bool operator!=(const Variable & v1, const Variable & v2);
 
 /** 
  * @brief Display a Variable
- * @param flux : flux where the Variable will be print 
+ * @param flux : flux where the Variable will be print
  * @param element : the Variable to display
  * @return std::ostream&
  * @author Johan Defaye
  */
 std::ostream& operator<<(std::ostream &flux, const Variable & element);
-
 
 
 

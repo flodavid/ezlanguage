@@ -30,7 +30,12 @@ string DeclarationFunction::preTranslate() const {
 }
 
 string DeclarationFunction::postTranslate() const
-{    
-    return "}";
+{
+    string res= "";
+    res+= "return " + getVariable() + ";\n";
+    res+= "}";
+
+    res+= this->getRightSon()->translate();
+    return res;
 }
 

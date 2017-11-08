@@ -13,5 +13,6 @@ string While::preTranslate() const {
 
 string While::postTranslate() const
 {
+    //    The instructions have been translated, the loop closes
     return "}";
 }

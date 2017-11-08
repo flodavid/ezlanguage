@@ -23,7 +23,7 @@ Node * Node::getLeftSon() const {
     return left_son;
 }
 
-Node * Node::getRightSon() const{
+Node * Node::getRightSon() const {
     return right_son;
 }
 
@@ -44,10 +44,8 @@ string Node::postTranslate() const
 string Node::translate() const {
     string left_translate= "";
     string right_translate= "";
-    if (left_son != nullptr)
-	left_translate = "\n" + left_son->translate() + "\n";
-    if (right_son != nullptr)
-	right_translate = "\n\n" + right_son->translate() + "\n";
+    if (left_son != nullptr)	left_translate = "\n" + left_son->translate() + "\n";
+    if (right_son != nullptr)	right_translate = "\n\n" + right_son->translate() + "\n";
     std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
     return preTranslate() + left_translate + postTranslate() + right_translate;
 }
