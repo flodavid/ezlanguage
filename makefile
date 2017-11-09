@@ -24,9 +24,9 @@ YACC_FLAGS =
 
 
 # Divers
-MOD_CPP = src/modules/ArrayAccess.cpp src/modules/Class.cpp src/modules/If.cpp src/modules/Node.cpp src/modules/Operator.cpp src/modules/ConditionalExpression.cpp
+MOD_CPP = src/modules/ArrayAccess.cpp src/modules/Class.cpp src/modules/If.cpp src/modules/Node.cpp src/modules/Operator.cpp src/modules/ConditionalExpression.cpp src/modules/Program.cpp 
 # Déclarations
-MOD_CPP += src/modules/DeclarationVariable.cpp src/modules/DeclarationMultipleVariable.cpp src/modules/DeclarationFunction.cpp src/modules/DeclarationProcedure.cpp src/modules/DeclarationContainer.cpp 
+MOD_CPP += src/modules/DeclarationVariable.cpp src/modules/DeclarationMultipleVariable.cpp src/modules/DeclarationFunction.cpp src/modules/DeclarationProcedure.cpp src/modules/DeclarationContainer.cpp
 # Boucles
 MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
 

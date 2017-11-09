@@ -13,12 +13,11 @@
 #include "../src/hash_table/Variable.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
 #include "../src/modules/Class.h"
-#include "../src/modules/Declaration.h"
+#include "../src/modules/DeclarationVariable.h"
 #include "../src/modules/DeclarationFunction.h"
 #include "../src/modules/DeclarationProcedure.h"
 #include "../src/modules/Node.h"
-#include "../src/modules/Program.h"
-
+#include "../src/modules/Program.h" // Empty Node
 
 
 //#include "global.h"
@@ -49,10 +48,10 @@ extern ScopeHashTable symbolTable;
 %}
 
 
-%token<numerical_value>	NUM_INTEGER // ENTIER
-%token<real_value>	NUM_REAL			  // REEL
+%token<texte>	NUM_INTEGER     // Integer
+%token<texte>	NUM_REAL			  // Real
 %token<texte> NAME RETOUR STRING STRING_PARAM
-%token	COMMA DEGRE POURCENT DIESE POINT QUOTE		// Caractères
+%token COMMA DEGRE POURCENT DIESE POINT QUOTE		// Caractères
 %token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
 %token EGAL NE LT LE GT GE PLUS MINUS MULT DIVISE
 %token  LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
@@ -63,7 +62,7 @@ extern ScopeHashTable symbolTable;
 %token WHILE ENDWHILE							  // while .. do ...
 %token REPEAT UNTIL ENDREPEAT 			// do .. while ...
 %token FOR IN DO STEP 
-%token FUNCTION PROCEDURE RETURN	 	// functions
+%token FUNCTION PROCEDURE RETURNS RETURN	 	// functions
 %token PRINT
 %token BEGINN END						        // can not use 'BEGIN'
 %token END_OF_FILE
@@ -89,28 +88,30 @@ extern ScopeHashTable symbolTable;
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS OPERATOR		// Operators
 
 %type<texte> type operators portee string designator
-%type<arbre> expression statement_sequence function_call single_expression
-%type<arbre> next_line  function procedure class
-%type<arbre> ROOT declaration_classes declaration_lists declaration_variables declaration_methods variable_with_scope variable_without_scope
+%type<arbre> statement_sequence function_call affect declaration statement
+%type<arbre> next_line function procedure class return 
+%type<arbre> ROOT imports declaration_arguments declaration_classes declarations_list declaration_variables declaration_methods variable_with_scope variable_without_scope
 %type<arbre> function_string map_declaration array_declaration vector_declaration list_declaration set_declaration
-%type<vecString> liste_argument
-%type<texte> nbrOrName params param_args param_type
-%type<texte> forDecl forType forRange forStep forBody
+%type<vecString> list_arguments
+%type<texte> expression single_expression names nbrOrName params param_args param_type
+%type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl
 
 
 %start ROOT
 %%
 
 ROOT:
-  PROGRAM NAME next_line declaration_class declarations_list PROCEDURE NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS next_line statement_sequence  END  END_OF_FILE
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS begin statement_sequence END  END_OF_FILE
 	{
-		Node* p_decl_class = $4;
-		Node* p_decl_list = $5;
-		Node* p_prog = $11;
+		Node* p_imports = $4;
+    /* TODO add program arguments logic */
+		Node* p_decl_class = $6;
+		Node* p_decl_list = $7;
+		Node* p_prog = $13;
 		p_decl_class->setRightSon(p_decl_list);
 		p_decl_list->setRightSon(p_prog);
 
-		Program *racine = new Program($2,p_decl_class);
+		Program *racine = new Program(p_imports, $2);
 
 		cout << racine->translate() << endl;
     /* TODO program translation save */
@@ -118,26 +119,9 @@ ROOT:
 	}
 ;
 
-// zero or several new lines
-next_line_null:
-| next_line {}
-;
-
 /* ******************
  *  PROGRAM MODULES *
  * ******************/
-
-declarations_list:
-  declaration_variables declaration_methods
-	{
-		// PDVariables* vars = (PDVariables*) $1;
-		// PDFunctions* functs = (PDFunctions*) $2;
-    Node* vars=  $1;
-    Node* functs = $2;
-		$1->setRightSon(functs);
-		$$ = vars;
-	}
-;
 
 // import modules or libraries
 imports:
@@ -163,6 +147,27 @@ declaration_classes:
 	}
 ;
 
+declarations_list:
+  declaration_variables declaration_methods
+    {
+      // PDVariables* vars = (PDVariables*) $1;
+      // PDFunctions* functs = (PDFunctions*) $2;
+      Node* vars=  $1;
+      Node* functs = $2;
+      $1->setRightSon(functs);
+      $$ = vars;
+    }
+  | declaration_methods declaration_variables
+    {
+      // PDVariables* vars = (PDVariables*) $1;
+      // PDFunctions* functs = (PDFunctions*) $2;
+      Node* functs = $1;
+      Node* vars= $2;
+      $1->setRightSon(vars);
+      $$ = vars;
+    }
+;
+
 declaration_variables:
 /* empty */ { $$ = NULL;}
 | variable_with_scope declaration_variables
@@ -170,8 +175,27 @@ declaration_variables:
 	}
 | variable_without_scope declaration_variables
 	{
-		$$ = new Declaration();
+	  /* $$ = new DeclarationVariable(); */
 	}
+;
+/* ******************
+ *    SUBMODULES    *
+ * ******************/
+
+/* imports */
+import:
+  IMPORT NAME next_line {
+    /* TODO import logic (name of module) */
+    cout << "importation du module " << $2 << endl;
+  }
+| INCLUDE string next_line {
+    /* TODO include import logic */
+    cout << " inclusion de la bibliothèque " << delete_quote($2) << endl ;
+  }
+| LIBRARY string next_line {
+    /* TODO library import logic */
+    cout << " inclusion de la LIBRARY " << delete_quote($2) << endl ;
+  }
 ;
 
 /* declaration_arguments */
@@ -202,14 +226,13 @@ class:
  * ********************/
 
 statement_sequence:
-  /* empty */ { cout<< "last statement"<< endl; $$ = new Declaration(); }
+  /* empty */ { cout<< "last statement"<< endl; /* $$ = new DeclarationVariable(); */ }
 | statement_sequence statement { }
 ;
 
 names:
   NAME              { $$ = $1; }
-| COMMA NAME names  { $$ = $1; }
-| COMMA NAME        { $$ = $1; }
+| names COMMA NAME  { $$ = $1 + ", " + $3; }
 ;
 
 /* ******************
@@ -233,38 +256,57 @@ declaration_methods:
 	}
 ;
 
+returnstype:
+  RETURNS type
+  {
+    // $$= new Type($2);
+  }
+;
+
+return:
+  RETURN expression
+  {
+    // $$= new Return($2);
+  }
+;
+
 function:
-  SHARED FUNCTION NAME LEFT_PARENTHESIS liste_argument {symbolTable.incScope(); }
-  RIGHT_PARENTHESIS RETURN type next_line  BEGINN  next_line statement_sequence RETURN expression next_line END endfunction
+  SHARED FUNCTION NAME LEFT_PARENTHESIS list_arguments // {symbolTable.incScope(); }
+  RIGHT_PARENTHESIS returnstype next_line begin statement_sequence return next_line END endfunction
 	{
     /* TODO function declaration logic 1 */
 		cout << "declaration de la fonction " << $3 << endl;
 	}
-| FUNCTION NAME LEFT_PARENTHESIS liste_argument { symbolTable.incScope(); }
-  RIGHT_PARENTHESIS RETURN type next_line  BEGINN  next_line statement_sequence RETURN expression next_line END endfunction {
+| FUNCTION NAME LEFT_PARENTHESIS list_arguments // { symbolTable.incScope(); }
+  RIGHT_PARENTHESIS returnstype next_line begin statement_sequence return next_line END endfunction {
     cout << "declaration de la fonction" << $2 << endl;
-
-		DeclarationFunction *f = new DeclarationFunction($2,$4,$8,$12,"blabla");
+    // Right son of last instruction is return statement
+    $9->setRightSon($10);
+		DeclarationFunction *f = new DeclarationFunction($9, nullptr, $2,$4,$6);
 		$$ = f;
-		//$$ = new Declaration();
+		//$$ = new DeclarationVariable();
 		symbolTable.decScope();
 	}
-| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS IS EXTERN NAME {
+| FUNCTION NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS IS EXTERN NAME {
   /* TODO function declaration logic 3 */
     cout << "declaration d'une fonction externe " << endl;
   }
 ;
 
+procedureDecl:
+  PROCEDURE NAME LEFT_PARENTHESIS list_arguments
+  {
+    cout << "Déclaration de la procedure " << $2 << endl;
+    symbolTable.incScope();
+  }
+;
+
 procedure:
-  PROCEDURE NAME LEFT_PARENTHESIS liste_argument { symbolTable.incScope(); }
-  RIGHT_PARENTHESIS next_line statement_sequence  END endprocedure
+  procedureDecl RIGHT_PARENTHESIS next_line statement_sequence END endprocedure
   {
     /* TODO procedure declaration logic 1 */
-    cout << "Déclaration de la procedure " << $2 << endl;
-
-    DeclarationProcedure *f = new DeclarationProcedure($2,$4,$8);
-		$$ = f;
-		//$$ = new Declaration();
+    // DeclarationProcedure *f = new DeclarationProcedure($1,$4,$4);
+		// $$ = f;
 		symbolTable.decScope();
   }
 | PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END endprocedure {
@@ -292,12 +334,20 @@ statement:
 | variable_without_scope next_line  { }
 | affectation next_line             { } 
 | function_call next_line           { }
+| declaration { $$ = $1; }
+;
+
+declaration:
+  map_declaration     { $$ = $1; }
+| array_declaration   { $$ = $1; }
+| vector_declaration  { $$ = $1; }
+| list_declaration    { $$ = $1; }
+| set_declaration     { $$ = $1; }
 ;
 
 statement:
   next_line
-| variable_with_scope  {}
-| start_with_name {}  // variables - functions - construct
+| variable_with_scope               { }
 | variable_without_scope next_line  { }
 | affectation next_line             { } 
 | function_call next_line           { }
@@ -315,7 +365,7 @@ statement:
 /* ************************
  *  Complex Instructions  *
  * ************************/
-function_call: 
+function_call:
   NAME POINT simple_function {}
 | function_call POINT simple_function {}
 | simple_function { }
@@ -494,29 +544,25 @@ variable_without_scope:
     cout << "Déclaration de la variable1 " << $1 << endl;
 		Variable v($1,$3);
 		symbolTable.addElement(v);
-		$$ = new Declaration($1,$3,"",false);
+		$$ = new DeclarationVariable(nullptr, nullptr, $1,$3,"",$4,false);
 	}
 | NAME names ARE type affect
 	{
-		cout << "Declaration des variables1 "<< $1 << endl;
+		cout << "DeclarationVariable des variables1 "<< $1 << endl;
 	}
 | NAME IS SHARED type affect
 	{
-		cout << "Declaration de la variable1 " << $1 << endl;
+		cout << "DeclarationVariable de la variable1 " << $1 << endl;
 	}
 | NAME names ARE SHARED type affect
 	{
-		cout << "Declaration des variables1 "<< $1 << endl;
+		cout << "DeclarationVariable des variables1 "<< $1 << endl;
 	}
-| declaration_construct
-	{
-		cout << " declaration de contructeur " << endl ;
-	}
-// | variable_construct
-//   {
-//     /* TODO variable construction logic (with class) */
-//     cout << "variable construction (class)" << endl ;
-//   } 
+| variable_construct
+  {
+    /* TODO variable construction logic (with class) */
+    cout << "variable construction (class)" << endl ;
+  } 
 ;
 
 variable_with_scope:
@@ -524,28 +570,28 @@ variable_with_scope:
   	{
   		Variable v($2,$4);
   		symbolTable.addElement(v);
-  		$$ = new Declaration($2,$4,$1,false);
+  		// $$ = new DeclarationVariable($2,$4,$1,false);
   	}
 | portee NAME names ARE type next_line
 	{
-		cout << "  Declaration des variables  avec portee "<< $2 << endl;
+		cout << "  list_arguments des variables  avec portee "<< $2 << endl;
 	}
 | portee NAME IS SHARED type affect next_line
 	{
 		Variable v($2,$4);
 		symbolTable.addElement(v);
-		$$ = new Declaration($2,$4,$1,true);
+		// $$ = new DeclarationVariable($2,$4,$1,true);
 	}
-| portee NAME noms ARE SHARED type next_line
+| portee NAME names ARE SHARED type next_line
 	{
-		cout << "  Declaration des variables  avec portee "<< $2 << endl;
+		cout << "  DeclarationVariable des variables  avec portee "<< $2 << endl;
 	}
 
 variable_constant:
-  CONSTANT NAME IS  type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
-| CONSTANT NAME names ARE  type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
-| CONSTANT NAME IS SHARED type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
-| CONSTANT NAME names ARE SHARED type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
+  CONST NAME IS  type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
+| CONST NAME names ARE  type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
+| CONST NAME IS SHARED type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
+| CONST NAME names ARE SHARED type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
 ;
 
 variable_construct:
@@ -556,44 +602,45 @@ variable_construct:
 
 expression:
   /* TODO expressions logic */
-  expression EGAL EGAL expression { $$ = new Declaration(); }
-| expression NE expression {$$ = new Declaration();}
-| expression LT expression { $$ = new Declaration(); }
-| expression LE expression { $$ = new Declaration();}
-| expression GT expression {$$ = new Declaration();}
-| expression GE expression { $$ = new Declaration();}
-| expression PLUS expression {$$ = new Declaration();}
-| expression MINUS expression { $$ = new Declaration();}
-| expression MULT expression {$$ = new Declaration();}
-| expression DIVISE expression {$$ = new Declaration(); }
-| expression AND AND expression { $$ = new Declaration();}
-| expression OR OR expression {$$ = new Declaration(); }
-| designator {$$ = new Declaration();}
-| NUM_REAL { $$ = new Declaration(); } //real   /* TODO ADD litteral creation */
-| NUM_INTEGER {$$ = new Declaration(); }  // integer /* TODO ADD litteral creation */
-| single_expression { yyprint("single_expression");  $$ = new Declaration(); /* $1 = $1 */ }
+  expression EGAL EGAL expression { /* $$ = new DeclarationVariable(); */ }
+| expression NE expression {/* $$ = new DeclarationVariable(); */ }
+| expression LT expression { /* $$ = new DeclarationVariable(); */ }
+| expression LE expression { /* $$ = new DeclarationVariable(); */ }
+| expression GT expression {/* $$ = new DeclarationVariable(); */ }
+| expression GE expression { /* $$ = new DeclarationVariable(); */ }
+| expression PLUS expression {/* $$ = new DeclarationVariable(); */ }
+| expression MINUS expression { /* $$ = new DeclarationVariable(); */ }
+| expression MULT expression {/* $$ = new DeclarationVariable(); */ }
+| expression DIVISE expression {/* $$ = new DeclarationVariable(); */ }
+| expression AND AND expression { /* $$ = new DeclarationVariable(); */ }
+| expression OR OR expression {/* $$ = new DeclarationVariable(); */ }
+| single_expression { yyprint("single_expression");  /* $$ = new DeclarationVariable(); */ /* $1 = $1 */ }
 ;
 
+expressions:
+  expression  { cout <<"affichage  : " <<  $1  << endl; }
+| string      { cout << "affichage  : " << delete_quote($1) << endl; }
+| expression COMMA expressions  { cout <<"affichage  : " <<  $1 << endl; }
+| string COMMA expressions      {   cout << "affichage : " << delete_quote($1) << endl; }
+;
+
+params:
+  expression { $$ = $1;}
+| expression COMMA params { $$ = $1 ;}
+;
 
 single_expression:
   /* single_expressions logic */
-  PLUS single_expression { $$ = new Declaration(); }
-| single_expression XOR single_expression { $$ = new Declaration();}
-| NOT single_expression {$$ = new Declaration();}
-| single_expression MOD single_expression { $$ = new Declaration();}
-| single_expression POW single_expression { $$ = new Declaration(); }
-| ABS single_expression { $$ = new Declaration();}
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { $$ = new Declaration();}
-| NUM_REAL { $$ = $1;} //real
-| NUM_INTEGER { $$ = $1;  }  // integer
-| designator { $$ = $1;}
-| designator {}
-| function_call {  $$ = $1;}
-| map_declaration {$$ = $1;}
-| array_declaration { $$ = $1;}
-| vector_declaration   {$$ = $1;}
-| list_declaration  { $$ = $1;}
-| set_declaration {$$ = $1;}
+  PLUS single_expression { /* $$ = new DeclarationVariable(); */ }
+| single_expression XOR single_expression { /* $$ = new DeclarationVariable(); */ }
+| NOT single_expression { /* $$ = new DeclarationVariable(); */ }
+| single_expression MOD single_expression { /* $$ = new DeclarationVariable(); */ }
+| single_expression POW single_expression { /* $$ = new DeclarationVariable(); */ }
+| ABS single_expression { /* $$ = new DeclarationVariable(); */ }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new DeclarationVariable(); */ }
+| NUM_REAL { $$ = $1; } //real
+| NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
+| designator { /* $$ = String($1); */ }
 ;
 
 /* ******************
@@ -651,22 +698,10 @@ operators:
 | DIVISE { $$ =  "/";}
 ;
 
-expressions:
-  expression   { cout <<"affichage  : " <<  $1  << endl; }
-| string    {   cout << "affichage  : " << delete_quote($1) << endl; }
-| expression COMMA expressions { cout <<"affichage  : " <<  $1 << endl; }
-| string  COMMA expressions {   cout << "affichage : " << delete_quote($1) << endl; }
-;
-
-params:
-  expression { $$ = $1;}
-| expression COMMA params { $$ = $1 ;}
-;
-
 nbrOrName:
-  NUM_INTEGER { $$ = to_string($1); }
-| NUM_REAL    { $$ = $1; }
-| NAME        { $$ = $1; }
+  NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
+| NUM_REAL    { /* $$ = Real($1); */ }
+| NAME        { /* $$ = String($1); */ }
 ;
 
 portee: 
