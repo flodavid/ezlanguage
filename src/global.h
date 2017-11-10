@@ -3,7 +3,7 @@
 
 
 #include "./modules/Node.h"
-#include "./hash_table/Variable.h"
+#include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
 #include <vector>
 
@@ -19,7 +19,7 @@ typedef struct s_mon_type {
     bool booleen;
     std::string texte;
     Node* arbre;
-    vector<Variable> vecString;
+    vector<VariableHashed> vecString;
 //    MaClasse	une_maclasse;
 } mon_type;
 

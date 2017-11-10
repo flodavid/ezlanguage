@@ -2,25 +2,25 @@
 
 using namespace std;
 
-ClassHashTable::ClassHashTable(): HashTable< ClassDeclaration >()
+ClassHashTable::ClassHashTable(): HashTable< ClassHashed >()
 {}
 
 
 
-ClassHashTable::ClassHashTable(int size): HashTable< ClassDeclaration >(size)
+ClassHashTable::ClassHashTable(int size): HashTable< ClassHashed >(size)
 {}
 
 
 
 bool ClassHashTable::contains(const string& id) const
 {
-    ClassDeclaration cd(id);
+    ClassHashed cd(id);
     return HashTable::contains(cd, id);
 }
 
 
 
-bool ClassHashTable::isParentClass(const string& parentClass, const ClassDeclaration& Class) const
+bool ClassHashTable::isParentClass(const string& parentClass, const ClassHashed& Class) const
 {
   bool haveParentClass;
   

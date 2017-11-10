@@ -2,10 +2,10 @@
 #define CLASSHASHTABLE_H
 
 #include "HashTable.h"
-#include "ClassDeclaration.h"
+#include "ClassHashed.h"
 
 
-class ClassHashTable : public HashTable<ClassDeclaration> {
+class ClassHashTable : public HashTable<ClassHashed> {
   
   private:
     
@@ -41,20 +41,20 @@ class ClassHashTable : public HashTable<ClassDeclaration> {
        
        
     /**
-     * @brief Test if a ClassDeclaration is in the hash table
-     * @param id : identifier of the ClassDeclaration
+     * @brief Test if a ClassHashed is in the hash table
+     * @param id : identifier of the ClassHashed
      * @author Johan Defaye
      */
     bool contains(const std::string & id) const;
     
     
     /**
-     * @brief Test if a ClassDeclaration is one of the parent class of another ClassDeclaration
+     * @brief Test if a ClassHashed is one of the parent class of another ClassHashed
      * @param parentClass : name of the supposed parent class
-     * @param Class : ClassDeclaration
+     * @param Class : ClassHashed
      * @author Johan Defaye
      */
-    bool isParentClass(const std::string & parentClass, const ClassDeclaration & Class) const;
+    bool isParentClass(const std::string & parentClass, const ClassHashed & Class) const;
     
 };
 

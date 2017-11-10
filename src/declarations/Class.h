@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include "Node.h"
-#include "DeclarationFunction.h"
-#include "../hash_table/ClassDeclaration.h"
-#include "../hash_table/Variable.h"
+#include "../modules/Node.h"
+#include "../hash_table/ClassHashed.h"
+#include "Function.h"
+#include "Variable.h"
 
 /**
  * @brief 
@@ -17,11 +17,11 @@
 class Class : public Node {
 protected:
 
-    ClassDeclaration *m_class;
+    ClassHashed *m_class;
     // as the validate document of Houssam BENHOUD (les classes.pdf) all variables and functions of classes are public
-    std::vector<DeclarationFunction *> public_functions;
+    std::vector<Function *> public_functions;
     // here are the static functions
-    std::vector<DeclarationFunction *> static_functions;
+    std::vector<Function *> static_functions;
     std::vector<Variable *> public_variables;
 
 public:
@@ -44,7 +44,7 @@ public:
     * @param c : class declaration
     * @author Ismail ELFAQIR
     */
-    Class(ClassDeclaration *c);
+    Class(ClassHashed *c);
 
     /**
     * Constructor with parameters
@@ -55,9 +55,9 @@ public:
     * @param variables : vector of attributes
     * @author Ismail ELFAQIR
     */
-    Class(ClassDeclaration *c,
-                         const std::vector<DeclarationFunction *> &functions,
-                         const std::vector<DeclarationFunction *> &s_functions,
+    Class(ClassHashed *c,
+                         const std::vector<Function *> &functions,
+                         const std::vector<Function *> &s_functions,
                          const std::vector<Variable *> &variables );
 
 
@@ -69,8 +69,8 @@ public:
     * @param variables : vector of attributes
     * @author Ismail ELFAQIR
     */
-    Class(ClassDeclaration *c,
-                         const std::vector<DeclarationFunction *> &functions,
+    Class(ClassHashed *c,
+                         const std::vector<Function *> &functions,
                          const std::vector<Variable *> &variables );
 
     /**
@@ -80,7 +80,7 @@ public:
     * @param functions : vector of functions
     * @author Ismail ELFAQIR
     */
-    Class(ClassDeclaration *c, const std::vector<DeclarationFunction *> &functions);
+    Class(ClassHashed *c, const std::vector<Function *> &functions);
 
 
     /**
@@ -90,7 +90,7 @@ public:
     * @param variables : vector of attributes
     * @author Ismail ELFAQIR
     */
-    Class(ClassDeclaration *c, const std::vector<Variable *> &variables);
+    Class(ClassHashed *c, const std::vector<Variable *> &variables);
 
     /**
     * Copy constructor
@@ -113,7 +113,7 @@ public:
     * getter of the class declaration
     * @author Ismail ELFAQIR
     */
-    ClassDeclaration * get_class() const;
+    ClassHashed * get_class() const;
 
     /**
     * getter of variables
@@ -125,20 +125,20 @@ public:
     * getter of functions
     * @author Ismail ELFAQIR
     */
-    const std::vector<DeclarationFunction *>&  get_functions() const;
+    const std::vector<Function *>&  get_functions() const;
 
     /**
     * getter of static functions
     * @author Ismail ELFAQIR
     */
-    const std::vector<DeclarationFunction *>&  get_static_functions() const;
+    const std::vector<Function *>&  get_static_functions() const;
 
     /**
     * setter of class declaration
     * @param name : the pointer of this class declaration
     * @author Ismail ELFAQIR
     */
-    void set_class(ClassDeclaration *c);
+    void set_class(ClassHashed *c);
 
     /**
     * setter of variables
@@ -152,14 +152,14 @@ public:
     * @param functions : vector of functions
     * @author Ismail ELFAQIR
     */
-    void set_functions(const std::vector<DeclarationFunction *>&functions);
+    void set_functions(const std::vector<Function *>&functions);
 
     /**
     * setter of variables
     * @param s_functions : vector of static functions
     * @author Ismail ELFAQIR
     */
-    void set_static_functions(const std::vector<DeclarationFunction *>&s_functions);
+    void set_static_functions(const std::vector<Function *>&s_functions);
 
     /* * * * * *
      * METHOD  *
@@ -171,7 +171,7 @@ public:
      * @author Ismail ELFAQIR
      */
 
-    void add_function(DeclarationFunction *function);
+    void add_function(Function *function);
 
     /**
      * @brief add an static function to this class
@@ -179,7 +179,7 @@ public:
      * @author Ismail ELFAQIR
      */
 
-    void add_static_function(DeclarationFunction *function);
+    void add_static_function(Function *function);
 
     /**
      * @brief add an attribute to this class
@@ -196,7 +196,7 @@ public:
      * @author Ismail ELFAQIR
      */
 
-    bool is_in_class(DeclarationFunction * function);
+    bool is_in_class(Function * function);
 
 
     /**

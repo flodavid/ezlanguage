@@ -1,13 +1,16 @@
 //@author : GINISTY Valentin
-#include "DeclarationVariable.h"
+#include "Variable.h"
 
 using namespace std;
 
-DeclarationVariable::DeclarationVariable(Node * left, Node * right, const string & n, const string & t, const string & s, Node *content, bool co, bool st):
+Variable::Variable(Node * left, Node * right, const string & n, const string & t, const string & s, Node *content, bool co, bool st):
     Node(left, right), name(n), type(t), scope(s), affect(content), isConst(co), isStatic(st)
-{}
+{
+    // TODO create a hashed instance of the variable and store it in the hash table
+    hashed= new VariableHashed();
+}
 
-string DeclarationVariable::preTranslate() const {
+string Variable::preTranslate() const {
     string res = "";
     if (isStatic) {
 		res += "static ";
@@ -35,4 +38,8 @@ string DeclarationVariable::preTranslate() const {
 	}
 	else res += ";";
     return res;
+}
+
+const VariableHashed* Variable::getVariableHashed() const {
+    return hashed;
 }

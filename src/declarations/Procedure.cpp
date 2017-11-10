@@ -1,12 +1,12 @@
 //@author GARNIER Antoine
-#include "DeclarationProcedure.h"
+#include "Procedure.h"
 
 using namespace std;
 
-DeclarationProcedure::DeclarationProcedure(Node * left, Node * right, const string & name, const vector<pair<string, string> > & args): Node(left, right), procedure_name(name), arguments(args)
+Procedure::Procedure(Node * left, Node * right, const string & name, const vector<pair<string, string> > & args): Node(left, right), procedure_name(name), arguments(args)
 {}
 
-std::string DeclarationProcedure::preTranslate() const {
+std::string Procedure::preTranslate() const {
     string res = "";
 	
 	if (procedure_name == "main") res = "int main(int argc, char ** argv) {";
@@ -37,7 +37,7 @@ std::string DeclarationProcedure::preTranslate() const {
     return res;
 }
 
-string DeclarationProcedure::postTranslate() const
+string Procedure::postTranslate() const
 {
     return "}";
 }

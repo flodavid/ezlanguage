@@ -8,14 +8,14 @@
 #include <vector>
 
 #include "../src/global.h"	 // we start from ../obj because it's important
-#include "../src/hash_table/Function.h"
+#include "../src/hash_table/FunctionHashed.h"
 #include "../src/hash_table/ScopeHashTable.h"
-#include "../src/hash_table/Variable.h"
+#include "../src/hash_table/VariableHashed.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
-#include "../src/modules/Class.h"
-#include "../src/modules/DeclarationVariable.h"
-#include "../src/modules/DeclarationFunction.h"
-#include "../src/modules/DeclarationProcedure.h"
+#include "../src/declarations/Class.h"
+#include "../src/declarations/Function.h"
+#include "../src/declarations/Procedure.h"
+#include "../src/declarations/Variable.h"
 #include "../src/modules/Node.h"
 #include "../src/modules/Program.h" // Empty Node
 
@@ -101,17 +101,22 @@ extern ScopeHashTable symbolTable;
 %%
 
 ROOT:
-  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS begin statement_sequence END  END_OF_FILE
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS begin statement_sequence END END_OF_FILE
 	{
 		Node* p_imports = $4;
+		Program *racine = new Program(p_imports, $2);
     /* TODO add program arguments logic */
 		Node* p_decl_class = $6;
 		Node* p_decl_list = $7;
+    
+    Node* p_args = $5;
 		Node* p_prog = $13;
-		p_decl_class->setRightSon(p_decl_list);
-		p_decl_list->setRightSon(p_prog);
+    // Function* main= new Function(p_prog, nullptr, $9, p_args, "int");
 
-		Program *racine = new Program(p_imports, $2);
+    p_imports->setRightSon(p_args);
+    p_args->setRightSon(p_decl_class);
+		p_decl_class->setRightSon(p_decl_list);
+		// p_decl_list->setRightSon(main);
 
 		cout << racine->translate() << endl;
     /* TODO program translation save */
@@ -175,7 +180,7 @@ declaration_variables:
 	}
 | variable_without_scope declaration_variables
 	{
-	  /* $$ = new DeclarationVariable(); */
+	  /* $$ = new Variable(); */
 	}
 ;
 /* ******************
@@ -226,7 +231,7 @@ class:
  * ********************/
 
 statement_sequence:
-  /* empty */ { cout<< "last statement"<< endl; /* $$ = new DeclarationVariable(); */ }
+  /* empty */ { cout<< "last statement"<< endl; /* $$ = new Variable(); */ }
 | statement_sequence statement { }
 ;
 
@@ -244,13 +249,13 @@ declaration_methods:
   /* empty */ { $$ = NULL;}
 | declaration_methods function next_line
 	{
-		DeclarationFunction* f = (DeclarationFunction*) $2;
+		Function* f = (Function*) $2;
 		f->setLeftSon($1);
 		$$ = f;
 	}
 | declaration_methods procedure next_line
 	{
-		DeclarationProcedure* p = (DeclarationProcedure*) $2;
+		Procedure* p = (Procedure*) $2;
 		p->setLeftSon($1);
 		$$ = p;
 	}
@@ -282,9 +287,9 @@ function:
     cout << "declaration de la fonction" << $2 << endl;
     // Right son of last instruction is return statement
     $9->setRightSon($10);
-		DeclarationFunction *f = new DeclarationFunction($9, nullptr, $2,$4,$6);
+		Function *f = new Function($9, nullptr, $2,$4,$6);
 		$$ = f;
-		//$$ = new DeclarationVariable();
+		//$$ = new Variable();
 		symbolTable.decScope();
 	}
 | FUNCTION NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS IS EXTERN NAME {
@@ -305,7 +310,7 @@ procedure:
   procedureDecl RIGHT_PARENTHESIS next_line statement_sequence END endprocedure
   {
     /* TODO procedure declaration logic 1 */
-    // DeclarationProcedure *f = new DeclarationProcedure($1,$4,$4);
+    // Procedure *f = new Procedure($1,$4,$4);
 		// $$ = f;
 		symbolTable.decScope();
   }
@@ -521,18 +526,18 @@ next_line:
 
 list_arguments:
   /* empty */ {
-    vector<Variable> v;
+    vector<VariableHashed> v;
     $$ = v;
   }
 | NAME IS type
  	{
- 		vector<Variable> v;
- 		v.push_back(Variable($1,$3));
+ 		vector<VariableHashed> v;
+ 		v.push_back(VariableHashed($1,$3));
  		$$ = v;
  	}
 | NAME IS type COMMA list_arguments
  	{
- 		$5.push_back(Variable($1,$3));
+ 		$5.push_back(VariableHashed($1,$3));
  		$$ = $5;
  	}
 | NAME names ARE type { /* todo list_arguments logic */ }
@@ -542,21 +547,21 @@ variable_without_scope:
   NAME IS type affect
 	{
     cout << "Déclaration de la variable1 " << $1 << endl;
-		Variable v($1,$3);
+		VariableHashed v($1,$3);
 		symbolTable.addElement(v);
-		$$ = new DeclarationVariable(nullptr, nullptr, $1,$3,"",$4,false);
+		$$ = new Variable(nullptr, nullptr, $1,$3,"",$4,false);
 	}
 | NAME names ARE type affect
 	{
-		cout << "DeclarationVariable des variables1 "<< $1 << endl;
+		cout << "Variable des variables1 "<< $1 << endl;
 	}
 | NAME IS SHARED type affect
 	{
-		cout << "DeclarationVariable de la variable1 " << $1 << endl;
+		cout << "Variable de la variable1 " << $1 << endl;
 	}
 | NAME names ARE SHARED type affect
 	{
-		cout << "DeclarationVariable des variables1 "<< $1 << endl;
+		cout << "Variable des variables1 "<< $1 << endl;
 	}
 | variable_construct
   {
@@ -568,9 +573,9 @@ variable_without_scope:
 variable_with_scope:
   portee NAME IS type affect next_line
   	{
-  		Variable v($2,$4);
+  		VariableHashed v($2,$4);
   		symbolTable.addElement(v);
-  		// $$ = new DeclarationVariable($2,$4,$1,false);
+  		// $$ = new Variable($2,$4,$1,false);
   	}
 | portee NAME names ARE type next_line
 	{
@@ -578,13 +583,13 @@ variable_with_scope:
 	}
 | portee NAME IS SHARED type affect next_line
 	{
-		Variable v($2,$4);
+		VariableHashed v($2,$4);
 		symbolTable.addElement(v);
-		// $$ = new DeclarationVariable($2,$4,$1,true);
+		// $$ = new Variable($2,$4,$1,true);
 	}
 | portee NAME names ARE SHARED type next_line
 	{
-		cout << "  DeclarationVariable des variables  avec portee "<< $2 << endl;
+		cout << "  Variable des variables  avec portee "<< $2 << endl;
 	}
 
 variable_constant:
@@ -602,19 +607,19 @@ variable_construct:
 
 expression:
   /* TODO expressions logic */
-  expression EGAL EGAL expression { /* $$ = new DeclarationVariable(); */ }
-| expression NE expression {/* $$ = new DeclarationVariable(); */ }
-| expression LT expression { /* $$ = new DeclarationVariable(); */ }
-| expression LE expression { /* $$ = new DeclarationVariable(); */ }
-| expression GT expression {/* $$ = new DeclarationVariable(); */ }
-| expression GE expression { /* $$ = new DeclarationVariable(); */ }
-| expression PLUS expression {/* $$ = new DeclarationVariable(); */ }
-| expression MINUS expression { /* $$ = new DeclarationVariable(); */ }
-| expression MULT expression {/* $$ = new DeclarationVariable(); */ }
-| expression DIVISE expression {/* $$ = new DeclarationVariable(); */ }
-| expression AND AND expression { /* $$ = new DeclarationVariable(); */ }
-| expression OR OR expression {/* $$ = new DeclarationVariable(); */ }
-| single_expression { yyprint("single_expression");  /* $$ = new DeclarationVariable(); */ /* $1 = $1 */ }
+  expression EGAL EGAL expression { /* $$ = new Variable(); */ }
+| expression NE expression {/* $$ = new Variable(); */ }
+| expression LT expression { /* $$ = new Variable(); */ }
+| expression LE expression { /* $$ = new Variable(); */ }
+| expression GT expression {/* $$ = new Variable(); */ }
+| expression GE expression { /* $$ = new Variable(); */ }
+| expression PLUS expression {/* $$ = new Variable(); */ }
+| expression MINUS expression { /* $$ = new Variable(); */ }
+| expression MULT expression {/* $$ = new Variable(); */ }
+| expression DIVISE expression {/* $$ = new Variable(); */ }
+| expression AND AND expression { /* $$ = new Variable(); */ }
+| expression OR OR expression {/* $$ = new Variable(); */ }
+| single_expression { yyprint("single_expression");  /* $$ = new Variable(); */ /* $1 = $1 */ }
 ;
 
 expressions:
@@ -631,13 +636,13 @@ params:
 
 single_expression:
   /* single_expressions logic */
-  PLUS single_expression { /* $$ = new DeclarationVariable(); */ }
-| single_expression XOR single_expression { /* $$ = new DeclarationVariable(); */ }
-| NOT single_expression { /* $$ = new DeclarationVariable(); */ }
-| single_expression MOD single_expression { /* $$ = new DeclarationVariable(); */ }
-| single_expression POW single_expression { /* $$ = new DeclarationVariable(); */ }
-| ABS single_expression { /* $$ = new DeclarationVariable(); */ }
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new DeclarationVariable(); */ }
+  PLUS single_expression { /* $$ = new Variable(); */ }
+| single_expression XOR single_expression { /* $$ = new Variable(); */ }
+| NOT single_expression { /* $$ = new Variable(); */ }
+| single_expression MOD single_expression { /* $$ = new Variable(); */ }
+| single_expression POW single_expression { /* $$ = new Variable(); */ }
+| ABS single_expression { /* $$ = new Variable(); */ }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new Variable(); */ }
 | NUM_REAL { $$ = $1; } //real
 | NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
 | designator { /* $$ = String($1); */ }

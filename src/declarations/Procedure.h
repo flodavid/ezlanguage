@@ -1,7 +1,7 @@
 #ifndef DECLARATION_PROCEDURE_H
 #define DECLARATION_PROCEDURE_H
 
-#include "Node.h"
+#include "../modules/Node.h"
 #include <vector>
 
 
@@ -13,7 +13,7 @@
  *              instruction(s);
  *         end procedure
  */
-class DeclarationProcedure : public Node {
+class Procedure : public Node {
 
 protected:
     std::string procedure_name;
@@ -28,7 +28,7 @@ public:
      * @param name : procedure's name
      * @param args : arguments list of the procedure
      */
-    DeclarationProcedure(Node * left, Node * right, const std::string & name, const std::vector<std::pair<std::string, std::string> > & args);
+    Procedure(Node * left, Node * right, const std::string & name, const std::vector<std::pair<std::string, std::string> > & args);
 
     /**
      * @brief Getter for the procedure's name

@@ -1,7 +1,7 @@
 #ifndef DECLARATIONMULTIPLEVARIABLE_H
 #define DECLARATIONMULTIPLEVARIABLE_H
 
-#include "Node.h"
+#include "../modules/Node.h"
 #include <vector>
 
 /**
@@ -9,7 +9,7 @@
  * Exemple : locale a, b, c are integer -> int a, b, c;
  * @author Johan Defaye
  */
-class DeclarationMultipleVariable : public Node {
+class MultipleVariable : public Node {
 	
 	protected:
 		std::vector<std::string> names;
@@ -24,7 +24,7 @@ class DeclarationMultipleVariable : public Node {
 		 * @param n : names of the variable to declare
 		 * @param t :type of alle the variable to declare 
 		 */
-		DeclarationMultipleVariable(Node * left, Node * right, const std::vector<std::string> & n, const std::string & t);
+		MultipleVariable(Node * left, Node * right, const std::vector<std::string> & n, const std::string & t);
 		
 		
 		virtual std::string preTranslate() const;

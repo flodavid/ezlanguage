@@ -2,23 +2,23 @@
 
 using namespace std;
 
-ScopeHashTable::ScopeHashTable(): HashTable< Variable >(), _scopeStack(), _currentScope(0)
+ScopeHashTable::ScopeHashTable(): HashTable< VariableHashed >(), _scopeStack(), _currentScope(0)
 {
-  list<list<Variable>::iterator> l;
+  list<list<VariableHashed>::iterator> l;
   _scopeStack.push(l);
 }
 
 
 
-ScopeHashTable::ScopeHashTable(unsigned int size): HashTable< Variable >(size), _scopeStack(), _currentScope(0)
+ScopeHashTable::ScopeHashTable(unsigned int size): HashTable< VariableHashed >(size), _scopeStack(), _currentScope(0)
 {
-  list<list<Variable>::iterator> l;
+  list<list<VariableHashed>::iterator> l;
   _scopeStack.push(l);
 }
 
 
 
-ScopeHashTable::ScopeHashTable(const ScopeHashTable& table): HashTable< Variable >(table), _scopeStack(table.get_scopeStack()), _currentScope(table.get_currentScope())
+ScopeHashTable::ScopeHashTable(const ScopeHashTable& table): HashTable< VariableHashed >(table), _scopeStack(table.get_scopeStack()), _currentScope(table.get_currentScope())
 {}
 
 
@@ -26,7 +26,7 @@ ScopeHashTable::ScopeHashTable(const ScopeHashTable& table): HashTable< Variable
 void ScopeHashTable::incScope()
 {
   _currentScope += 1;
-  list<list<Variable>::iterator> l;
+  list<list<VariableHashed>::iterator> l;
   _scopeStack.push(l);
 }
 
@@ -36,7 +36,7 @@ void ScopeHashTable::decScope()
 {
   if (_currentScope == 0) throw string("Can not have a scope less than zero");
   else {
-    list<list<Variable>::iterator>::iterator it;
+    list<list<VariableHashed>::iterator>::iterator it;
     int index;
     for (it = _scopeStack.top().begin(); it != _scopeStack.top().end(); ++it) {
       index = hash( (*it)->get_id() );
@@ -49,7 +49,7 @@ void ScopeHashTable::decScope()
 
 
 
-void ScopeHashTable::addElement(Variable& v)
+void ScopeHashTable::addElement(VariableHashed& v)
 {
     if (this->empty()) throw string("Error, can not add a Variable because the size of the hash table is null");
     else if (this->contains(v.get_id(), _currentScope)) throw string("Variable "+v.get_id()+" already defined");
