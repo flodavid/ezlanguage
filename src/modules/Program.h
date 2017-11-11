@@ -1,7 +1,8 @@
-#ifndef REPEAT_H
-#define REPEAT_H
+#ifndef PROGRAM_H
+#define PROGRAM_H
 
 //special files no to forget to import
+#include "../addons/debug.h"
 #include "Node.h"
 
 /**

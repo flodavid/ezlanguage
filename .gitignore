@@ -25,3 +25,5 @@ obj/*
 .idea/*
 .vscode/*
 
+# Output files (generated cpp)
+tests/*.cpp

@@ -1,11 +1,11 @@
 %{
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <list>
 #include <string>
 #include <vector>
+#include <cstdarg>
 
 #include "../src/global.h"	 // we start from ../obj because it's important
 #include "../src/hash_table/FunctionHashed.h"
@@ -19,17 +19,18 @@
 #include "../src/modules/Node.h"
 #include "../src/modules/Program.h" // Empty Node
 
+#include "../src/global.h"
 
-//#include "global.h"
 
-#define YYERROR_VERBOSE
-#define USE(VALUE) /*empty*/
+bool existing_parsing_error= false;
 
 extern FILE* yyin;
 using namespace std;
 
 int yyparse (void);
 extern "C" int yylex();
+// extern YYLTYPE yylloc;
+// extern "C" void yyerror(const char *s, ...);
 extern "C" void yyerror(const std::string&);
 extern "C" void yyprint(const std::string&);
 extern int yylineno;
@@ -45,9 +46,22 @@ string get_argument_value(string & str ){
 }
 
 extern ScopeHashTable symbolTable;
+
+/* handle locations */
+int yycolumn = 1;
+
+#define YY_USER_ACTION yylloc.first_line = yyloc.last_line = yylineno; \
+    yylloc.first_column = yycolumn; yylloc.last_column = yycolumn+yyleng-1; \
+    yycolumn += yyleng;
+
+#define YYERROR_VERBOSE
+#define YY_USER_INIT yylloc.first_line=1;
+#define USE(VALUE) /*empty*/  
+
 %}
 
 
+// Tokens
 %token<texte>	NUM_INTEGER     // Integer
 %token<texte>	NUM_REAL			  // Real
 %token<texte> NAME RETOUR STRING STRING_PARAM
@@ -96,12 +110,14 @@ extern ScopeHashTable symbolTable;
 %type<texte> expression single_expression names nbrOrName params param_args param_type
 %type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl
 
+// Parameters
+// %define parse.trace
 
 %start ROOT
 %%
 
 ROOT:
-  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS begin statement_sequence END END_OF_FILE
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME statement_sequence END endprocedure END_OF_FILE
 	{
 		Node* p_imports = $4;
 		Program *racine = new Program(p_imports, $2);
@@ -110,7 +126,7 @@ ROOT:
 		Node* p_decl_list = $7;
     
     Node* p_args = $5;
-		Node* p_prog = $13;
+		Node* p_prog = $10;
     // Function* main= new Function(p_prog, nullptr, $9, p_args, "int");
 
     p_imports->setRightSon(p_args);
@@ -131,14 +147,14 @@ ROOT:
 // import modules or libraries
 imports:
   /* empty */
-| imports import { /* TODO import logic */ }
+| imports import { debug("import;", AT); /* TODO import logic */ }
 ;
 
 declaration_arguments:
   /* empty */
 | ARGUMENTS next_line param_args END endargument next_line {
     /* TODO arguements declaration logic */
-    cout << "arguments declaration" << endl;
+    debug("arguments declaration;", AT);
   }
 ;
 
@@ -147,6 +163,7 @@ declaration_classes:
 | declaration_classes class next_line
 	{
 		Class* c = (Class *) $1;
+    debug("class declared : " + c->getName()+":", AT);
 		$1->setRightSon($2);
 		$$ = c;
 	}
@@ -299,7 +316,12 @@ function:
 ;
 
 procedureDecl:
-  PROCEDURE NAME LEFT_PARENTHESIS list_arguments
+  PROCEDURE NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS
+  {
+    cout << "Déclaration de la procedure " << $2 << endl;
+    symbolTable.incScope();
+  }
+| PROCEDURE NAME
   {
     cout << "Déclaration de la procedure " << $2 << endl;
     symbolTable.incScope();
@@ -307,11 +329,11 @@ procedureDecl:
 ;
 
 procedure:
-  procedureDecl RIGHT_PARENTHESIS next_line statement_sequence END endprocedure
+  procedureDecl next_line statement_sequence END endprocedure
   {
     /* TODO procedure declaration logic 1 */
     // Procedure *f = new Procedure($1,$4,$4);
-		// $$ = f;
+		$$ = nullptr; // = f
 		symbolTable.decScope();
   }
 | PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END endprocedure {
@@ -925,8 +947,63 @@ NAME POINT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS        { printf("utilisation 
 %%
 
 void yyerror(const std::string& mess){
-    std::cout << "Erreur trouvée à la ligne " << yylineno << " :  "<< mess << std::endl;
+    std::cerr << "Error found at line " << yylineno << " :  "<< mess << std::endl;
+    existing_parsing_error= true;
 }
+
+// int
+// yylex (void)
+// {
+//   int c;
+
+//   /* Skip white space.  */
+//   while ((c = getchar ()) == ' ' || c == '\t')
+//     ++yylloc.last_column;
+
+//   /* Step.  */
+//   yylloc.first_line = yylloc.last_line;
+//   yylloc.first_column = yylloc.last_column;
+
+//   /* Process numbers.  */
+//   if (isdigit (c))
+//     {
+//       yylval = c - '0';
+//       ++yylloc.last_column;
+//       while (isdigit (c = getchar ()))
+//         {
+//           ++yylloc.last_column;
+//           yylval = yylval * 10 + c - '0';
+//         }
+//       ungetc (c, stdin);
+//       return NUM;
+//     }
+
+//   /* Return end-of-input.  */
+//   if (c == EOF)
+//     return 0;
+
+//   /* Return a single char, and update location.  */
+//   if (c == '\n')
+//     {
+//       ++yylloc.last_line;
+//       yylloc.last_column = 0;
+//     }
+//   else
+//     ++yylloc.last_column;
+//   return c;
+// }
+
+
+// void yyerror(const char *s, ...){
+//   va_list ap;
+//   va_start(ap, s);
+
+//   if(yylloc.first_line)
+//     fprintf(stderr, "%s:%d.%d-%d.%d: error: ", /*yylloc.filename,*/ yylloc.first_line, 
+//      yylloc.first_column, yylloc.last_line, yylloc.last_column);
+//   vfprintf(stderr, s, ap);
+//   fprintf(stderr, "\n");
+// }
 
 void yyprint(const std::string& mess){
     std::cout << "[l" << yylineno << "] "<<mess  << std::endl;

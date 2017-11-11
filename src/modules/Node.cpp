@@ -28,7 +28,7 @@ Node * Node::getRightSon() const {
 }
 
 void Node::setLeftSon(Node *left) {
-    left_son = left;
+    if (left!=nullptr) left_son = left; // TODO replace by reference
 }
 
 void Node::setRightSon(Node *right) {

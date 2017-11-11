@@ -56,6 +56,11 @@ public:
     Node * getRightSon() const;
     
     /**
+     * @brief getter on right son
+     */
+    inline const std::string & getName() const { return name; }
+    
+    /**
      * @brief setter on left son
      * @param node : New left son
      */

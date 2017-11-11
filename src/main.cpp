@@ -13,9 +13,9 @@ using namespace std;
 extern FILE* yyin;
 extern int yyparse();
 extern FILE* yyout;
+extern bool existing_parsing_error;
+
 ScopeHashTable symbolTable = ScopeHashTable(100);
-
-
 
 //FLAGS
 int verbose_flag;
@@ -285,5 +285,9 @@ int main(int argc , char ** argv){
 	}
 	if(fic_ezl.size() != 0)	exec_cpp(commande_gpp, output_name);
 
+	if (existing_parsing_error == true) {
+        cerr<< "Error encountered during compilation, correct them, then re-run";
+        exit(EXIT_FAILURE);
+    }
     exit(EXIT_SUCCESS);
 }

@@ -15,7 +15,7 @@ LEX_FlAGS =
 # extension des fichiers yacc (.XXX)
 YACC_EXT = ypp
 # interpréteur des fichiers Yacc : analyse syntaxique et sémantique
-YACC = bison
+YACC = bison -t
 YACC_FLAGS =
 
 # cpp sources
@@ -33,7 +33,7 @@ MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Operator.c
 # Boucles
 MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
 
-ADDONS_CPP += src/addons/String_addon.cpp
+ADDONS_CPP += src/addons/String_addon.cpp src/addons/log.cpp
 
 # hash table sources
 HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp
@@ -141,6 +141,17 @@ launch: all
 	@echo ""
 	@exec bin/$(EXEC) ""
 	@echo -e "FIN\033[0m"
+ 	
+basic_tests: all
+	@echo -e "\n\033[1;33mExécution des tests ...\033[0m"
+	bash tests/basic_tests.sh
+ 	
+full_tests: all
+	@echo -e "\n\033[1;33mExécution des tests ...\033[0m"
+	bash tests/full_tests.sh
+
+debug: all
+	valgrind bin/EZ_language_compiler tests/1_main_simple.ez
  	
 doc:
 	doxygen Doxyfile
