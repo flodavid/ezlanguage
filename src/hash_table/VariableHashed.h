@@ -1,5 +1,5 @@
-#ifndef VARIABLE_H
-#define VARIABLE_H
+#ifndef VARIABLEHASHED_H
+#define VARIABLEHASHED_H
 
 #include "HashElement.h"
 

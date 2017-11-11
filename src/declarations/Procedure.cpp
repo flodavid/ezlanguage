@@ -3,7 +3,7 @@
 
 using namespace std;
 
-Procedure::Procedure(Node * left, Node * right, const string & name, const vector<pair<string, string> > & args): Node(left, right), procedure_name(name), arguments(args)
+Procedure::Procedure(Node * left, Node * right, const string & name, const vector<Variable> & args): Node(left, right), procedure_name(name), arguments(args)
 {}
 
 std::string Procedure::preTranslate() const {
@@ -17,11 +17,13 @@ std::string Procedure::preTranslate() const {
 		if(!arguments.empty()) {
 			
 			if (arguments.size() >= 1) {
-				res += arguments[0].first + " " + arguments[0].second;
+				// TODO use translate (preTranslate for knowing we must put a ",")
+				res+= arguments[0].preTranslate();
 			}
 			if (arguments.size() > 1) {
 				for (unsigned int i = 1; i < arguments.size(); ++i) {
-					res += ", " + arguments[i].first + " " + arguments[i].second;
+					// TODO use translate (preTranslate for knowing we must put a ",")
+					res+= ", " + arguments[0].preTranslate();
 				}
 			}
 		}

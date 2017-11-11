@@ -3,6 +3,7 @@
 
 #include "./addons/debug.h"
 #include "./modules/Node.h"
+#include "./declarations/Variable.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
 #include <vector>
@@ -20,7 +21,9 @@ typedef struct s_mon_type {
     bool booleen;
     std::string texte;
     Node* arbre;
-    vector<VariableHashed> vecString;
+    vector<VariableHashed> vectString;
+    // TODO change as pointer or reference
+    vector<Variable> vectVar;
 //    MaClasse	une_maclasse;
 } mon_type;
 

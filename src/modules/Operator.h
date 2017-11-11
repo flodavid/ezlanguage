@@ -43,7 +43,7 @@ public:
      * All subclasses, must reimplement this method so that the translation corresponds
      * to their specifications, specificities and own values
      */
-    virtual std::string preTranslate() const =0;
+    virtual std::string preTranslate() const;
 };
 
 

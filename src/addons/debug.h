@@ -10,7 +10,7 @@
 #define NO_DEBUG            0 // Not any debug
 
 // Generic debug
-#define DEBUG               0
+#define DEBUG               1
 
 
 #if DEBUG_ALL

@@ -64,7 +64,7 @@ public:
      * @brief setter on left son
      * @param node : New left son
      */
-    void setLeftSon(Node *son);
+    void setLeftSon(Node* son);
     
     /**
      * @brief setter on right son

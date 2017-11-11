@@ -1,5 +1,5 @@
-#ifndef DECLARATIONVARIABLE_H
-#define DECLARATIONVARIABLE_H
+#ifndef VARIABLE_H
+#define VARIABLE_H
 
 #include "../modules/Node.h"
 #include "../hash_table/VariableHashed.h"
@@ -16,7 +16,7 @@ protected:
     std::string name;
     std::string type;
     std::string scope;
-    Node* affect;
+    std::string affect;
     VariableHashed* hashed;
     bool isConst;
     bool isStatic;
@@ -34,7 +34,8 @@ public:
 	 * @param co : if the variable is const
 	 * @param st : if the variable is static
 	 */
-    Variable(Node * left, Node * right, const std::string & n, const std::string & t, const std::string & s, Node * content, bool co = false, bool st = false);
+    Variable(Node * right, const std::string & _name, const std::string & _type,
+            const std::string & _scope, const std::string & content, bool co = false, bool st = false);
     
     /**
      * @brief Translate the begining part of the Variable
