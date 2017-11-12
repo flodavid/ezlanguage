@@ -1,13 +1,13 @@
-#include "DeclarationContainer.h"
+#include "Container.h"
 
 using namespace std;
 
 
-DeclarationContainer::DeclarationContainer(Node * left, Node * right, const string & nameC, const string & typeC, const string & typeE, const string & listI): Node(left, right), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI)
+Container::Container(Node * left, Node * right, const string & nameC, const string & typeC, const string & typeE, const string & listI): Node(left, right), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI)
 {}
 
 
-string DeclarationContainer::preTranslate() const
+string Container::preTranslate() const
 {
 	string res;
 

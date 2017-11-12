@@ -1,7 +1,8 @@
 #ifndef DECLARATION_FUNCTION_H
 #define DECLARATION_FUNCTION_H
 
-#include "Node.h"
+#include "../modules/Node.h"
+#include "Variable.h"
 #include <vector>
 
 /**
@@ -14,12 +15,13 @@
  *              return variable;
  *          end function
  */
-class DeclarationFunction : public Node {
+class Function : public Node {
 
 protected:
     std::string function_name;
-    std::vector<std::pair<std::string, std::string> > arguments;
+    std::vector<VariableHashed> arguments;
     std::string return_type;
+    Node* funReturn;
 
 public:
 
@@ -31,7 +33,7 @@ public:
      * @param arguments : arguments list of the function
      * @param type : return type of the function
      */
-    DeclarationFunction(Node * left, Node * right, const std::string & name, const std::vector<std::pair<std::string, std::string> > & arguments, const std::string & type);
+    Function(Node * left, Node * right, const std::string & name, const std::vector< VariableHashed > & arguments, const std::string & type);
 
     /**
      * @brief Getter for the function's name
@@ -49,7 +51,7 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<std::pair<std::string, std::string> > getArguments() const {return arguments;}
+    std::vector<VariableHashed> getArguments() const {return arguments;}
 
     /**
      * @brief Setter of the function's name
@@ -67,11 +69,11 @@ public:
      * @brief Setter of the list of arguments
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(const std::vector<std::pair<std::string, std::string>> & args){arguments= args;}
+    void setArguments(const std::vector<VariableHashed> & args){arguments= args;}
 
     
     /**
-     * @brief Translate the begining part of the DeclarationFunction
+     * @brief Translate the begining part of the Function
      * @return a string containing the C++ code of the instruction
      *
      * All subclasses, should reimplement this method so that the translation corresponds
@@ -80,7 +82,7 @@ public:
     virtual std::string preTranslate() const;
     
     /**
-     * @brief Translate the end part of the DeclarationFunction
+     * @brief Translate the end part of the Function
      * @return a string containing the C++ code of the instruction
      *
      * All subclasses, should reimplement this method so that the translation corresponds

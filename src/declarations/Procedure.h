@@ -1,7 +1,8 @@
 #ifndef DECLARATION_PROCEDURE_H
 #define DECLARATION_PROCEDURE_H
 
-#include "Node.h"
+#include "../modules/Node.h"
+#include "Variable.h"
 #include <vector>
 
 
@@ -13,11 +14,11 @@
  *              instruction(s);
  *         end procedure
  */
-class DeclarationProcedure : public Node {
+class Procedure : public Node {
 
 protected:
     std::string procedure_name;
-    std::vector<std::pair<std::string, std::string> > arguments;
+    std::vector<Variable> arguments;
 
 public:
 
@@ -28,7 +29,7 @@ public:
      * @param name : procedure's name
      * @param args : arguments list of the procedure
      */
-    DeclarationProcedure(Node * left, Node * right, const std::string & name, const std::vector<std::pair<std::string, std::string> > & args);
+    Procedure(Node * left, Node * right, const std::string & name, const std::vector<Variable> & args);
 
     /**
      * @brief Getter for the procedure's name
@@ -40,7 +41,7 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<std::pair<std::string, std::string> > getArguments() const {return arguments;}
+    std::vector<Variable> getArguments() const {return arguments;}
 
     /**
      * @brief Setter of the procedure's name
@@ -52,7 +53,7 @@ public:
      * @brief Setter of the list of arguments
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(std::vector<std::pair<std::string, std::string> > args){arguments= args;}
+    void setArguments(std::vector<Variable> args){arguments= args;}
     
     /**
      * @brief Translate the begining part of the Procedure

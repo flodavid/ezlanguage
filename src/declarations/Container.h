@@ -1,15 +1,15 @@
 #ifndef DECLARATIONCONTAINER_H
 #define DECLARATIONCONTAINER_H
 
-#include "Node.h"
+#include "../modules/Node.h"
 
 /**
- * @class DeclarationContainer
+ * @class Container
  * @brief Node of the tree whhich represent the declaration of a container
  * 
  * @author LAHYANI Zakaria - Ismail ELFAQIR
  */
-class DeclarationContainer : public Node {
+class Container : public Node {
 	
   protected:
 	std::string nameContainer;
@@ -35,7 +35,7 @@ class DeclarationContainer : public Node {
     * @param s : size
     * @author LAHYANI Zakaria
     */
-    DeclarationContainer(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, int s = 0);
+    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, int s = 0);
 
 
 
@@ -49,7 +49,7 @@ class DeclarationContainer : public Node {
     * @param listI : list of initialisation (only available for the "array")
     * @author Johan Defaye
     */
-    DeclarationContainer(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, const std::string & listI);
+    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, const std::string & listI);
 
 
 	/**

@@ -1,0 +1,17 @@
+/*
+* @author dbenmoumen
+* ceci est un module
+*/
+module person
+
+class person
+
+name is string
+id is integer
+age is integer
+
+function isOlderThan(old is integer) return boolean
+	return old<age
+end function
+
+end class

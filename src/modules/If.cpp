@@ -30,7 +30,7 @@ void If::set_block_type(int bt){
 string If::preTranslate() const
 {
     string res="", block;
-    
+
     switch (block_type) {
 	case block_if :
 	    block="if(" + cond->translate() + ") ";
@@ -39,12 +39,14 @@ string If::preTranslate() const
 	    block= "else if(" + cond->translate() + ") ";
 	    break;
 	case block_else :
-	    block= "else ";
-	    break;	
+        block= "else";
+        break;
     }
+
+    res=block+"{\n";
     
-    res=block+"{";
-    
+    // the instructions are in the left_son (the first one IS the left son)
+
     return res;
 }
 

@@ -1,0 +1,11 @@
+program hello_prog
+import person
+
+procedure hello_prog
+	mathieu is person("Mathieu", 1, 23)
+	driss is person(name="Driss", age=20)
+	if mathieu.isOlderThan(driss.getAge())
+		print mathieu.getName(), " is older than ", driss.getName()
+	else 
+		print driss.getName(), " is older than ", mathieu.getName()
+end procedure

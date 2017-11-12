@@ -6,12 +6,16 @@
 #include <algorithm>
 #include <fstream>
 #include "aide.h"
+#include "./hash_table/ScopeHashTable.h"
 
 using namespace std;
 
 extern FILE* yyin;
 extern int yyparse();
 extern FILE* yyout;
+extern bool existing_parsing_error;
+
+ScopeHashTable symbolTable = ScopeHashTable(100);
 
 //FLAGS
 int verbose_flag;
@@ -78,29 +82,29 @@ void parse_to_cpp(vector<char*> fic_ezl, string &input_files){
 	            // creation des fichiers cpp
 	            string fichier_tmp = string(fic_ezl[i]);
 
-	            fichier_tmp = fichier_tmp.substr(fichier_tmp.find_last_of("/")+1, fichier_tmp.find_last_of(".") - fichier_tmp.find_last_of("/"));
-	            fichier_tmp +="cpp";
-	            FILE * cpp_file = fopen(fichier_tmp.c_str(), "w");		
+                fichier_tmp = fichier_tmp.substr(fichier_tmp.find_last_of("/")+1, fichier_tmp.find_last_of(".") - fichier_tmp.find_last_of("/"));
+                fichier_tmp +="cpp";
+                FILE * cpp_file = fopen(fichier_tmp.c_str(), "w");
 
-		    // cas où la création du fichier échoue
-	            if(cpp_file == NULL){
+		    	// cas où la création du fichier échoue
+	            if(cpp_file == NULL) {
 	                cerr << fichier_tmp << ": creation failed;" << endl;
 	                break;
 	            }
 
-	            // parsing du fichiers ez en fichier cpp
-	            yyparse();
+                // parsing du fichiers ez en fichier cpp
+                yyparse();
 
-	            yyout = cpp_file;
+                yyout = cpp_file;
 
-	            // fermerture du fichier cpp
-	            fclose(cpp_file);
-	            input_files+=fichier_tmp + " ";
-	            
-         		cout << "\033[1;36m=====================================\033[0m" << endl;
-         		cout << endl;
-	        }
-		}
+                // fermerture du fichier cpp
+                fclose(cpp_file);
+                input_files+=fichier_tmp + " ";
+
+                cout << "\033[1;36m=====================================\033[0m" << endl;
+                cout << endl;
+            }
+        }
     }
 }
 
@@ -124,10 +128,10 @@ void exec_cpp(std::string commande_gpp, std::string output_name){
 			system(commande_gpp.c_str());
 			if(no_execution != 1){
 				if(output_name != ""){
-					string tmp_output= "./" + output_name;	
+					string tmp_output= "./" + output_name;
 					system(tmp_output.c_str());
 				}else{
-					string tmp_output= "./a.out";	
+					string tmp_output= "./a.out";
 					system(tmp_output.c_str());
 				}
 			}
@@ -175,7 +179,7 @@ int main(int argc , char ** argv){
 		//getopt_long recupere l'option ici
 		int option_index = 0;
 		
-		opt = getopt_long(argc, argv, "ho:f:O:w", long_options, &option_index);
+		opt = getopt_long(argc, argv, "ho:f:O:w:v", long_options, &option_index);
 		
 		//fin des options
 		if(opt == -1){
@@ -204,7 +208,7 @@ int main(int argc , char ** argv){
 			// Affiche l'aide
 			case 'h':
 				no_options = 1;
-				help = 1;		
+				help = 1;
 				// teste l'existence du fichier d'aide
 				cout << AIDE_PROG << endl;
 				break;
@@ -244,7 +248,7 @@ int main(int argc , char ** argv){
 				break;
 		}
 	}
-	
+
     // tableaux des extensions des fichiers a traiter
     int nb_ext = 2;
     const string ext_ez[nb_ext] = {".ez", ".ezl"};
@@ -255,7 +259,7 @@ int main(int argc , char ** argv){
 			parse_argv_ext(ext_ez[i].c_str(), fic_ezl, argv[j]);
 			//cout << "ajout" << fic_ezl.size() << endl;
 		}
-	}     
+	}
     
     //test des arguments restant
 	for(int i=optind+1; i<argc; ++i){
@@ -281,5 +285,9 @@ int main(int argc , char ** argv){
 	}
 	if(fic_ezl.size() != 0)	exec_cpp(commande_gpp, output_name);
 
+	if (existing_parsing_error == true) {
+        cerr<< "Error encountered during compilation, correct them, then re-run";
+        exit(EXIT_FAILURE);
+    }
     exit(EXIT_SUCCESS);
 }

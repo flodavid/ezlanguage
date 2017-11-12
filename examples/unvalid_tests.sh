@@ -1,6 +1,6 @@
  #!/bin/bash
 
-COMPILER=../bin/EZ_language_compiler
+COMPILER=$(dirname $0)/../bin/EZ_language_compiler
 
 echo -e "\n\033[1;31m=========================================="
 echo -e "\tExécution des tests non valides"

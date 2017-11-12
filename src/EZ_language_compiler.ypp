@@ -1,27 +1,40 @@
 %{
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <list>
-#include <math.h> /* fmod , pow ... */
-#include <cmath> /* fabs */
-#include <string> /* to_string */
+#include <string>
+#include <vector>
+#include <cstdarg>
 
 #include "../src/global.h"	 // we start from ../obj because it's important
+#include "../src/hash_table/FunctionHashed.h"
+#include "../src/hash_table/ScopeHashTable.h"
+#include "../src/hash_table/VariableHashed.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
-//#include "global.h"
+#include "../src/declarations/Class.h"
+#include "../src/declarations/Function.h"
+#include "../src/declarations/Procedure.h"
+#include "../src/declarations/Variable.h"
+#include "../src/modules/Node.h"
+#include "../src/modules/TranslatedNode.h"
+#include "../src/modules/Program.h" // Empty Node
 
-#define YYERROR_VERBOSE
-#define USE(VALUE) /*empty*/
+#include "../src/global.h"
+
+
+bool existing_parsing_error= false;
 
 extern FILE* yyin;
 using namespace std;
 
- int yyparse (void);
- extern "C" int yylex();
- extern "C" void yyerror(const std::string&);
- extern int yylineno;
+int yyparse (void);
+extern "C" int yylex();
+// extern YYLTYPE yylloc;
+// extern "C" void yyerror(const char *s, ...);
+extern "C" void yyerror(const std::string&);
+extern "C" void yyprint(const std::string&);
+extern int yylineno;
 
 // Return the string value without quotation_marks
 string delete_quote(string & str ){
@@ -33,38 +46,51 @@ string get_argument_value(string & str ){
   return str.substr(str.find_last_of("-")+1,str.size()-4);
 }
 
+extern ScopeHashTable symbolTable;
+
+/* handle locations */
+int yycolumn = 1;
+
+#define YY_USER_ACTION yylloc.first_line = yyloc.last_line = yylineno; \
+    yylloc.first_column = yycolumn; yylloc.last_column = yycolumn+yyleng-1; \
+    yycolumn += yyleng;
+
+#define YYERROR_VERBOSE
+#define YY_USER_INIT yylloc.first_line=1;
+#define USE(VALUE) /* empty */  
 
 %}
 
 
-%token<numerical_value>	NUM_INTEGER			// ENTIER
-%token<reel_value>	NUM_REAL			// REEL
-%token<texte>	NAME RETOUR STRING STRING_PARAM		
-%token<texte>	COMMA  DEGRE POURCENT DIESE POINT QUOTATION_MARKS		// Caractères
-%token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN			// variables type
-%token  EGAL NE LT LE GT GE PLUS MINUS MULT DIVISE
-%token<texte>	LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
-%token<texte> CONSTANT  VARIABLE  GLOBAL  IS  ARE SHARED          	      // variables declaration
-%token IMPORT INCLUDE LIBRARY  EXTERN						 // importe module - code c++
-%token IF THEN ELSE   						 // if else 
-%token WHEN CASE  DEFAULT ENDWHEN				 // switch case ...
-%token WHILE ENDWHILE							 // while .. do ..
-%token REPEAT UNTIL ENDREPEAT 						 // do .. while ...
+// Tokens
+%token<texte>	NUM_INTEGER     // Integer
+%token<texte>	NUM_REAL			  // Real
+%token<texte> NAME RETOUR STRING STRING_PARAM
+%token COMMA DEGRE POURCENT DIESE POINT QUOTE		// Caractères
+%token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
+%token EGAL NE LT LE GT GE PLUS MINUS MULT DIVISE
+%token  LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
+%token<texte> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
+%token IMPORT INCLUDE LIBRARY EXTERN						                  // module import - c++ code
+%token IF THEN ELSE   						  // if else 
+%token WHEN CASE DEFAULT ENDWHEN	  // switch case ...
+%token WHILE ENDWHILE							  // while .. do ...
+%token REPEAT UNTIL ENDREPEAT 			// do .. while ...
 %token FOR IN DO STEP 
-%token FUNCTION PROCEDURE RETURN	 				 // functions
+%token FUNCTION PROCEDURE RETURNS RETURN	 	// functions
 %token PRINT
-%token BEGINN END						       // can't use  'BEGIN'
+%token BEGINN END						        // can not use 'BEGIN'
 %token END_OF_FILE
-%token CLASS PROGRAM  DESTRUCT						//class
-%token ARGUMENTS AS							// arguments	
+%token CLASS PROGRAM DESTRUCT			  //class
+%token ARGUMENTS AS							    // arguments	
 %token REGEX SEARCH MATCH 					// Regular expression
 
-%token LENGTH TOUPPERCASE TOLOWERCASE     
-%token SUBSTRING SPLIT STRIP    
-%token REPLACE CONTAINS     
-%token FIND FINDFIRSTOF FINDLASTOF     
+%token LENGTH TOUPPERCASE TOLOWERCASE
+%token SUBSTRING SPLIT STRIP
+%token REPLACE CONTAINS
+%token FIND FINDFIRSTOF FINDLASTOF
 
-%token ARRAY VECTOR LIST SET MAP OF     
+%token ARRAY VECTOR LIST SET MAP OF
 
 %token SIZE IS_EMPTY CLEAR FILL
 %token RANDOMIZE COUNT MAX MIN SORT
@@ -76,116 +102,624 @@ string get_argument_value(string & str ){
 %left PLUS MINUS EGAL
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS OPERATOR		// Operators
 
-%type<reel_value> expression single_expression designator statement_sequence function_call function_string map_declaration array_declaration vector_declaration list_declaration set_declaration    
-%type<texte>  function procedure  string operators noms portee type  nbrOrName  params param_args param_type  
+// Basic elements
+%type<arbre> ROOT
+%type<arbre> imports declaration_classes declarations_list declaration_variables declaration_methods
+%type<vectVar> declaration_arguments param_args
+%type<vectString> list_arguments
+%type<arbre> variable affectation declaration function_call
+%type<arbre> destruct printing overloading if when while repeat for
+%type<arbre> function procedure statement class return import
+%type<texte> type operators scope constancy string designator
+%type<arbre> map_declaration array_declaration vector_declaration list_declaration set_declaration
+// Non basic elements
+%type<arbre> function_string
+%type<texte> expression single_expression names nbrOrName params param_type affect
+%type<arbre> statement_sequence
+%type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl
 
+// Parameters
+// %define parse.trace
 
 %start ROOT
 %%
 
 ROOT:
-  next_line_null PROGRAM NAME  next_line  import  declaration_arguments declaration_class  statement_sequence END_OF_FILE { cout << "Fichier parsé." << endl; return 0;} 
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
+	{
+		Node* p_imports = $4;
+		Program *racine = new Program(p_imports, $2);
+    /* TODO add program arguments logic */
+		Node* p_decl_class = $6;
+		Node* p_decl_list = $7;
+    
+		Node* p_prog = $11;
+    // $5 : parameters (vector<Variable>)
+    // @see main : procedure or function with int return ?
+    Procedure* main= new Procedure(p_prog, nullptr, "main", $5);
+
+    racine->setRightSon(p_imports);
+    p_imports->setRightSon(p_decl_class);
+		p_decl_class->setRightSon(p_decl_list);
+    p_decl_list->setRightSon(main);
+
+		// cout << racine->translate() << endl;
+    /* TODO program translation save */
+		return 0;
+	}
 ;
 
-// zero or several new lines
-next_line_null:
-| next_line {}
-;
+/* ******************
+ *  PROGRAM MODULES *
+ * ******************/
 
-// one or several new lines
-next_line:  
-  BACK_LINE {}
-| next_line BACK_LINE {}
-;
-
-// import modules ou librarys
-import:
-/* Nothing to import */
-| import IMPORT NAME next_line    { cout << "importation du module " << $3 << endl; }
-| import INCLUDE string next_line { cout << " inclusion de la bibliothèque " << delete_quote($3) << endl ; }
-| import LIBRARY string next_line { cout << " inclusion de la LIBRARY " << delete_quote($3) << endl ; }
+// import modules or libraries
+imports:
+  /* empty */ { $$= new TranslatedNode(""); }
+| imports import {
+    /* TODO import logic */
+    debug("import;", AT);
+    $1->setRightSon($2);
+    $$=$1;
+  }
 ;
 
 declaration_arguments:
-/* No declarations */
-| ARGUMENTS next_line param_args END next_endargument next_line {  cout << "delcaration des arguments " << endl;}
+  /* empty */ { $$= vector<Variable>(); }
+| ARGUMENTS BACK_LINE param_args END endargument next_line {
+    /* TODO arguements declaration logic */
+    debug("arguments declaration;", AT);
+    vector<Variable> vars($3);
+    $$= vars;
+  }
 ;
 
-declaration_class: 
-| declaration_class class next_line {} 
+declaration_classes:
+  /* empty */ { $$= new TranslatedNode(""); }
+| declaration_classes class BACK_LINE
+	{
+		Class* c = (Class *) $1;
+    debug("class declared : " + c->getName()+":", AT);
+		$1->setRightSon($2);
+		$$ = c;
+	}
 ;
 
-declaration_methods:
-/* empty */
-| declaration_methods function next_line {}  
-| declaration_methods procedure next_line {}
+declarations_list:
+  /* empty */ { $$= new TranslatedNode(""); }
+| declaration_variables declaration_methods
+    {
+      // PDVariables* vars = (PDVariables*) $1;
+      // PDFunctions* functs = (PDFunctions*) $2;
+      Node* vars=  $1;
+      Node* functs = $2;
+      vars->setRightSon(functs);
+      $$ = vars;
+    }
+| declaration_methods declaration_variables
+    {
+      // PDVariables* vars = (PDVariables*) $1;
+      // PDFunctions* functs = (PDFunctions*) $2;
+      Node* functs = $1;
+      Node* vars= $2;
+      functs->setRightSon(vars);
+      $$ = functs;
+    }
 ;
 
+declaration_variables:
+/* empty */ { $$= new TranslatedNode(""); }
+| declaration_variables variable
+	{
+    $1->setRightSon($2);
+	  $$ = $1;
+	}
+;
+/* ******************
+ *    SUBMODULES    *
+ * ******************/
+
+/* imports */
+import:
+  IMPORT NAME BACK_LINE {
+    /* TODO import logic (name of module) */
+    debug("importation du module "+ $2, AT);
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"");
+    $$= trans_node;
+  }
+| INCLUDE string BACK_LINE {
+    /* TODO include import logic */
+    debug(" inclusion de la bibliothèque "+ delete_quote($2), AT);
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ delete_quote($2)+ "\"");
+    $$= trans_node;
+  }
+| LIBRARY string BACK_LINE {
+    /* TODO library import logic */
+    debug(" inclusion de la LIBRARY "+ delete_quote($2), AT);
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ delete_quote($2)+ "\"");
+    $$= trans_node;
+  }
+;
+
+/* declaration_arguments */
 param_args:
-  NAME IS param_type AS STRING_PARAM next_line { cout << "parametre " << get_argument_value($5) << endl;} //ex: x is integer as "--x"
-| NAME IS param_type AS STRING_PARAM next_line param_args { cout << "parametre " << get_argument_value($5) << endl; }
+  NAME IS param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
+    cout << "parameter " << get_argument_value($5) << endl;
+    vector<Variable> var;
+    var.push_back(Variable(nullptr, $1, $3, "local", $5));
+    $$= var;
+  }
+  // TODO transform it into left recursive
+| NAME IS param_type AS STRING_PARAM BACK_LINE param_args {
+    debug("paramètre "+ get_argument_value($5), AT);
+    // Add parameter declaration to vector
+    // TODO Variable should have right son, instead, of using Vector (replace nullptr) ?
+    $7.push_back(Variable(nullptr, $1, $3, "local", $5));
+    $$= $7;
+  }
 ;
 
 // Past arguments should be of only one of the following types: 
 param_type:
-  TYPE_INTEGER { $$ = $1; }
-| TYPE_REAL   { $$ = $1; } 
-| TYPE_STRING  {$$ = $1; } 
+  TYPE_INTEGER  { $$ = $1; }
+| TYPE_REAL     { $$ = $1; } 
+| TYPE_STRING   { $$ = $1; } 
 ;
 
+/* declaration_classes */
 class:
-CLASS NAME next_line begin  statement_sequence END next_endclass { cout << "declaration de la class" << $2 << endl; }
+  CLASS NAME BACK_LINE begin statement_sequence END endclass
+	{
+    /* TODO class declaration logic */
+		$$ = new Class();
+		cout << "class declaration " << $2 << endl;
+	}
+;
+
+/* ********************
+ *  GENERIC RECURSIVE *
+ * ********************/
+
+statement_sequence:
+  /* empty */ { $$=nullptr; cout<< "last statement"<< endl; /* $$ = new Variable(); */ }
+| statement_sequence statement { $$=nullptr; }
+;
+
+names:
+  NAME              { $$ = $1; }
+| names COMMA NAME  { $$ = $1 + ", " + $3; }
+;
+
+/* ******************
+ *    METHODS    *
+ * ******************/
+
+/* declaration_methods */
+declaration_methods:
+  /* empty */ { $$ = nullptr; }
+| declaration_methods function BACK_LINE
+	{
+		Function* f = (Function*) $2;
+		f->setLeftSon($1);
+		$$ = f;
+	}
+| declaration_methods procedure BACK_LINE
+	{
+		Procedure* p = (Procedure*) $2;
+		p->setLeftSon($1);
+		$$ = p;
+	}
+;
+
+returnstype:
+  RETURNS type
+  {
+    // $$= new Type($2);
+  }
+;
+
+return:
+  RETURN expression
+  {
+    // $$= new Return($2);
+  }
+;
+
+function:
+  SHARED FUNCTION NAME LEFT_PARENTHESIS list_arguments // {symbolTable.incScope(); }
+  RIGHT_PARENTHESIS returnstype BACK_LINE begin statement_sequence return BACK_LINE END endfunction
+	{
+    /* TODO function declaration logic 1 */
+		cout << "declaration de la fonction " << $3 << endl;
+	}
+| FUNCTION NAME LEFT_PARENTHESIS list_arguments // { symbolTable.incScope(); }
+  RIGHT_PARENTHESIS returnstype BACK_LINE begin statement_sequence return BACK_LINE END endfunction
+  {
+    cout << "declaration de la fonction" << $2 << endl;
+    // Right son of last instruction is return statement
+    $9->setRightSon($10);
+		Function *f = new Function($9, nullptr, $2,$4,$6);
+		$$ = f;
+		//$$ = new Variable();
+		symbolTable.decScope();
+	}
+| FUNCTION NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS IS EXTERN NAME
+  {
+  /* TODO function declaration logic 3 */
+    cout << "declaration d'une fonction externe " << endl;
+  }
+;
+
+procedureDecl:
+  PROCEDURE NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS
+  {
+    /* TODO procedure declaration logic 1 */
+    debug("Procedure declaration : "+$2+ ";", AT);
+    symbolTable.incScope();
+  }
+| PROCEDURE NAME
+  {
+    /* TODO procedure declaration logic 2 */
+    debug("Procedure declaration : "+$2+ ";", AT);
+    symbolTable.incScope();
+  }
+;
+
+procedure:
+// Add shared/not shared operators
+  procedureDecl BACK_LINE statement_sequence END endprocedure
+  {
+    /* TODO procedure creation logic 1 */
+    debug("Procedure creation ", AT);
+    // Procedure *f = new Procedure($1,$4,$4);
+		$$ = nullptr; // = f
+		symbolTable.decScope();
+  }
+| PROCEDURE PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS BACK_LINE begin statement_sequence END endprocedure {
+    /* TODO print overloading logic 1 */
+    cout << "Surcharge de la methode d'affichage \"print\" "  << endl;
+    $$ = nullptr; // = f
+  }
+| SHARED procedureDecl BACK_LINE statement_sequence END endprocedure {
+    /* TODO procedure creation logic 2 */
+    debug("Procedure creation ", AT);
+    // Procedure *f = new Procedure($1,$4,$4);
+		$$ = nullptr; // = f
+  }
+| SHARED PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS BACK_LINE begin statement_sequence END endprocedure {
+    /* TODO print overloading logic 2 (factorize) */
+    cout << "Surcharge de la methode d'affichage \"print\" "  << endl;
+    $$ = nullptr;
+  }
+;
+
+/* ******************
+ *   INSTRUCTIONS   *
+ * ******************/
+
+declaration:
+  map_declaration     { $$ = $1; }
+| array_declaration   { $$ = $1; }
+| vector_declaration  { $$ = $1; }
+| list_declaration    { $$ = $1; }
+| set_declaration     { $$ = $1; }
+;
+
+statement:
+  BACK_LINE               { $$ = new TranslatedNode(""); }
+| variable                { $$ = $1; }
+| affectation             { $$ = $1; }
+| declaration             { $$ = $1; }
+| function_call           { $$ = $1; }
+| destruct    { $$ = $1; }
+| printing    { $$ = $1; }
+| overloading { $$ = $1; }
+| if        { $$ = $1; }
+| when      { $$ = $1; }
+| while     { $$ = $1; }
+| repeat    { $$ = $1; }
+| for       { $$ = $1; }
+;
+
+/* ************************
+ *  Complex Instructions  *
+ * ************************/
+function_call:
+  NAME POINT simple_function {}
+| function_call POINT simple_function {}
+| simple_function { }
+| NAME POINT NAME { }  
+| function_string { $$ = $1;}
+| function_regex { }
+| containers_methods { }
+;
+
+simple_function:
+  // function without parameter
+  NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} 
+  // function with parameter
+| NAME LEFT_PARENTHESIS params RIGHT_PARENTHESIS {} 
+;
+
+if:
+  IF expression THEN BACK_LINE statement_sequence  END endif {
+    /* TODO if-then logic */
+    printf("SI   ALORS \n");
+  }
+| IF expression THEN BACK_LINE statement_sequence ELSE BACK_LINE statement_sequence END endif {
+    /* TODO if-else-then logic */
+    printf("SI_SINON_ALORS \n");
+  }
+;
+
+when:
+  WHEN expression IS BACK_LINE whenbody whendefault END endwhen {
+    /* TODO when logic */
+    printf("when .. case .. \n");
+  }
+;
+
+whenbody: /* whenbody can't be empty */
+  CASE expression BACK_LINE statement_sequence END endcase {
+    /* TODO whenbody logic 1 */
+    cout << "case body" << endl;
+  }
+| CASE expression BACK_LINE statement_sequence END endcase whenbody {
+    /* TODO whenbody logic 2 */
+    cout << "case body" << endl;
+  }
+;
+
+whendefault: /* May not be specified */
+  /* empty */
+| DEFAULT BACK_LINE statement_sequence END endcase {
+    /* TODO whendefault logic 1 */
+  }
+;
+
+while:
+  WHILE expression DO statement_sequence END endwhile {
+    /* TODO while logic */
+    printf("WHILE .. DO .. \n");
+  }
+;
+
+repeat:
+  REPEAT statement_sequence UNTIL BACK_LINE expression BACK_LINE END endrepeat {
+    /* TODO repeat-until logic */
+    printf("REPEAT .. UNTIL .. \n");
+  }
+;
+
+/* for */
+forDecl:
+  FOR NAME { $$= $2; }
+;
+
+forType:
+  IS type { $$= $2; }
+;
+
+forRange:
+  IN expression doublepoint expression { 
+    /* TODO for range logic */
+  }
+;
+
+forStep: // @see do step should be text or real_value
+  STEP nbrOrName { $$= $2; }
+;
+
+forBody:
+  DO BACK_LINE statement_sequence END endfor { 
+    /* TODO for body logic */
+  }
+;
+
+for:
+  forDecl forRange forBody {
+    /* TODO 'for a in b .. c' logic */
+    printf("FOR .. IN ... \n");
+  }
+| forDecl forRange forStep forBody {
+    /* TODO 'for a in b .. c step x' logic */
+    printf("FOR .. IN ... \n");
+  }
+| forDecl forType forRange forBody {
+    /* TODO 'for a is TYPE in b .. c' logic */
+    printf("FOR a IN b .. c\n");
+  }
+| forDecl forType forRange forStep forBody {
+    /* TODO 'for a is TYPE in b .. c step x' logic */
+    printf("FOR a is TYPE IN b .. c STEP x\n");
+  }
+;
+
+/* ************************
+ *   Simple Instructions  *
+ * ************************/
+affectation:
+  NAME EGAL expression { cout << "Affectation name " <<  endl; }
+| NAME POINT NAME EGAL expression { cout << "Affectation name.name " <<  endl; }
+| NAME PLUS PLUS { cout << "Affectation ++" <<  endl; }
+| NAME MINUS MINUS {  cout << "Affectation --" <<  endl; }
+| PLUS PLUS NAME  { cout << "++ Affectation " <<  endl; }
+| MINUS MINUS NAME  { cout << "-- Affectation " <<  endl;  }
+;
+
+destruct:
+  // TODO reword destruction definition
+  DESTRUCT BACK_LINE statement_sequence END enddestruct {
+    /* TODO destructions logic */
+    cout << "destructeur " << endl;
+  }
+;
+
+printing:
+PRINT expressions BACK_LINE {
+    /* TODO overloading logic */
+  }
+;
+
+overloading:
+  OPERATOR operators LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
+    /* TODO overloading logic */
+    cout << "operateur " <<  $2 << endl;
+  }
+;
+
+/* *******************
+ *  GENERIC COMPLEX  *
+ * ******************/
+
+// one or several new lines
+next_line:
+  BACK_LINE BACK_LINE /* Nothing to do */
+| next_line BACK_LINE /* Nothing to do */
+;
+
+// zero or some new lines
+lineend:
+  END_OF_FILE
+| BACK_LINE /* Nothing to do */
+;
+
+
+list_arguments:
+  /* empty */ {
+    vector<VariableHashed> v;
+    $$ = v;
+  }
+| NAME IS type
+ 	{
+ 		vector<VariableHashed> v;
+ 		v.push_back(VariableHashed($1,$3));
+ 		$$ = v;
+ 	}
+| NAME IS type COMMA list_arguments
+ 	{
+ 		$5.push_back(VariableHashed($1,$3));
+ 		$$ = $5;
+ 	}
+| NAME names ARE type { /* todo list_arguments logic */ }
+;
+
+| NAME names ARE SHARED type affect
+	{
+		cout << "Variable des variables1 "<< $1 << endl;
+	}
+
+;
+
+// TODO Avoid shift/reduce by factorising shared/not shared
+variable:
+  scope constancy NAME IS type affect BACK_LINE
+  {
+    debug("Variable declaration: "+ $3, AT);
+    VariableHashed v($3,$5);
+    symbolTable.addElement(v);
+    $$ = new Variable(nullptr, $3,$5,$1+$2,$6,false);
+  }
+| scope constancy NAME names ARE type affect BACK_LINE
+	{
+    /* TODO multiple variables declaration logic 1 */
+		debug("Variable declaration: "+ $3, AT);
+	}
+| scope constancy NAME IS SHARED type affect BACK_LINE
+	{
+		VariableHashed v($3,$5);
+		symbolTable.addElement(v);
+		// $$ = new Variable($2,$4,$1,true);
+	}
+| scope constancy NAME names ARE SHARED type BACK_LINE
+	{
+    /* TODO multiple variables declaration logic 2 */
+		debug("  Variable des variables  avec portee "+ $3, AT);
+	}
+| variable_construct
+  {
+    /* TODO variable construction logic (with class) */
+    debug("variable construction (class)", AT);
+  }
+;
+
+scope:
+  /* empty */    { $$ = "local";}
+| LOCAL   { $$ = "local";}
+| GLOBAL  { $$ = "global";}
+;
+
+// @see if we 
+constancy:
+  /* empty */ { $$ = ""; }
+| CONST { $$ = "const"; }
+;
+
+variable_construct:
+  NAME IS NAME {}  // ex: c is Maclasse
+| NAME IS NAME LEFT_PARENTHESIS class_liste_argument RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
+| NAME IS NAME LEFT_PARENTHESIS class_liste_argument_with_assignment RIGHT_PARENTHESIS {} // p is Person(name="name")
+;
+
+expression:
+  /* TODO expressions logic */
+  expression EGAL EGAL expression { /* $$ = new Variable(); */ }
+| expression NE expression {/* $$ = new Variable(); */ }
+| expression LT expression { /* $$ = new Variable(); */ }
+| expression LE expression { /* $$ = new Variable(); */ }
+| expression GT expression {/* $$ = new Variable(); */ }
+| expression GE expression { /* $$ = new Variable(); */ }
+| expression PLUS expression {/* $$ = new Variable(); */ }
+| expression MINUS expression { /* $$ = new Variable(); */ }
+| expression MULT expression {/* $$ = new Variable(); */ }
+| expression DIVISE expression {/* $$ = new Variable(); */ }
+| expression AND AND expression { /* $$ = new Variable(); */ }
+| expression OR OR expression {/* $$ = new Variable(); */ }
+| single_expression { yyprint("single_expression");  /* $$ = new Variable(); */ /* $1 = $1 */ }
+;
+
+expressions:
+  expression  { cout <<"affichage  : " <<  $1  << endl; }
+| string      { cout << "affichage  : " << delete_quote($1) << endl; }
+| expression COMMA expressions  { cout <<"affichage  : " <<  $1 << endl; }
+| string COMMA expressions      {   cout << "affichage : " << delete_quote($1) << endl; }
+;
+
+params:
+  expression { $$ = $1;}
+| expression COMMA params { $$ = $1 ;}
+;
+
+single_expression:
+  /* single_expressions logic */
+  PLUS single_expression { /* $$ = new Variable(); */ }
+| single_expression XOR single_expression { /* $$ = new Variable(); */ }
+| NOT single_expression { /* $$ = new Variable(); */ }
+| single_expression MOD single_expression { /* $$ = new Variable(); */ }
+| single_expression POW single_expression { /* $$ = new Variable(); */ }
+| ABS single_expression { /* $$ = new Variable(); */ }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new Variable(); */ }
+| NUM_REAL { $$ = $1; } //real
+| NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
+| designator { /* $$ = String($1); */ }
+;
+
+/* ******************
+ *  GENERIC SIMPLE  *
+ * ******************/
+
+doublepoint:
+ POINT POINT
 ;
 
 begin:
-/* empty */
-| BEGINN next_line { }
+  BACK_LINE         { }
+| BEGINN BACK_LINE  { }
 ;
 
-start_with_name:
-   variable_without_scope  next_line { }
-|  affectation  next_line { } 
-|  function_call next_line {}
-;
-
-variable_without_scope:
-     NAME IS  type affect  { cout << "Declaration de la variable1 " << $1 << endl; }
-|    NAME noms ARE  type affect  { cout << "Declaration des variables1 "<< $1 << endl; }
-|    NAME IS SHARED type affect  { cout << "Declaration de la variable1 " << $1 << endl; }
-|    NAME noms ARE SHARED type affect  { cout << "Declaration des variables1 "<< $1 << endl; }
-//|    NAME IS REGEX next_line { cout << " Declaration l'expression réguliere  " << $1 << endl; }
-//|    NAME IS REGEX EGAL string next_line { cout << " Declaration  l'expression réguliere " << $1 << endl; }
-|    declaration_construct  { cout << " declaration de contructeur " << endl ;}
-;
-
-variable_with_scope:
-    portee NAME IS type affect next_line { cout << "= Declaration de la variable avec portee " << $2 << endl; }
-|   portee NAME noms ARE type next_line { cout << "  Declaration des variables  avec portee "<< $2 << endl; }
-|   portee NAME IS SHARED type affect next_line { cout << "= Declaration de la variable avec portee " << $2 << endl; }
-|   portee NAME noms ARE SHARED type next_line { cout << "  Declaration des variables  avec portee "<< $2 << endl; }
-/* regular expression */
-|    portee NAME IS REGEX next_line { cout << " Declaration l'expression réguliere  " << $2 << endl; }
-|    portee NAME IS REGEX EGAL string next_line { cout << " Declaration  l'expression réguliere " << $2 << endl; }
-;
-
-variable_constant:
-     CONSTANT NAME IS  type affect  { cout << "Declaration de la variable constante " << $1 << endl; }
-|    CONSTANT NAME noms ARE  type affect  { cout << "Declaration des variables constante "<< $1 << endl; }
-|    CONSTANT NAME IS SHARED type affect  { cout << "Declaration de la variable constante " << $1 << endl; }
-|    CONSTANT NAME noms ARE SHARED type affect  { cout << "Declaration des variables constante "<< $1 << endl; }
-/* regular expression */
-|    CONSTANT NAME IS REGEX next_line { cout << " Declaration l'expression réguliere  " << $2 << endl; }
-|    CONSTANT NAME IS REGEX EGAL string next_line { cout << " Declaration  l'expression réguliere " << $2 << endl; }
-;
-
-declaration_construct:
-   NAME IS NAME {}  // ex: c is Maclasse
-|  NAME IS NAME LEFT_PARENTHESIS class_liste_argument RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
-|  NAME IS NAME LEFT_PARENTHESIS class_liste_argument_with_assignment RIGHT_PARENTHESIS {} // p is Person(nom="nom")
-;
-
+// @see can it just be a translated Node (variable name don't change) or a Node (Var or value)
 affect:
-/* No assigned value */
+  /* empty */
 | EGAL expression { }
 | EGAL string { }
 ;
@@ -198,7 +732,7 @@ class_liste_argument:
 | string COMMA class_liste_argument  { }
 | NUM_INTEGER COMMA class_liste_argument  {}
 | NUM_REAL COMMA class_liste_argument  {}
-| NAME COMMA class_liste_argument {} 
+| NAME COMMA class_liste_argument {}
 ;
 
 class_liste_argument_with_assignment:
@@ -209,192 +743,48 @@ class_liste_argument_with_assignment:
 | NAME EGAL string COMMA class_liste_argument_with_assignment  { }
 | NAME EGAL NUM_INTEGER COMMA class_liste_argument_with_assignment  {}
 | NAME EGAL NUM_REAL COMMA class_liste_argument_with_assignment  {}
-| NAME EGAL NAME COMMA class_liste_argument_with_assignment {} 
-;
-
-
-function:
-SHARED FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS RETURN type next_line  begin   statement_sequence RETURN expression next_line END next_endfunction { cout << "declaration de la fonction" << $3 << endl;}
-| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS RETURN type next_line  begin   statement_sequence RETURN expression next_line END next_endfunction { cout << "declaration de la fonction" << $2 << endl;}
-| FUNCTION NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS IS EXTERN NAME { cout << "declaration d'une fonction externe " << endl;  }
-;
-
-procedure:
-  PROCEDURE NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Declaration de la procedure " << $2 << endl;}
-| PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Surcharge de la methode d'affichage \"print\" "  << endl;}
-| SHARED PROCEDURE NAME LEFT_PARENTHESIS liste_argument RIGHT_PARENTHESIS next_line begin  statement_sequence END next_endprocedure {cout << "Declaration de la procedure " << $3 << endl;}
-| SHARED PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END next_endprocedure {cout << "Surcharge de la methode d'affichage \"print\" "  << endl;}
-;
-
-next_endclass:
-| CLASS {}
-;
-
-
-next_endprocedure:
-/* emplty */
-| PROCEDURE {}
-;
-
-next_endfunction:
-/* empty */
-| FUNCTION {}
-;
-
-next_endif:
-/* empty */
-| IF {}
-;
-
-next_endwhen:
-/*empty */
-| WHEN  {}
-;
-
-next_endcase:
-/* empty*/
-| CASE {}
-;
-
-next_endwhile:
-/* empty */
-|  WHILE {}
-;
-
-next_endfor:
-/*emtpy */
-| FOR
-;
-
-next_endrepeat:
-/* empty */
-| REPEAT {}
-;
-
-next_enddestruct:
-/* empty */
-| DESTRUCT {}
-;
-
-next_endargument:
-/* empty */
-| ARGUMENTS {}
-;
-
-
-statement_sequence:
- /*empty */
-| statement_sequence statement{ }
-;
-
-liste_argument:
- // No argument
- | NAME IS type { }
- | NAME IS type COMMA liste_argument { }
- | NAME noms ARE type {}
-;
-
-destruct:
-  DESTRUCT next_line statement_sequence  END next_enddestruct { cout << "destructeur " << endl;}
-;
-
-overloading:
-  OPERATOR operators LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type next_line statement_sequence END { cout << "operateur " <<  $2 << endl; }
+| NAME EGAL NAME COMMA class_liste_argument_with_assignment {}
 ;
 
 operators:
- EGAL EGAL { $$ = "==";}
-|  EGAL   { $$ = "=";}
-|  NE  { $$= "!="; }
-|  LT  { $$ =  "<"; }
-|  LE  { $$ = "<=";}
-|  GT  { $$ = ">";}
-|  GE  { $$ = ">=";}
-|  PLUS   {$$ ="+";}
-|  MINUS  { $$ = "-";}
-|  MULT   {$$ = "*";}
-|  DIVISE { $$ =  "/";}
+  EGAL EGAL { $$ = "==";}
+| EGAL   { $$ = "=";}
+| NE  { $$= "!="; }
+| LT  { $$ =  "<"; }
+| LE  { $$ = "<=";}
+| GT  { $$ = ">";}
+| GE  { $$ = ">=";}
+| PLUS   {$$ ="+";}
+| MINUS  { $$ = "-";}
+| MULT   {$$ = "*";}
+| DIVISE { $$ =  "/";}
 ;
 
-// 		---------------------------------------------------------------------
-statement:
-  next_line
-| variable_with_scope  {} 
-| variable_constant {}
-| start_with_name {}  // variables - functions - construct
-| declaration_methods {}
-| destruct {}
-| printing {}
-| overloading {}
-| IF expression THEN next_line statement_sequence ELSE next_line statement_sequence END next_endif { printf("SI_SINON_ALORS \n"); }
-| IF expression THEN next_line statement_sequence  END next_endif { printf("SI   ALORS \n"); }
-| WHEN expression IS next_line whenbody whendefault END next_endwhen {  printf("when .. case .. \n"); }
-| WHILE expression DO  statement_sequence END next_endwhile { printf("WHILE .. DO .. \n"); }
-| REPEAT statement_sequence UNTIL next_line expression next_line END next_endrepeat{ printf("REPEAT .. UNTIL .. \n"); }
-| for {}
-;
-// 		---------------------------------------------------------------------
-
-/*else_body:
-   ELSE next_line statement_sequence   { cout << "else " << endl; }
-|  ELSE next_line statement_sequence  else_body  { cout << "else " << endl;}
-;*/
-
-affectation:
-  NAME EGAL expression { cout << "Affectation name " <<  endl; }
-| NAME POINT NAME EGAL expression { cout << "Affectation name.name " <<  endl; }
-| NAME PLUS PLUS { cout << "Affectation ++" <<  endl; }
-| NAME MINUS MINUS {  cout << "Affectation --" <<  endl; }
-| PLUS PLUS NAME  { cout << "++ Affectation " <<  endl; }
-| MINUS MINUS NAME  { cout << "-- Affectation " <<  endl;  }
+nbrOrName:
+  NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
+| NUM_REAL    { /* $$ = Real($1); */ }
+| NAME        { /* $$ = String($1); */ }
 ;
 
-printing :
-PRINT expressions  next_line { }
+type:
+  TYPE_INTEGER  { $$ = "int";}
+| TYPE_REAL     { $$ = "real";}
+| TYPE_STRING   { $$ = "string";}
+| TYPE_BOOLEAN  { $$ = "bool";}
 ;
 
-expressions:
-  expression   { cout <<"affichage  : " <<  $1  << endl; }
-| string    {   cout << "affichage  : " << delete_quote($1) << endl; }
-| expression COMMA expressions { cout <<"affichage  : " <<  $1 << endl; }
-| string  COMMA expressions {   cout << "affichage : " << delete_quote($1) << endl; }
+string :
+ STRING  { $$= $1;}
 ;
 
-for :
-  FOR NAME IN expression POINT POINT expression DO next_line statement_sequence END next_endfor next_line{ printf("FOR .. IN ... \n");}
-| FOR NAME IN expression POINT POINT expression STEP nbrOrName  DO next_line statement_sequence END next_endfor next_line { printf("FOR .. IN ... \n");}
-| FOR NAME IS type IN expression POINT POINT expression DO next_line statement_sequence END next_endfor next_line { printf("FOR .. IN ... \n");}
-| FOR NAME IS type IN expression POINT POINT expression STEP nbrOrName  DO next_line statement_sequence END next_endfor next_line{ printf("FOR .. IN ... \n");}
+designator:
+  NAME { 
+    $$=$1;
+  }
 ;
 
-
-function_call : 
-  NAME POINT simple_function {}
-| function_call POINT simple_function {}
-| simple_function { }
-| NAME POINT NAME { }  
-| function_string { $$ = $1;}
-| function_regex { }
-| containers_methods { }
-;
-
-simple_function:
-   // function without parametre
-  NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} 
-    // function wit parametre
-| NAME LEFT_PARENTHESIS params RIGHT_PARENTHESIS {} 
-;
-
-params:
-  expression { $$ = $1;}
-| expression COMMA params { $$ = $1 ;}
-;
-
-//    -----------------------------REGEX METHODS-----------------------------------------
-function_regex:
-  NAME POINT MATCH  LEFT_PARENTHESIS strOrName RIGHT_PARENTHESIS { cout << " expression régulière MATCH " << endl ;}
-| NAME POINT SEARCH  LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << " expression régulière SEARCH " << endl ;}
-|   NAME POINT REPLACE  LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << " expression régulière REPLACE " << endl ;}
+string:
+  STRING  { $$ = $1; }
 ;
 
 strOrName:
@@ -402,9 +792,87 @@ strOrName:
 | NAME { } 
 ;
 
+/* *********************
+ * FACULATIVE END TAGS *
+ * *********************/
+
+endclass:
+  lineend
+| CLASS lineend {}
+;
+
+endfunction:
+  lineend
+| FUNCTION lineend {}
+;
+
+endprocedure:
+  lineend
+| PROCEDURE lineend {}
+;
+
+endif:
+  lineend
+| IF lineend {}
+;
+
+endwhen:
+  lineend
+| WHEN lineend {}
+;
+
+endcase:
+  lineend
+| CASE lineend {}
+;
+
+endwhile:
+  lineend
+| WHILE lineend {}
+;
+
+endfor:
+  lineend
+| FOR lineend {}
+;
+
+endrepeat:
+  lineend
+| REPEAT lineend {}
+;
+
+enddestruct:
+  lineend
+| DESTRUCT lineend {}
+;
+
+endargument:
+  lineend
+| ARGUMENTS lineend {}
+;
+
+
+/* ************
+ *    OTHER   *
+ * ************/
+// 		---------------------------------------------------------------------
+// 		---------------------------------------------------------------------
+
+/* else_body:
+   ELSE BACK_LINE statement_sequence   { cout << "else " << endl; }
+|  ELSE BACK_LINE statement_sequence  else_body  { cout << "else " << endl;}
+;*/
+
+//    -----------------------------REGEX METHODS-----------------------------------------
+function_regex:
+  NAME POINT MATCH LEFT_PARENTHESIS strOrName RIGHT_PARENTHESIS { cout << "regular expression MATCH " << endl ;}
+| NAME POINT SEARCH LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression SEARCH " << endl ;}
+| NAME POINT REPLACE LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression REPLACE " << endl ;}
+;
+
 //    -----------------------------STRING METHODS----------------------------------------
-function_string : 
-NAME POINT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
+function_string: 
+  NAME POINT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
 | NAME POINT TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
 | NAME POINT TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
 | NAME POINT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
@@ -424,175 +892,149 @@ NAME POINT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \
 ;
 
 
-//    -----------------------------array Declaration----------------------------------------
-array_declaration :
-portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
+//    -----------------------------array Déclaration----------------------------------------
+array_declaration:
+scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
 ;
 
-//    -----------------------------vector Declaration----------------------------------------
-vector_declaration : 
-portee NAME IS VECTOR OF type { printf("vector declaration  \n"); }
-| portee NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| portee NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| portee NAME IS VECTOR OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+//    -----------------------------vector declaration----------------------------------------
+vector_declaration: 
+scope NAME IS VECTOR OF type { printf("vector declaration  \n"); }
+| scope NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
+| scope NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
+| scope NAME IS VECTOR OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
 ;
 
-//    -----------------------------list Declaration----------------------------------------
-list_declaration : 
-portee NAME IS LIST OF type { printf("list declaration  \n"); }
-| portee NAME IS LIST OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
+//    -----------------------------list declaration----------------------------------------
+list_declaration: 
+scope NAME IS LIST OF type { printf("list declaration  \n"); }
+| scope NAME IS LIST OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
 ;
 
-//    -----------------------------set Declaration----------------------------------------
-set_declaration : 
-portee NAME IS SET OF type { printf("set declaration  \n"); }
-| portee NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| portee NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| portee NAME IS SET OF type EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
+//    -----------------------------set declaration----------------------------------------
+set_declaration: 
+scope NAME IS SET OF type { printf("set declaration  \n"); }
+| scope NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
+| scope NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
+| scope NAME IS SET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
 ;
 
-//    -----------------------------map Declaration----------------------------------------
-map_declaration : 
-portee NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
-| map_declaration EGAL LEFT_ACCOLADE noms RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
+//    -----------------------------map declaration----------------------------------------
+map_declaration: 
+scope NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
+| map_declaration EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
 ;
-
 
 //    ---------------------------------------------------------------------------------------
-//    -----------------------------Containers Methods----------------------------------------
-//
-//    ---------------------------------------------------------------------------------------
-//    -----------------------------Container's methods---------------------------------------
+//    -----------------------------Containers methods---------------------------------------
 //    ---------------------------------------------------------------------------------------
 
 containers_methods : 
-NAME POINT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("utilisation de la méthode size  \n"); }
-| NAME POINT IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("utilisation de la méthode size  \n"); }
-| NAME POINT CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("utilisation de la méthode size  \n"); }
-| NAME POINT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("utilisation de la méthode size  \n"); }
+NAME POINT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS        { printf("utilisation de la méthode size  \n"); }
+| NAME POINT IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
+| NAME POINT CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
+| NAME POINT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
 | NAME POINT FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
 | NAME POINT RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
-| NAME POINT MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("MAX() called \n"); }
+| NAME POINT MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
 | NAME POINT MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
-| NAME POINT MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("MIN() called \n"); }
+| NAME POINT MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
 | NAME POINT MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
-| NAME POINT SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("SORT() called \n"); }
-| NAME POINT SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("SORT(attr) called \n"); }
-| NAME POINT SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("SUM() called \n"); }
+| NAME POINT SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
+| NAME POINT SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
+| NAME POINT SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("SUM() called \n"); }
 | NAME POINT SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("SUM(attr) called \n"); }
-| NAME POINT COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("COUNT(val) called \n"); }
-| NAME POINT REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("remove(val) called \n"); }
-| NAME POINT RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("range() called \n"); }
-| NAME POINT FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("find(val) called \n"); }
+| NAME POINT COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
+| NAME POINT COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
+| NAME POINT REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
+| NAME POINT RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
+| NAME POINT FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
 | NAME POINT FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
-| NAME POINT COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("COUNT(attr,val) called \n"); }
 | NAME POINT PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
-| NAME POINT PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_Last(elem) called \n"); }
-| NAME POINT REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("remove_Last() called \n"); }
-| NAME POINT REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("remove_Last() called \n"); }
-| NAME POINT AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("average() called \n"); }
+| NAME POINT PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
+| NAME POINT REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
+| NAME POINT REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
+| NAME POINT AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
 | NAME POINT AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
-| NAME POINT STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS { printf("STORE(val) called \n"); }
-| NAME POINT RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS { printf("RESTORE(val) called \n"); }
-| NAME POINT FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
-| NAME POINT LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("last() called \n"); }
-| NAME POINT REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS { printf("REMOVE_AT(pos) called \n"); }
-| NAME POINT PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS { printf("put_at(pos, val) called \n"); }
-| NAME POINT INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("insert() called \n"); }
-| NAME POINT INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("insert(key,val called \n"); }
-| NAME POINT EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("insert() called \n"); }
+| NAME POINT STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
+| NAME POINT RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
+| NAME POINT FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("first() called \n"); }
+| NAME POINT LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
+| NAME POINT REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
+| NAME POINT PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
+| NAME POINT INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
+| NAME POINT INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
+| NAME POINT EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
 ;
 
-
-
-nbrOrName:
-  NUM_INTEGER  { $$ = to_string($1);}
-| NUM_REAL {$$ = $1; }
-| NAME {$$ = $1;}
-;
-
-portee: 
-  VARIABLE {$$ = $1;}
-| GLOBAL {$$ = $1;}
-;
-
-type:
-  TYPE_INTEGER { $$ = $1; }
-| TYPE_REAL   { $$ = $1; } 
-| TYPE_STRING  {$$ = $1; } 
-| TYPE_BOOLEAN  {$$ = $1; }
-;
-
-
-noms:
-  NAME {$$ = $1;}
-| COMMA NAME noms {$$ = $1;}
-| COMMA NAME {$$ = $1;}
-
-;
-
-whenbody: /* whenbody can't be empty */
-  CASE  expression next_line statement_sequence  END next_endcase next_line  { cout << "case body" << endl; }
-| CASE  expression next_line statement_sequence  END next_endcase next_line whenbody { cout << "case body" << endl;}
-;
-
-whendefault: /* May not be specified */
-| DEFAULT next_line statement_sequence  END next_endcase next_line{}
-;
-
-string :
- STRING  { $$= $1;}
-;
-
-//For  those  rules in comment , the corresponding definition must be written by the C++ team because their (rules) have not effect.
-expression:
-  single_expression { $1 = $1 ;}  
-| expression EGAL EGAL expression { /*$1 == $4;*/ } 
-| expression NE expression {/* $1 != $3; */}
-| expression LT expression { /*$1 < $3;*/ }
-| expression LE expression {/* $1 <= $3;*/ }
-| expression GT expression {/* $1 > $3 ;*/}
-| expression GE expression { /*$1 >= $3 ;*/}
-| expression PLUS expression {$$ = $1 + $3; }
-| expression MINUS expression { $$ = $1 - $3; }
-| expression MULT expression {$$ = $1 * $3 ;}
-| expression DIVISE expression { $$ =  $1 / $3 ;}
-| expression AND AND expression {/* $1 && $4;  */ }
-| expression OR OR expression {/* $1 || $4 ; */ }
-;
-
-single_expression:   
-  PLUS single_expression { $$ = $2;  }
-| single_expression XOR single_expression { /* $1^$3 ; */}
-| NOT single_expression { $$ = !$2 ; }
-| single_expression MOD single_expression { $$ =  fmod($1,$3); }
-| single_expression POW single_expression { $$ = pow($1, $3); }
-| ABS single_expression { $$ = fabs($2);}
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { $$ = $2 ;}
-| NUM_REAL { $$ = $1;} //real
-| NUM_INTEGER { $$ = $1;  }  // integer
-| designator { $$ = $1;}
-| function_call {  $$ = $1;}
-| map_declaration {$$ = $1;}
-| array_declaration { $$ = $1;}
-| vector_declaration   {$$ = $1;}
-| list_declaration  { $$ = $1;}
-| set_declaration {$$ = $1;}
-;
-
-designator:
-  NAME { /* $$ = value of $1*/  }
-
-;
 
 %%
 
 void yyerror(const std::string& mess){
-    std::cout << "Erreur trouvée à la ligne " << yylineno << " :  "<<mess  << std::endl;
+    std::cerr << "Error found at line " << yylineno << " :  "<< mess << std::endl;
+    existing_parsing_error= true;
+}
+
+// int
+// yylex (void)
+// {
+//   int c;
+
+//   /* Skip white space.  */
+//   while ((c = getchar ()) == ' ' || c == '\t')
+//     ++yylloc.last_column;
+
+//   /* Step.  */
+//   yylloc.first_line = yylloc.last_line;
+//   yylloc.first_column = yylloc.last_column;
+
+//   /* Process numbers.  */
+//   if (isdigit (c))
+//     {
+//       yylval = c - '0';
+//       ++yylloc.last_column;
+//       while (isdigit (c = getchar ()))
+//         {
+//           ++yylloc.last_column;
+//           yylval = yylval * 10 + c - '0';
+//         }
+//       ungetc (c, stdin);
+//       return NUM;
+//     }
+
+//   /* Return end-of-input.  */
+//   if (c == EOF)
+//     return 0;
+
+//   /* Return a single char, and update location.  */
+//   if (c == '\n')
+//     {
+//       ++yylloc.last_line;
+//       yylloc.last_column = 0;
+//     }
+//   else
+//     ++yylloc.last_column;
+//   return c;
+// }
+
+
+// void yyerror(const char *s, ...){
+//   va_list ap;
+//   va_start(ap, s);
+
+//   if(yylloc.first_line)
+//     fprintf(stderr, "%s:%d.%d-%d.%d: error: ", /*yylloc.filename,*/ yylloc.first_line, 
+//      yylloc.first_column, yylloc.last_line, yylloc.last_column);
+//   vfprintf(stderr, s, ap);
+//   fprintf(stderr, "\n");
+// }
+
+void yyprint(const std::string& mess){
+    std::cout << "[l" << yylineno << "] "<<mess  << std::endl;
 }

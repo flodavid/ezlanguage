@@ -40,7 +40,7 @@ minus     [-]
 {separateurs}   { /* On ignore */ }
 {commentaire}   { /* On ignore */ cout << "Commentaire"<<endl; }
 {entier}	{ yylval.numerical_value=atoi(yytext); return(NUM_INTEGER);}  // integer
-{reel}      { yylval.reel_value=atof(yytext); return(NUM_REAL);}		 // reel
+{reel}      { yylval.texte=atof(yytext); return(NUM_REAL);}		 // reel
 
 {backLine}	return(BACK_LINE);
 
@@ -76,7 +76,7 @@ minus     [-]
 "]"		return (RIGHT_BRACKET);
 "."	        return (POINT);
 
-{quote}		return (QUOTATION_MARKS);
+{quote}		return (QUOTE);
 
 (import|IMPORT)      return(IMPORT);
 (include|INCLUDE)    return(INCLUDE);
@@ -87,7 +87,7 @@ minus     [-]
 (pow|POW)            return(POW);
 (abs|ABS)            return(ABS);
 
-(constant|CONSTANT)  return(CONSTANT);
+(constant|CONSTANT)  return(CONST);
 (variable|VARIABLE)  return(VARIABLE);
 (global|GLOBAL)      return(GLOBAL);
 (is|IS)              return(IS) ;
@@ -122,6 +122,7 @@ minus     [-]
 
 (function|FUNCTION)         return(FUNCTION);
 (procedure|PROCEDURE)       return(PROCEDURE);
+(returns|RETURNS)	    return(RETURNS);
 (return|RETURN)             return(RETURN);
 
 (operator|OPERATOR)         return(OPERATOR);
@@ -159,7 +160,6 @@ minus     [-]
 (regex|REGEX)        	return(REGEX);
 (match|MATCH)        	return(MATCH);
 (search|SEARCH)         return(SEARCH);
-(replace|REPLACE)       return(REPLACE);
 
 
 (size|SIZE)             return(SIZE);
