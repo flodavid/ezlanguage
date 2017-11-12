@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "log.h"
-
 //#define NDEBUG 1 // pour enlever les assert()
 
 // All or no debugs, default value : 0
@@ -20,4 +18,3 @@
 #if NO_DEBUG
     #define DEBUG           0
 #endif
-

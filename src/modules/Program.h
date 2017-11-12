@@ -2,7 +2,6 @@
 #define PROGRAM_H
 
 //special files no to forget to import
-#include "../addons/debug.h"
 #include "Node.h"
 
 /**

@@ -9,7 +9,7 @@ void error(const char *location, const char *msg)
 
 void debug(const std::string &msg, const char *location)
 {
-#if DEBUG
-    printf("%s at : %s\n", msg, location);
+#if DEBUG == 1
+    std::clog << msg << " at : " << location << std::endl;
 #endif
 }

@@ -1,15 +1,16 @@
 #include "Node.h"
+
 #include <iostream>
 
 using namespace std;
 
-Node::Node(): left_son(nullptr), right_son(nullptr)
+Node::Node(): left_son(nullptr), name(""), right_son(nullptr)
 {}
 
-Node::Node(const string &name) : name(name), left_son(nullptr), right_son(nullptr)
+Node::Node(const string &_name) : name(_name), left_son(nullptr), right_son(nullptr)
 {}
 
-Node::Node(Node* left, Node* right): left_son(left), right_son(right)
+Node::Node(Node* left, Node* right): name(""), left_son(left), right_son(right)
 {}
 
 Node::~Node()
@@ -28,7 +29,7 @@ Node * Node::getRightSon() const {
 }
 
 void Node::setLeftSon(Node *left) {
-    if (left!=nullptr) left_son = left; // TODO replace by reference
+    left_son = left; // TODO replace by reference
 }
 
 void Node::setRightSon(Node *right) {
@@ -42,10 +43,12 @@ string Node::postTranslate() const
 
 
 string Node::translate() const {
+    debug("[node--translate()]"+ getName(), AT);
+    // debug("Translation of the node : "+ getName(), AT);
     string left_translate= "";
     string right_translate= "";
-    if (left_son != nullptr)	left_translate = "\n" + left_son->translate() + "\n";
-    if (right_son != nullptr)	right_translate = "\n\n" + right_son->translate() + "\n";
-    std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
+    if (left_son != nullptr)	left_translate += "\n" + left_son->translate() + "\n";
+    if (right_son != nullptr)	right_translate += "\n\n" + right_son->translate() + "\n";
+    // std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
     return preTranslate() + left_translate + postTranslate() + right_translate;
 }

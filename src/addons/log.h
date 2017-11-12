@@ -5,6 +5,8 @@
 #include <string>
 // #include <tchar.h>
 
+#include "debug.h"
+
 // To represent infinity
 #define UNSIGNED_INFINITY std::numeric_limits<unsigned>::max()
 

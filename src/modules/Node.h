@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <string>
+
+#include "../addons/log.h"
+
 using namespace std;
 
 /**
@@ -29,7 +32,7 @@ public:
      * @brief Constructor with a name
      * @param name : Name of the node
      */
-    Node(const std::string &name);
+    Node(const std::string& _name);
 
     /**
      * @brief Constructor with nodes

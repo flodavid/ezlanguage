@@ -57,7 +57,7 @@ int yycolumn = 1;
 
 #define YYERROR_VERBOSE
 #define YY_USER_INIT yylloc.first_line=1;
-#define USE(VALUE) /*empty*/  
+#define USE(VALUE) /* empty */  
 
 %}
 
@@ -102,15 +102,21 @@ int yycolumn = 1;
 %left PLUS MINUS EGAL
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS OPERATOR		// Operators
 
-%type<texte> type operators portee string designator
-%type<arbre> statement_sequence function_call affect declaration statement
-%type<arbre> next_line function procedure class return import
-%type<arbre> ROOT imports declaration_classes declarations_list declaration_variables declaration_methods variable_with_scope variable_without_scope
-%type<arbre> function_string map_declaration array_declaration vector_declaration list_declaration set_declaration
-%type<vectString> list_arguments
-%type<texte> expression single_expression names nbrOrName params param_type
-%type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl
+// Basic elements
+%type<arbre> ROOT
+%type<arbre> imports declaration_classes declarations_list declaration_variables declaration_methods
 %type<vectVar> declaration_arguments param_args
+%type<vectString> list_arguments
+%type<arbre> variable affectation declaration function_call
+%type<arbre> destruct printing overloading if when while repeat for
+%type<arbre> function procedure statement class return import
+%type<texte> type operators scope constancy string designator
+%type<arbre> map_declaration array_declaration vector_declaration list_declaration set_declaration
+// Non basic elements
+%type<arbre> function_string
+%type<texte> expression single_expression names nbrOrName params param_type affect
+%type<arbre> statement_sequence
+%type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl
 
 // Parameters
 // %define parse.trace
@@ -119,7 +125,7 @@ int yycolumn = 1;
 %%
 
 ROOT:
-  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME statement_sequence END endprocedure END_OF_FILE
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
 	{
 		Node* p_imports = $4;
 		Program *racine = new Program(p_imports, $2);
@@ -127,16 +133,17 @@ ROOT:
 		Node* p_decl_class = $6;
 		Node* p_decl_list = $7;
     
-		Node* p_prog = $10;
+		Node* p_prog = $11;
     // $5 : parameters (vector<Variable>)
     // @see main : procedure or function with int return ?
     Procedure* main= new Procedure(p_prog, nullptr, "main", $5);
 
+    racine->setRightSon(p_imports);
     p_imports->setRightSon(p_decl_class);
 		p_decl_class->setRightSon(p_decl_list);
-		// p_decl_list->setRightSon(main);
+    p_decl_list->setRightSon(main);
 
-		cout << racine->translate() << endl;
+		// cout << racine->translate() << endl;
     /* TODO program translation save */
 		return 0;
 	}
@@ -159,7 +166,7 @@ imports:
 
 declaration_arguments:
   /* empty */ { $$= vector<Variable>(); }
-| ARGUMENTS next_line param_args END endargument next_line {
+| ARGUMENTS BACK_LINE param_args END endargument next_line {
     /* TODO arguements declaration logic */
     debug("arguments declaration;", AT);
     vector<Variable> vars($3);
@@ -169,7 +176,7 @@ declaration_arguments:
 
 declaration_classes:
   /* empty */ { $$= new TranslatedNode(""); }
-| declaration_classes class next_line
+| declaration_classes class BACK_LINE
 	{
 		Class* c = (Class *) $1;
     debug("class declared : " + c->getName()+":", AT);
@@ -202,12 +209,10 @@ declarations_list:
 
 declaration_variables:
 /* empty */ { $$= new TranslatedNode(""); }
-| variable_with_scope declaration_variables
+| declaration_variables variable
 	{
-	}
-| variable_without_scope declaration_variables
-	{
-	  /* $$ = new Variable(); */
+    $1->setRightSon($2);
+	  $$ = $1;
 	}
 ;
 /* ******************
@@ -216,19 +221,19 @@ declaration_variables:
 
 /* imports */
 import:
-  IMPORT NAME next_line {
+  IMPORT NAME BACK_LINE {
     /* TODO import logic (name of module) */
     debug("importation du module "+ $2, AT);
     TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"");
     $$= trans_node;
   }
-| INCLUDE string next_line {
+| INCLUDE string BACK_LINE {
     /* TODO include import logic */
     debug(" inclusion de la bibliothèque "+ delete_quote($2), AT);
     TranslatedNode* trans_node= new TranslatedNode("#include \""+ delete_quote($2)+ "\"");
     $$= trans_node;
   }
-| LIBRARY string next_line {
+| LIBRARY string BACK_LINE {
     /* TODO library import logic */
     debug(" inclusion de la LIBRARY "+ delete_quote($2), AT);
     TranslatedNode* trans_node= new TranslatedNode("#include \""+ delete_quote($2)+ "\"");
@@ -238,14 +243,14 @@ import:
 
 /* declaration_arguments */
 param_args:
-  NAME IS param_type AS STRING_PARAM next_line { // ex: x is integer as "--x"
+  NAME IS param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
     cout << "parameter " << get_argument_value($5) << endl;
     vector<Variable> var;
     var.push_back(Variable(nullptr, $1, $3, "local", $5));
     $$= var;
   }
   // TODO transform it into left recursive
-| NAME IS param_type AS STRING_PARAM next_line param_args {
+| NAME IS param_type AS STRING_PARAM BACK_LINE param_args {
     debug("paramètre "+ get_argument_value($5), AT);
     // Add parameter declaration to vector
     // TODO Variable should have right son, instead, of using Vector (replace nullptr) ?
@@ -263,7 +268,7 @@ param_type:
 
 /* declaration_classes */
 class:
-  CLASS NAME next_line begin statement_sequence END endclass
+  CLASS NAME BACK_LINE begin statement_sequence END endclass
 	{
     /* TODO class declaration logic */
 		$$ = new Class();
@@ -292,13 +297,13 @@ names:
 /* declaration_methods */
 declaration_methods:
   /* empty */ { $$ = nullptr; }
-| declaration_methods function next_line
+| declaration_methods function BACK_LINE
 	{
 		Function* f = (Function*) $2;
 		f->setLeftSon($1);
 		$$ = f;
 	}
-| declaration_methods procedure next_line
+| declaration_methods procedure BACK_LINE
 	{
 		Procedure* p = (Procedure*) $2;
 		p->setLeftSon($1);
@@ -322,13 +327,14 @@ return:
 
 function:
   SHARED FUNCTION NAME LEFT_PARENTHESIS list_arguments // {symbolTable.incScope(); }
-  RIGHT_PARENTHESIS returnstype next_line begin statement_sequence return next_line END endfunction
+  RIGHT_PARENTHESIS returnstype BACK_LINE begin statement_sequence return BACK_LINE END endfunction
 	{
     /* TODO function declaration logic 1 */
 		cout << "declaration de la fonction " << $3 << endl;
 	}
 | FUNCTION NAME LEFT_PARENTHESIS list_arguments // { symbolTable.incScope(); }
-  RIGHT_PARENTHESIS returnstype next_line begin statement_sequence return next_line END endfunction {
+  RIGHT_PARENTHESIS returnstype BACK_LINE begin statement_sequence return BACK_LINE END endfunction
+  {
     cout << "declaration de la fonction" << $2 << endl;
     // Right son of last instruction is return statement
     $9->setRightSon($10);
@@ -337,7 +343,8 @@ function:
 		//$$ = new Variable();
 		symbolTable.decScope();
 	}
-| FUNCTION NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS IS EXTERN NAME {
+| FUNCTION NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS IS EXTERN NAME
+  {
   /* TODO function declaration logic 3 */
     cout << "declaration d'une fonction externe " << endl;
   }
@@ -346,51 +353,49 @@ function:
 procedureDecl:
   PROCEDURE NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS
   {
+    /* TODO procedure declaration logic 1 */
     debug("Procedure declaration : "+$2+ ";", AT);
     symbolTable.incScope();
   }
 | PROCEDURE NAME
   {
+    /* TODO procedure declaration logic 2 */
     debug("Procedure declaration : "+$2+ ";", AT);
     symbolTable.incScope();
   }
 ;
 
 procedure:
-  procedureDecl next_line statement_sequence END endprocedure
+// Add shared/not shared operators
+  procedureDecl BACK_LINE statement_sequence END endprocedure
   {
-    /* TODO procedure declaration logic 1 */
+    /* TODO procedure creation logic 1 */
+    debug("Procedure creation ", AT);
     // Procedure *f = new Procedure($1,$4,$4);
 		$$ = nullptr; // = f
 		symbolTable.decScope();
   }
-| PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END endprocedure {
+| PROCEDURE PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS BACK_LINE begin statement_sequence END endprocedure {
     /* TODO print overloading logic 1 */
     cout << "Surcharge de la methode d'affichage \"print\" "  << endl;
+    $$ = nullptr; // = f
   }
-| SHARED PROCEDURE NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS next_line begin  statement_sequence END endprocedure {
-  /* TODO procedure declaration logic 2 */
-    cout << "Déclaration de la procedure " << $3 << endl;
+| SHARED procedureDecl BACK_LINE statement_sequence END endprocedure {
+    /* TODO procedure creation logic 2 */
+    debug("Procedure creation ", AT);
+    // Procedure *f = new Procedure($1,$4,$4);
+		$$ = nullptr; // = f
   }
-| SHARED PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS next_line begin statement_sequence END endprocedure {
+| SHARED PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS BACK_LINE begin statement_sequence END endprocedure {
     /* TODO print overloading logic 2 (factorize) */
     cout << "Surcharge de la methode d'affichage \"print\" "  << endl;
+    $$ = nullptr;
   }
 ;
 
 /* ******************
  *   INSTRUCTIONS   *
  * ******************/
-
-statement:
-  next_line {}
-| variable_with_scope   {} 
-| variable_constant     {}
-| variable_without_scope next_line  { }
-| affectation next_line             { } 
-| function_call next_line           { }
-| declaration { $$ = $1; }
-;
 
 declaration:
   map_declaration     { $$ = $1; }
@@ -401,20 +406,19 @@ declaration:
 ;
 
 statement:
-  next_line
-| variable_with_scope               { }
-| variable_without_scope next_line  { }
-| affectation next_line             { } 
-| function_call next_line           { }
-| declaration_methods {}
-| destruct {}
-| printing {}
-| overloading {}
-| if          {}
-| when        {}
-| while       {}
-| repeat      {}
-| for         {}
+  BACK_LINE               { $$ = new TranslatedNode(""); }
+| variable                { $$ = $1; }
+| affectation             { $$ = $1; }
+| declaration             { $$ = $1; }
+| function_call           { $$ = $1; }
+| destruct    { $$ = $1; }
+| printing    { $$ = $1; }
+| overloading { $$ = $1; }
+| if        { $$ = $1; }
+| when      { $$ = $1; }
+| while     { $$ = $1; }
+| repeat    { $$ = $1; }
+| for       { $$ = $1; }
 ;
 
 /* ************************
@@ -438,29 +442,29 @@ simple_function:
 ;
 
 if:
-  IF expression THEN next_line statement_sequence  END endif {
+  IF expression THEN BACK_LINE statement_sequence  END endif {
     /* TODO if-then logic */
     printf("SI   ALORS \n");
   }
-| IF expression THEN next_line statement_sequence ELSE next_line statement_sequence END endif {
+| IF expression THEN BACK_LINE statement_sequence ELSE BACK_LINE statement_sequence END endif {
     /* TODO if-else-then logic */
     printf("SI_SINON_ALORS \n");
   }
 ;
 
 when:
-  WHEN expression IS next_line whenbody whendefault END endwhen {
+  WHEN expression IS BACK_LINE whenbody whendefault END endwhen {
     /* TODO when logic */
     printf("when .. case .. \n");
   }
 ;
 
 whenbody: /* whenbody can't be empty */
-  CASE expression next_line statement_sequence END endcase next_line {
+  CASE expression BACK_LINE statement_sequence END endcase {
     /* TODO whenbody logic 1 */
     cout << "case body" << endl;
   }
-| CASE expression next_line statement_sequence END endcase next_line whenbody {
+| CASE expression BACK_LINE statement_sequence END endcase whenbody {
     /* TODO whenbody logic 2 */
     cout << "case body" << endl;
   }
@@ -468,7 +472,7 @@ whenbody: /* whenbody can't be empty */
 
 whendefault: /* May not be specified */
   /* empty */
-| DEFAULT next_line statement_sequence END endcase next_line {
+| DEFAULT BACK_LINE statement_sequence END endcase {
     /* TODO whendefault logic 1 */
   }
 ;
@@ -481,7 +485,7 @@ while:
 ;
 
 repeat:
-  REPEAT statement_sequence UNTIL next_line expression next_line END endrepeat {
+  REPEAT statement_sequence UNTIL BACK_LINE expression BACK_LINE END endrepeat {
     /* TODO repeat-until logic */
     printf("REPEAT .. UNTIL .. \n");
   }
@@ -507,7 +511,7 @@ forStep: // @see do step should be text or real_value
 ;
 
 forBody:
-  DO next_line statement_sequence END endfor next_line { 
+  DO BACK_LINE statement_sequence END endfor { 
     /* TODO for body logic */
   }
 ;
@@ -545,20 +549,20 @@ affectation:
 
 destruct:
   // TODO reword destruction definition
-  DESTRUCT next_line statement_sequence END enddestruct {
+  DESTRUCT BACK_LINE statement_sequence END enddestruct {
     /* TODO destructions logic */
     cout << "destructeur " << endl;
   }
 ;
 
 printing:
-PRINT expressions next_line {
+PRINT expressions BACK_LINE {
     /* TODO overloading logic */
   }
 ;
 
 overloading:
-  OPERATOR operators LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type next_line statement_sequence END {
+  OPERATOR operators LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
     /* TODO overloading logic */
     cout << "operateur " <<  $2 << endl;
   }
@@ -570,9 +574,16 @@ overloading:
 
 // one or several new lines
 next_line:
-  BACK_LINE /* Nothing to do */
+  BACK_LINE BACK_LINE /* Nothing to do */
 | next_line BACK_LINE /* Nothing to do */
 ;
+
+// zero or some new lines
+lineend:
+  END_OF_FILE
+| BACK_LINE /* Nothing to do */
+;
+
 
 list_arguments:
   /* empty */ {
@@ -593,60 +604,55 @@ list_arguments:
 | NAME names ARE type { /* todo list_arguments logic */ }
 ;
 
-variable_without_scope:
-  NAME IS type affect
-	{
-    cout << "Déclaration de la variable1 " << $1 << endl;
-		VariableHashed v($1,$3);
-		symbolTable.addElement(v);
-		$$ = new Variable(nullptr, nullptr, $1,$3,"",$4,false);
-	}
-| NAME names ARE type affect
-	{
-		cout << "Variable des variables1 "<< $1 << endl;
-	}
-| NAME IS SHARED type affect
-	{
-		cout << "Variable de la variable1 " << $1 << endl;
-	}
 | NAME names ARE SHARED type affect
 	{
 		cout << "Variable des variables1 "<< $1 << endl;
 	}
-| variable_construct
-  {
-    /* TODO variable construction logic (with class) */
-    cout << "variable construction (class)" << endl ;
-  } 
+
 ;
 
-variable_with_scope:
-  portee NAME IS type affect next_line
-  	{
-  		VariableHashed v($2,$4);
-  		symbolTable.addElement(v);
-  		// $$ = new Variable($2,$4,$1,false);
-  	}
-| portee NAME names ARE type next_line
+// TODO Avoid shift/reduce by factorising shared/not shared
+variable:
+  scope constancy NAME IS type affect BACK_LINE
+  {
+    debug("Variable declaration: "+ $3, AT);
+    VariableHashed v($3,$5);
+    symbolTable.addElement(v);
+    $$ = new Variable(nullptr, $3,$5,$1+$2,$6,false);
+  }
+| scope constancy NAME names ARE type affect BACK_LINE
 	{
-		cout << "  list_arguments des variables  avec portee "<< $2 << endl;
+    /* TODO multiple variables declaration logic 1 */
+		debug("Variable declaration: "+ $3, AT);
 	}
-| portee NAME IS SHARED type affect next_line
+| scope constancy NAME IS SHARED type affect BACK_LINE
 	{
-		VariableHashed v($2,$4);
+		VariableHashed v($3,$5);
 		symbolTable.addElement(v);
 		// $$ = new Variable($2,$4,$1,true);
 	}
-| portee NAME names ARE SHARED type next_line
+| scope constancy NAME names ARE SHARED type BACK_LINE
 	{
-		cout << "  Variable des variables  avec portee "<< $2 << endl;
+    /* TODO multiple variables declaration logic 2 */
+		debug("  Variable des variables  avec portee "+ $3, AT);
 	}
+| variable_construct
+  {
+    /* TODO variable construction logic (with class) */
+    debug("variable construction (class)", AT);
+  }
+;
 
-variable_constant:
-  CONST NAME IS  type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
-| CONST NAME names ARE  type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
-| CONST NAME IS SHARED type affect  { cout << "Déclaration de la variable constante " << $1 << endl; }
-| CONST NAME names ARE SHARED type affect  { cout << "Déclaration des variables constante "<< $1 << endl; }
+scope:
+  /* empty */    { $$ = "local";}
+| LOCAL   { $$ = "local";}
+| GLOBAL  { $$ = "global";}
+;
+
+// @see if we 
+constancy:
+  /* empty */ { $$ = ""; }
+| CONST { $$ = "const"; }
 ;
 
 variable_construct:
@@ -707,10 +713,11 @@ doublepoint:
 ;
 
 begin:
-  /* empty */
-| BEGINN next_line { }
+  BACK_LINE         { }
+| BEGINN BACK_LINE  { }
 ;
 
+// @see can it just be a translated Node (variable name don't change) or a Node (Var or value)
 affect:
   /* empty */
 | EGAL expression { }
@@ -759,11 +766,6 @@ nbrOrName:
 | NAME        { /* $$ = String($1); */ }
 ;
 
-portee: 
- LOCAL    { $$ = "local";}
-| GLOBAL  { $$ = "global";}
-;
-
 type:
   TYPE_INTEGER  { $$ = "int";}
 | TYPE_REAL     { $$ = "real";}
@@ -795,58 +797,58 @@ strOrName:
  * *********************/
 
 endclass:
-  /* empty */
-| CLASS {}
+  lineend
+| CLASS lineend {}
 ;
 
 endfunction:
-  /* empty */
-| FUNCTION {}
+  lineend
+| FUNCTION lineend {}
 ;
 
 endprocedure:
-  /* empty */
-| PROCEDURE {}
+  lineend
+| PROCEDURE lineend {}
 ;
 
 endif:
-  /* empty */
-| IF {}
+  lineend
+| IF lineend {}
 ;
 
 endwhen:
-  /* empty */
-| WHEN  {}
+  lineend
+| WHEN lineend {}
 ;
 
 endcase:
-  /* empty */
-| CASE {}
+  lineend
+| CASE lineend {}
 ;
 
 endwhile:
-  /* empty */
-| WHILE {}
+  lineend
+| WHILE lineend {}
 ;
 
 endfor:
-  /* empty */
-| FOR {}
+  lineend
+| FOR lineend {}
 ;
 
 endrepeat:
-  /* empty */
-| REPEAT {}
+  lineend
+| REPEAT lineend {}
 ;
 
 enddestruct:
-  /* empty */
-| DESTRUCT {}
+  lineend
+| DESTRUCT lineend {}
 ;
 
 endargument:
-  /* empty */
-| ARGUMENTS {}
+  lineend
+| ARGUMENTS lineend {}
 ;
 
 
@@ -857,8 +859,8 @@ endargument:
 // 		---------------------------------------------------------------------
 
 /* else_body:
-   ELSE next_line statement_sequence   { cout << "else " << endl; }
-|  ELSE next_line statement_sequence  else_body  { cout << "else " << endl;}
+   ELSE BACK_LINE statement_sequence   { cout << "else " << endl; }
+|  ELSE BACK_LINE statement_sequence  else_body  { cout << "else " << endl;}
 ;*/
 
 //    -----------------------------REGEX METHODS-----------------------------------------
@@ -892,40 +894,40 @@ function_string:
 
 //    -----------------------------array Déclaration----------------------------------------
 array_declaration:
-portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| portee NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
+scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
 ;
 
 //    -----------------------------vector declaration----------------------------------------
 vector_declaration: 
-portee NAME IS VECTOR OF type { printf("vector declaration  \n"); }
-| portee NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| portee NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| portee NAME IS VECTOR OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+scope NAME IS VECTOR OF type { printf("vector declaration  \n"); }
+| scope NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
+| scope NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
+| scope NAME IS VECTOR OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
 ;
 
 //    -----------------------------list declaration----------------------------------------
 list_declaration: 
-portee NAME IS LIST OF type { printf("list declaration  \n"); }
-| portee NAME IS LIST OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
+scope NAME IS LIST OF type { printf("list declaration  \n"); }
+| scope NAME IS LIST OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
 ;
 
 //    -----------------------------set declaration----------------------------------------
 set_declaration: 
-portee NAME IS SET OF type { printf("set declaration  \n"); }
-| portee NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| portee NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| portee NAME IS SET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
+scope NAME IS SET OF type { printf("set declaration  \n"); }
+| scope NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
+| scope NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
+| scope NAME IS SET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
 ;
 
 //    -----------------------------map declaration----------------------------------------
 map_declaration: 
-portee NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
+scope NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
 | map_declaration EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
 ;
 
