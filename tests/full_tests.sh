@@ -28,11 +28,13 @@ echo -e "==========================================\033[0m\n"
 # Execute tests
 echo "Test 1 : main_simple" 
 run_test 1_main_simple.ez
+run_test 2_procedure_vide.ez
+run_test 3_fonction_vide.ez
+run_test 4_affichage.ez
+
+# Program modules tests
+run_test example.ez
+run_test module_program/person.ez
+run_test module_program/progam.ez
 
 check_tests_success
-
-#echo "Test 2 : procedure_vide" 
-#$ROOT/../bin/EZ_language_compiler .ez
-#echo "Test 3 : julia"
-#$ROOT/../bin/EZ_language_compiler julia.ez
-

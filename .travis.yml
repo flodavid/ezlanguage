@@ -33,12 +33,16 @@ install:
 
 script:
   - make --file makefile -j2
-  - ./bin/EZ_language_compiler tests/fichier_de_test.ezl
-  - cd examples
+  - ./bin/EZ_language_compiler tests/example.ezl
 # Launch valid tests
-  - sh ./valid_tests.sh
+  - cd ../tests
+  - ./basic_tests.sh
 
 after_success:
 # Launch other tests
-  - sh ./unvalid_tests.sh
+  - ./full_tests.sh
+  - cd ..
+  - cd examples
+  - ./valid_tests.sh
+  - ./unvalid_tests.sh
 
