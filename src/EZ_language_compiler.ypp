@@ -106,17 +106,18 @@ int yycolumn = 1;
 %type<arbre> ROOT
 %type<arbre> imports declaration_classes declarations_list declaration_variables declaration_methods
 %type<vectVar> declaration_arguments param_args
-%type<vectString> list_arguments
+%type<vectString> arguments
+%type<arbre> argumentsList argumentsSeparated
 %type<arbre> variable affectation declaration function_call
 %type<arbre> destruct printing overloading if when while repeat for
 %type<arbre> function procedure statement class return import
-%type<texte> type operators scope constancy string designator
+%type<texte> type operators scope constancy string designator argument
 %type<arbre> map_declaration array_declaration vector_declaration list_declaration set_declaration
 // Non basic elements
 %type<arbre> function_string
 %type<texte> expression single_expression names nbrOrName params param_type affect
 %type<arbre> statement_sequence
-%type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl
+%type<texte> forDecl forType forRange forStep forBody returnstype procedureDecl facultativeAssignment
 
 // Parameters
 // %define parse.trace
@@ -326,13 +327,13 @@ return:
 ;
 
 function:
-  SHARED FUNCTION NAME LEFT_PARENTHESIS list_arguments // {symbolTable.incScope(); }
+  SHARED FUNCTION NAME LEFT_PARENTHESIS arguments // {symbolTable.incScope(); }
   RIGHT_PARENTHESIS returnstype BACK_LINE begin statement_sequence return BACK_LINE END endfunction
 	{
     /* TODO function declaration logic 1 */
 		cout << "declaration de la fonction " << $3 << endl;
 	}
-| FUNCTION NAME LEFT_PARENTHESIS list_arguments // { symbolTable.incScope(); }
+| FUNCTION NAME LEFT_PARENTHESIS arguments // { symbolTable.incScope(); }
   RIGHT_PARENTHESIS returnstype BACK_LINE begin statement_sequence return BACK_LINE END endfunction
   {
     cout << "declaration de la fonction" << $2 << endl;
@@ -343,7 +344,7 @@ function:
 		//$$ = new Variable();
 		symbolTable.decScope();
 	}
-| FUNCTION NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS IS EXTERN NAME
+| FUNCTION NAME LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS IS EXTERN NAME
   {
   /* TODO function declaration logic 3 */
     cout << "declaration d'une fonction externe " << endl;
@@ -351,7 +352,7 @@ function:
 ;
 
 procedureDecl:
-  PROCEDURE NAME LEFT_PARENTHESIS list_arguments RIGHT_PARENTHESIS
+  PROCEDURE NAME LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS
   {
     /* TODO procedure declaration logic 1 */
     debug("Procedure declaration : "+$2+ ";", AT);
@@ -578,14 +579,7 @@ next_line:
 | next_line BACK_LINE /* Nothing to do */
 ;
 
-// zero or some new lines
-lineend:
-  END_OF_FILE
-| BACK_LINE /* Nothing to do */
-;
-
-
-list_arguments:
+arguments:
   /* empty */ {
     vector<VariableHashed> v;
     $$ = v;
@@ -596,19 +590,41 @@ list_arguments:
  		v.push_back(VariableHashed($1,$3));
  		$$ = v;
  	}
-| NAME IS type COMMA list_arguments
+| NAME IS type COMMA arguments
  	{
  		$5.push_back(VariableHashed($1,$3));
  		$$ = $5;
  	}
-| NAME names ARE type { /* todo list_arguments logic */ }
+| NAME names ARE type { /* todo arguments logic */ }
 ;
 
 | NAME names ARE SHARED type affect
 	{
 		cout << "Variable des variables1 "<< $1 << endl;
 	}
+;
 
+argumentsList:
+  /* empty */ { $$ = new TranslatedNode(""); } // No argument
+| facultativeAssignment argument argumentsSeparated // One or more arguments
+// arguments are separated by commas : they have a comma before, except the first one
+  {
+    // TODO Take assignment into account when passing argument @see what's the goal ?
+    TranslatedNode* arg= new TranslatedNode($2);
+    arg->setRightSon($3);
+    $$ = arg;
+  }
+;
+
+argumentsSeparated:
+  /* empty */ { $$ = new TranslatedNode(""); }
+| argumentsSeparated COMMA facultativeAssignment argument
+  {
+    // TODO Take assignment into account when passing argument @see what's the goal ?
+    TranslatedNode* arg= new TranslatedNode($4);
+    $1->setRightSon(arg);
+    $$ = $1;
+  }
 ;
 
 // TODO Avoid shift/reduce by factorising shared/not shared
@@ -657,8 +673,8 @@ constancy:
 
 variable_construct:
   NAME IS NAME {}  // ex: c is Maclasse
-| NAME IS NAME LEFT_PARENTHESIS class_liste_argument RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
-| NAME IS NAME LEFT_PARENTHESIS class_liste_argument_with_assignment RIGHT_PARENTHESIS {} // p is Person(name="name")
+| NAME IS NAME LEFT_PARENTHESIS argumentsList RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
+| NAME IS NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} // No arguments to construction
 ;
 
 expression:
@@ -708,6 +724,12 @@ single_expression:
  *  GENERIC SIMPLE  *
  * ******************/
 
+// zero or some new lines
+lineend:
+  END_OF_FILE
+| BACK_LINE /* Nothing to do */
+;
+
 doublepoint:
  POINT POINT
 ;
@@ -718,32 +740,24 @@ begin:
 ;
 
 // @see can it just be a translated Node (variable name don't change) or a Node (Var or value)
+// TODO affect logic
 affect:
-  /* empty */
+  /* empty */ {  }
 | EGAL expression { }
 | EGAL string { }
 ;
 
-class_liste_argument:
-  string { }
-| NUM_INTEGER  {}
-| NUM_REAL  {}
-| NAME  {}
-| string COMMA class_liste_argument  { }
-| NUM_INTEGER COMMA class_liste_argument  {}
-| NUM_REAL COMMA class_liste_argument  {}
-| NAME COMMA class_liste_argument {}
+argument:
+  string      { td::to_string( }
+| NUM_INTEGER { $$ = $1; }
+| NUM_REAL    { $$ = $1; }
+| NAME        { $$ = $1; /* @see if variable must be retrieved from name */ }
 ;
 
-class_liste_argument_with_assignment:
-  NAME EGAL string { }
-| NAME EGAL NUM_INTEGER   {}
-| NAME EGAL NUM_REAL  {}
-| NAME EGAL NAME  {}
-| NAME EGAL string COMMA class_liste_argument_with_assignment  { }
-| NAME EGAL NUM_INTEGER COMMA class_liste_argument_with_assignment  {}
-| NAME EGAL NUM_REAL COMMA class_liste_argument_with_assignment  {}
-| NAME EGAL NAME COMMA class_liste_argument_with_assignment {}
+// TODO facultativeAssignment logic
+facultativeAssignment:
+  /* empty */ { $$ = "" } // ex: c is myClass(var1, var2)
+| NAME EGAL   { $$ = $1 } // ex: p is Person(name="name")
 ;
 
 operators:
