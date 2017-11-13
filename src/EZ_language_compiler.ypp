@@ -748,7 +748,7 @@ affect:
 ;
 
 argument:
-  string      { td::to_string( }
+  string      { $$ = $1; }
 | NUM_INTEGER { $$ = $1; }
 | NUM_REAL    { $$ = $1; }
 | NAME        { $$ = $1; /* @see if variable must be retrieved from name */ }
