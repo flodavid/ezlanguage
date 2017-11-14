@@ -15,9 +15,8 @@ public:
     
     /**
      * @brief constructor with parameters
-     * @param left : left son
      * @param right : right son
-     * @param cond : condition of the loop
+     * @param prg_name : name of the program
      */
     Program(Node* right, std::string prg_name);
     

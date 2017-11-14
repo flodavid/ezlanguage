@@ -8,6 +8,7 @@
  * @brief Represent a node of the tree which will translate a multiple variable declaration
  * Exemple : locale a, b, c are integer -> int a, b, c;
  * @author Johan Defaye
+ * @see if it is useful or if Variable is sufficient (with boolean or other for separator ?)
  */
 class MultipleVariable : public Node {
 	
