@@ -1,15 +1,11 @@
 #ifndef REPEAT_H
 #define REPEAT_H
 
-//essential libraries
-#include <vector>
-#include <string.h>
-
 //special files no to forget to import
-#include "Iterative_instruction.h"
+#include "Node.h"
 
 /**
- * @brief
+ * @brief Represent a node of the tree whcih will traduct the loop repeat (do ... while in c++)
  * 
  * @details Using :
  * repeat
@@ -21,35 +17,30 @@
  * 
  * @author Antoine GARNIER
  */
-class Repeat :
-        public Iterative_instruction {
+class Repeat : public Node {
+	
 protected:
-//    The condition is located in the superclass Iterative_instruction
-//    Condition repeat_condition;
+	Node * condition;
 
 public:
-    //TODO : constructeur par recopie dans la classe Condition
-    Repeat(Condition* repeat_cond, Node* repeat_left_son, Node* repeat_right_son);
-
-    //getters
-//    The getter is located in the superclass
-//    Condition get_condition(){ return repeat_condition; }
+    
+    /**
+     * @brief constructor with parameters
+     * @param left : left son
+     * @param right : right son
+     * @param cond : condition of the loop
+     */
+    Repeat(Node * left, Node* right , Node * cond);
     
     /**
      * @brief Translate the begining part of the Repeat
      * @return a string containing the C++ code of the instruction
-     *
-     * All subclasses, should reimplement this method so that the translation corresponds
-     * to their specifications, specificities and own values
      */
     virtual std::string preTranslate() const;
     
     /**
      * @brief Translate the end part of the Repeat
      * @return a string containing the C++ code of the instruction
-     *
-     * All subclasses, should reimplement this method so that the translation corresponds
-     * to their specifications, specificities and own values
      */
     virtual std::string postTranslate() const;
 

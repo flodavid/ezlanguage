@@ -1,23 +1,15 @@
-//
-// Created by ROUINEB Hamza
-//
+//@author Antoine GARNIER
 #include "Program.h"
 
 using namespace std;
 
-Program::Program() : Node("Program")
-{}
-
-
-Program::Program(const string &program_name) : Node("Program"), _program_name(program_name)
-{}
-
-Program::Program(const string &program_name, DConstants *son) :Program(program_name)
+Program::Program(Node* right, std::string prg_name) : Node(nullptr, right)
 {
-    setRightSon(son);
+    name= prg_name; // TODO
+    debug("Program : " + prg_name, AT);
 }
 
-std::string Program::preTranslate() const
+string Program::preTranslate() const
 {
-    return "// Program " + _program_name;
+    return "";
 }

@@ -10,8 +10,6 @@
 #define COMPARISON 4
 #define INCREMENT 5
 
-#include <string>
-
 #include "Node.h"
 
 /**
@@ -19,8 +17,7 @@
  * @author : GARNIER Antoine
  * 
  */
-class Operator
-        : public Node{
+class Operator : public Node{
 
 protected:
     //in the yacc file, "Operator(LOGICAL, "and")" could be called, given the appropriate token
@@ -46,7 +43,7 @@ public:
      * All subclasses, must reimplement this method so that the translation corresponds
      * to their specifications, specificities and own values
      */
-    virtual std::string preTranslate() const =0;
+    virtual std::string preTranslate() const;
 };
 
 

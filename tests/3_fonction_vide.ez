@@ -1,0 +1,10 @@
+Program main
+
+function Plop ( plop is string = "plop" ) return string
+    return plop;
+end function
+
+
+procedure main()
+    print Plop()
+end procedure

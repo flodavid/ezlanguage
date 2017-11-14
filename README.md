@@ -1,6 +1,6 @@
 # EzLanguage
 
-[![Build Status](https://travis-ci.org/ezlanguage/ezlanguage.svg?branch=compilateur)](https://travis-ci.org/ezlanguage/ezlanguage)
+[![Build Status](https://travis-ci.org/flodavid/ezlanguage.svg)](https://travis-ci.org/flodavid/ezlanguage)
 
 Repository of a project for the EZ language compiler.
 A simple compiler for EZ-Language 
@@ -12,7 +12,7 @@ A makefile is present at the root of the project to help with the process.
 
 In order to :
 * add options to the YACC compiler : use the variable *YACC_FLAGS*
-* add options to the LEXX compiler : use the variable *YACC_FLAGS*
+* add options to the LEX compiler : use the variable *YACC_FLAGS*
 * add options for compilation : use the variable *YACC_FLAGS*
 * add files for the compilation of the compiler : use the variable *YACC_FLAGS*
 
@@ -30,4 +30,3 @@ In order to :
 * test a file : `EZ_language_compiler --directinput`
 
 Do not hesitate to create git *Issues* at the github website if you encounter an inopinate problem. 
-	  

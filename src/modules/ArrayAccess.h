@@ -1,9 +1,7 @@
 #ifndef ARRAYACCESS_H
 #define ARRAYACCESS_H
 
-#include <string>
 #include "Node.h"
-#include "ArrayDeclaration.h"
 
 /**
  * @class AccessArray
@@ -12,11 +10,12 @@
  * example of translation my_array[5] -> here index=5  
  * @author Ismail ELFAQIR
  */
-class ArrayAccess :
-public Node {
-protected:
-    ArrayDeclaration * array;
+class ArrayAccess : public Node {
+	
+protected:	
+	std::string arrayName;
     int index;
+
 public:
 
     /* * * * * * * * *
@@ -25,27 +24,16 @@ public:
 
 
     /**
-    * Default constructor
-    * Set array to NULL and index to 0
-    * @author Ismail ELFAQIR
-    */
-    ArrayAccess();
-
-    /**
     * Constructor with parameters
     * Set the array and the access index of array by the parameters passed to the constructor
-    * @param a : pointer to the ArrayDeclaration
-    * @param i : index
+    * @param left : left son
+    * @param right : right son
+    * @param arrayN : name of the array
+    * @param ind : index to access
     * @author Ismail ELFAQIR
     */
-    ArrayAccess(ArrayDeclaration *a, int i );
+    ArrayAccess(Node * left, Node * right, const std::string & arrayN, int ind);
 
-    /**
-    * Copy constructor
-    * @param cpy : the array accessor that we want to cpy to the actual array accessor
-    * @author Ismail ELFAQIR
-    */
-    ArrayAccess(const ArrayAccess & cpy);
 
     /**
     * Destructor
@@ -61,7 +49,7 @@ public:
     * getter of array
     * @author Ismail ELFAQIR
     */
-    ArrayDeclaration * get_array() const;
+    std::string get_array() const;
 
     /**
     * getter of index
@@ -71,10 +59,10 @@ public:
 
     /**
     * setter of array
-    * @param a : pointer to the ArrayDeclaration
+    * @param a : reference to the ArrayDeclaration
     * @author Ismail ELFAQIR
     */
-    void set_array(ArrayDeclaration *a);
+    void set_array(const std::string & a);
 
     /**
     * setter of index

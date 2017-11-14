@@ -1,8 +1,8 @@
-# EzLanguage
+Modules
+=======
 
-[![Build Status](https://travis-ci.org/ezlanguage/ezlanguage.svg?branch=compilateur)](https://travis-ci.org/ezlanguage/ezlanguage)
+This folder Source files C++ that contains data needed to translate EZ parts into C++ with lex and bison.
 
+Each class correspond to a C++ instruction of part of instruction. They all inherit from the class **Node**.
 
-Source files C++ that contains all the information needed to translate EZ into C++ by lexx and bison.
-
-This folder also contains some libraries created for enhancing the C++.
+More details in the parent [README](../README.md).
