@@ -756,8 +756,8 @@ argument:
 
 // TODO facultativeAssignment logic
 facultativeAssignment:
-  /* empty */ { $$ = "" } // ex: c is myClass(var1, var2)
-| NAME EGAL   { $$ = $1 } // ex: p is Person(name="name")
+  /* empty */ { $$ = ""; } // ex: c is myClass(var1, var2)
+| NAME EGAL   { $$ = $1; } // ex: p is Person(name="name")
 ;
 
 operators:
