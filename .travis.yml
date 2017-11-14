@@ -36,13 +36,12 @@ script:
   - ./bin/EZ_language_compiler tests/example.ezl
 # Launch valid tests
   - cd tests/
-  - sh basic_tests.sh
+  - bash basic_tests.sh
 
 after_success:
 # Launch other tests
-  - sh full_tests.sh
-  - cd ..
-  - cd examples
-  - sh valid_tests.sh
-  - sh unvalid_tests.sh
+  - bash full_tests.sh
+  - cd ../examples
+  - bash valid_tests.sh
+  - bash unvalid_tests.sh
 
