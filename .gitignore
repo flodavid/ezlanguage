@@ -27,3 +27,4 @@ obj/*
 
 # Output files (generated cpp)
 tests/*.cpp
+*.cpp

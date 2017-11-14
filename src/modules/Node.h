@@ -49,17 +49,8 @@ public:
     virtual ~Node();
 
     /**
-     * @brief getter on left son
-     */
-    Node * getLeftSon() const;
-    
-    /**
-     * @brief getter on right son
-     */
-    Node * getRightSon() const;
-    
-    /**
-     * @brief getter on right son
+     * @brief getter on name
+     * @return the name of the node. May be an empty string
      */
     inline const std::string & getName() const { return name; }
     

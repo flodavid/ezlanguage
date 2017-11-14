@@ -19,7 +19,7 @@ class Function : public Node {
 
 protected:
     std::string function_name;
-    std::vector<VariableHashed> arguments;
+    std::vector<Variable*> arguments; // TODO delete in destructor
     std::string return_type;
     Node* funReturn;
 
@@ -28,12 +28,14 @@ public:
     /**
      * @brief Constructor with parameters
      * @param left : left son
-     * @param right : right son
      * @param name : function's name
      * @param arguments : arguments list of the function
      * @param type : return type of the function
+     * 
+     * Right son is set to null
      */
-    Function(Node * left, Node * right, const std::string & name, const std::vector< VariableHashed > & arguments, const std::string & type);
+    Function(Node * left, const std::string & name,
+        const std::vector< Variable* > & arguments, const std::string & type);
 
     /**
      * @brief Getter for the function's name
@@ -51,26 +53,7 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<VariableHashed> getArguments() const {return arguments;}
-
-    /**
-     * @brief Setter of the function's name
-     * @param name : name of the function
-     */
-    void setFunctionName(const std::string & name){function_name= name;}
-
-    /**
-     * @brief Setter of the return type
-     * @param type : return type of the function
-     */
-    void setReturnType(const std::string & type){return_type= type;}
-
-    /**
-     * @brief Setter of the list of arguments
-     * @param arguments : list of the arguments of the function
-     */
-    void setArguments(const std::vector<VariableHashed> & args){arguments= args;}
-
+    std::vector<Variable*> getArguments() const {return arguments;}
     
     /**
      * @brief Translate the begining part of the Function

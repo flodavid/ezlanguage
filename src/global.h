@@ -21,9 +21,10 @@ typedef struct s_mon_type {
     bool booleen;
     std::string texte;
     Node* arbre;
-    vector<VariableHashed> vectString;
+    std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
-    vector<Variable> vectVar;
+    Variable* var;
+    std::vector<Variable*> vectVar;
 //    MaClasse	une_maclasse;
 } mon_type;
 

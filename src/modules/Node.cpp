@@ -19,15 +19,6 @@ Node::~Node()
     delete right_son;
 }
 
-
-Node * Node::getLeftSon() const {
-    return left_son;
-}
-
-Node * Node::getRightSon() const {
-    return right_son;
-}
-
 void Node::setLeftSon(Node *left) {
     left_son = left; // TODO replace by reference
 }
