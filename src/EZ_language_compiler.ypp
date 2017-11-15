@@ -146,6 +146,7 @@ ROOT:
     p_decl_list->setRightSon(main);
 
 		// cout << racine->translate() << endl;
+    fprintf(yyout, "%s", racine->translate().c_str());
     /* TODO program translation save */
 		return 1; // No other file
     // return 0; // other file
