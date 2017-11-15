@@ -18,6 +18,7 @@
 #include "../src/declarations/Variable.h"
 #include "../src/modules/Node.h"
 #include "../src/modules/TranslatedNode.h"
+#include "../src/modules/If.h"
 #include "../src/modules/Program.h" // Empty Node
 
 #include "../src/global.h"
@@ -112,7 +113,7 @@ int yycolumn = 1;
 %type<arbre> method affectation declaration function_call
 %type<arbre> destruct printing overloading if when while repeat for
 %type<arbre> function procedure statement class return import
-%type<texte> type operators scope constancy string designator argument
+%type<texte> type operators scope constancy string argument
 %type<arbre> map_declaration array_declaration vector_declaration list_declaration set_declaration
 // Non basic elements
 %type<arbre> function_string
@@ -127,7 +128,8 @@ int yycolumn = 1;
 %%
 
 ROOT:
-  PROGRAM NAME next_line imports declaration_arguments declaration_classes declarations_list PROCEDURE NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes // 6 emt
+  declarations_list PROCEDURE NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
 	{
 		Node* p_imports = $4;
 		Program *racine = new Program(p_imports, $2);
@@ -140,14 +142,18 @@ ROOT:
     // @see main : procedure or function with int return ?
     Procedure* main= new Procedure(p_prog, "main", $5);
 
-    racine->setRightSon(p_imports);
-    p_imports->setRightSon(p_decl_class);
-		p_decl_class->setRightSon(p_decl_list);
     p_decl_list->setRightSon(main);
+		p_decl_class->setRightSon(p_decl_list);
+    p_imports->setRightSon(p_decl_class);
+    racine->setRightSon(p_imports);
 
-		// cout << racine->translate() << endl;
-    fprintf(yyout, "%s", racine->translate().c_str());
-    /* TODO program translation save */
+		const std::string & translation= racine->translate();
+    // debug log
+    debug("\n      TRANSLATION\n======================>>>>>\n"+ translation +
+        "\n<<<<<======================\n        END TRANSLATION\n", AT);
+    // output the translation in the output file (should result a valid cpp file)
+    fprintf(yyout, "%s", translation.c_str());
+    
 		return 1; // No other file
     // return 0; // other file
 	}
@@ -201,7 +207,6 @@ declarations_list:
   {
     // PDVariables* vars = (PDVariables*) $1;
     // PDFunctions* functs = (PDFunctions*) $2;
-    Node* functs= $2;
     Node* vars= $3;
     $2->setRightSon(vars);
     vars->setRightSon($2);
@@ -228,19 +233,19 @@ import:
   IMPORT NAME BACK_LINE {
     /* TODO import logic (name of module) */
     debug("importation du module "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"");
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"\n");
     $$= trans_node;
   }
 | INCLUDE string BACK_LINE {
     /* TODO include import logic */
-    debug(" inclusion de la bibliothèque "+ delete_quote($2), AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ delete_quote($2)+ "\"");
+    debug(" inclusion de la bibliothèque "+ $2, AT);
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2+ "\"\n");
     $$= trans_node;
   }
 | LIBRARY string BACK_LINE {
     /* TODO library import logic */
-    debug(" inclusion de la LIBRARY "+ delete_quote($2), AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ delete_quote($2)+ "\"");
+    debug(" inclusion de la LIBRARY "+ $2, AT);
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2+ "\"\n");
     $$= trans_node;
   }
 ;
@@ -323,14 +328,20 @@ statement_sequence:
     debug("last statement", AT);
     $$ = nullptr;
   }
-| statement_sequence statement {
-    debug("statement", AT);
-    if ($1 == nullptr) $$ = $2;
-    else {
-      $1->setRightSon($2);
-      $$ = $1;
-    }
+| statement statement_sequence {
+    debug("statement: "+ $1->getName(), AT);
+    $1->setRightSon($2);
+    $$ = $1;
   }
+// @see if it is possible to use left recursion
+// | statement_sequence statement {
+//     debug("statement: "+ $2->getName(), AT);
+//     if ($1 == nullptr) $$ = $2;
+//     else {
+//       $1->addRightChild($2);
+//       $$ = $1;
+//     }
+//   }
 ;
 
 names:
@@ -437,7 +448,7 @@ declaration:
 ;
 
 statement:
-  BACK_LINE               { $$ = new TranslatedNode(""); }
+  BACK_LINE               { $$ = new TranslatedNode("\n"); }
 | variable                { $$ = $1; }
 | affectation             { $$ = $1; }
 | declaration             { $$ = $1; }
@@ -473,13 +484,15 @@ simple_function:
 ;
 
 if:
-  IF expression THEN BACK_LINE statement_sequence  END endif {
+  IF expression THEN BACK_LINE statement_sequence END endif {
     /* TODO if-then logic */
-    printf("SI   ALORS \n");
+    debug("SI   ALORS \n", AT);
+    // $$ = new If($5, $2,);
   }
-| IF expression THEN BACK_LINE statement_sequence ELSE BACK_LINE statement_sequence END endif {
-    /* TODO if-else-then logic */
-    printf("SI_SINON_ALORS \n");
+| IF expression THEN BACK_LINE statement_sequence BACK_LINE ELSE statement_sequence END endif {
+    /* TODO if-then-else logic */
+    debug("SI_SINON_ALORS \n", AT);
+    // $$ = new If($5, $2,);
   }
 ;
 
@@ -587,9 +600,15 @@ destruct:
 ;
 
 printing:
-  PRINT expressions BACK_LINE {
-    /* TODO overloading logic */
-  }
+  PRINT string BACK_LINE {
+    /* TODO replace string input for PRINT by expressions input */
+    debug("print "+ $2, AT);
+    $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl;\n", "Print (stdout)");
+  }  
+  // PRINT expressions BACK_LINE {
+  //   /* TODO print logic */
+  //   $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl");
+  // }
 ;
 
 overloading:
@@ -738,9 +757,9 @@ expression:
 
 expressions:
   expression  { cout <<"affichage  : " <<  $1  << endl; }
-| string      { cout << "affichage  : " << delete_quote($1) << endl; }
+| string      { cout << "affichage  : " << $1 << endl; }
 | expression COMMA expressions  { cout <<"affichage  : " <<  $1 << endl; }
-| string COMMA expressions      {   cout << "affichage : " << delete_quote($1) << endl; }
+| string COMMA expressions      {   cout << "affichage : " << $1 +"-$3" << endl; }
 ;
 
 params:
@@ -759,7 +778,7 @@ single_expression:
 | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new Variable(); */ }
 | NUM_REAL { $$ = $1; } //real
 | NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
-| designator { /* $$ = String($1); */ }
+| NAME { /* $$ = String($1); */ }
 ;
 
 /* ******************
@@ -829,23 +848,13 @@ type:
 | TYPE_BOOLEAN  { $$ = "bool";}
 ;
 
-string :
- STRING  { $$= $1;}
-;
-
-designator:
-  NAME { 
-    $$=$1;
-  }
-;
-
 string:
-  STRING  { $$ = $1; }
+  STRING  { $$ = delete_quote($1); }
 ;
 
 strOrName:
   string { }
-| NAME { } 
+| NAME { }
 ;
 
 /* *********************
@@ -995,7 +1004,7 @@ containers_methods :
 NAME POINT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS        { printf("utilisation de la méthode size  \n"); }
 | NAME POINT IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
 | NAME POINT CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
-| NAME POINT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
+| NAME POINT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
 | NAME POINT FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
 | NAME POINT RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
 | NAME POINT MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }

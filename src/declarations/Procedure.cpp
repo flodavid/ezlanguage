@@ -4,14 +4,19 @@
 using namespace std;
 
 Procedure::Procedure(Node * left, const string & name, const vector<Variable*> & args):
-	Node(left, nullptr), procedure_name(name), arguments(args)
+	Node(left, nullptr, "Procedure '"+ name +"'"), procedure_name(name), arguments(args)
 {}
 
 std::string Procedure::preTranslate() const {
-    string res = "";
+    std::string res = "";
 	
 	// TODO correct main function check (main name is the program name, not mandatory "main")
-	if (procedure_name == "main") res = "int main(int argc, char ** argv) {";
+	if (procedure_name == "main") res =
+		"#include <string>\n"
+		"#include <iostream>\n"
+		"\n"
+		"int main(int argc, char ** argv";
+
 	else {
 		res= "void " + getProcedureName() + "(";
 
@@ -26,8 +31,8 @@ std::string Procedure::preTranslate() const {
 			}
 		}
 
-		res += ") {";
 	}
+	res += ")\n{";
 
     return res;
 }

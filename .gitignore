@@ -29,3 +29,4 @@ obj/*
 tests/*.cpp
 *.cpp
 *.out
+**.run

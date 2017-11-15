@@ -33,14 +33,14 @@ install:
 
 script:
   - make --file makefile -j2
-  - ./bin/EZ_language_compiler tests/example.ezl
+  - ./bin/EZ_language_compiler tests/example.ezl -o example.run && echo -e "\nResult\n =======" ./example.run ; rm -f *.run ; echo -e "\n =======\n"
 # Launch valid tests
   - cd tests/
-  - bash basic_tests.sh
+  - bash basic_tests.sh && echo -e "\nResults\n ======" ./*.run ; rm -f *.run ; echo -e "\n =======\n"
 
 after_success:
 # Launch other tests
-  - bash full_tests.sh
+  - bash full_tests.sh && echo -e "\nResults\n ======" ./*.run ; rm -f *.run ; echo -e "\n =======\n"
   - cd ../examples
-  - bash valid_tests.sh
-  - bash unvalid_tests.sh
+  - bash valid_tests.sh && echo -e "\nResults\n ======" ./*.run ; rm -f *.run ; echo -e "\n =======\n"
+  - bash unvalid_tests.sh && echo -e "\nResults\n ======" ./*.run ; rm -f *.run ; echo -e "\n =======\n"

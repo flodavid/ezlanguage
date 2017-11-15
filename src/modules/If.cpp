@@ -5,7 +5,7 @@ using namespace std;
 
 
 
-If::If(Node * left, Node * right, Node * condition, const string & bt): Node(left, right), cond(condition)
+If::If(Node * left, Node * condition, const string & bt): Node(left, nullptr), cond(condition)
 {
 	if (bt == "elseif") block_type = 2;
 	else if (bt == "else") block_type = 3;
@@ -13,7 +13,7 @@ If::If(Node * left, Node * right, Node * condition, const string & bt): Node(lef
 }
 
 
-If::If(Node * left, Node * right, const string & bt): Node(left, right)
+If::If(Node * left, const string & bt): Node(left, nullptr)
 {
 	block_type = 3;
 }

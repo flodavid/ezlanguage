@@ -5,7 +5,7 @@ using namespace std;
 
 Function::Function(Node * left, const string & name, const vector< Variable* > & args,
                 const string & type):
-    Node(left, nullptr), function_name(name), arguments(args), return_type(type)
+    Node(left, nullptr, "Function"), function_name(name), arguments(args), return_type(type)
 {}
 
 string Function::preTranslate() const {
@@ -24,7 +24,7 @@ string Function::preTranslate() const {
         }
     }
 
-    res+= ") {";
+    res+= ")\n{";
 
     return res;
 }

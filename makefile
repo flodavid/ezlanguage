@@ -27,7 +27,7 @@ YACC_FLAGS =
 DEC_CPP = src/declarations/Class.cpp src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
 
 # Core
-MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp
+MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNode.cpp
 # Divers
 MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Operator.cpp src/modules/ConditionalExpression.cpp
 # Boucles
@@ -128,6 +128,8 @@ clean:
 	rm -rf obj/*.tab.*
 	rm -rf obj/*.d
 	rm -rf obj/*.o
+	rm -rf **.run
+	rm -rf a.out
 	
 mrproper: clean
 	@echo ""
@@ -151,7 +153,7 @@ full_tests: all
 	bash tests/full_tests.sh
 
 debug: all
-	valgrind bin/EZ_language_compiler tests/1_main_simple.ez
+	valgrind bin/EZ_language_compiler tests/1_main_simple.ez -o 1_main_simple.run
  	
 doc:
 	doxygen Doxyfile

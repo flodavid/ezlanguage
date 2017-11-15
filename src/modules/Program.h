@@ -17,6 +17,7 @@ public:
      * @brief constructor with parameters
      * @param right : right son
      * @param prg_name : name of the program
+     * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
      */
     Program(Node* right, std::string prg_name);
     
