@@ -4,36 +4,41 @@
 
 using namespace std;
 
-Node::Node(): left_son(nullptr), name(""), right_son(nullptr)
+Node::Node(): name(""), left_son(nullptr), right_son(nullptr)
 {}
 
 Node::Node(const string &_name) : name(_name), left_son(nullptr), right_son(nullptr)
 {}
 
-Node::Node(Node* left, Node* right): name(""), left_son(left), right_son(right)
+Node::Node(Node* left, Node* right, const std::string & _name):
+    name(_name), left_son(left), right_son(right)
 {}
 
 Node::~Node()
 {
-    delete left_son;
     delete right_son;
-}
-
-
-Node * Node::getLeftSon() const {
-    return left_son;
-}
-
-Node * Node::getRightSon() const {
-    return right_son;
+    delete left_son;
 }
 
 void Node::setLeftSon(Node *left) {
     left_son = left; // TODO replace by reference
 }
 
-void Node::setRightSon(Node *right) {
-    right_son = right;
+void Node::setRightSon(Node* son) {
+        right_son= son;
+}
+
+void Node::addRightChild(Node* child) {
+    debug("setRightChildCall:"+ getName(), AT);
+    // Right son recursive definition
+    if (right_son == nullptr) {
+        right_son= child;
+        debug("right child setted:"+ child->getName(), AT);
+    } else {
+        debug("This one is already has a right son:"+ getName(), AT);
+        right_son->setRightSon(child);
+    }
+    debug("setRightChildOK:"+ getName(), AT);
 }
 
 string Node::postTranslate() const
@@ -43,12 +48,18 @@ string Node::postTranslate() const
 
 
 string Node::translate() const {
-    debug("[node--translate()]"+ getName(), AT);
-    // debug("Translation of the node : "+ getName(), AT);
+    if (left_son) {
+        if (right_son) debug(""+ getName() +"--translate(), has left and right sons", AT);
+        else debug(""+ getName() +"--translate(), has left son", AT);
+    } else if (right_son) debug(""+ getName() +"--translate(), has right son", AT);
+        else debug(""+ getName() +"--translate(), no sons", AT);
+
     string left_translate= "";
     string right_translate= "";
-    if (left_son != nullptr)	left_translate += "\n" + left_son->translate() + "\n";
-    if (right_son != nullptr)	right_translate += "\n\n" + right_son->translate() + "\n";
+    if (left_son != nullptr)	left_translate+= left_son->translate();
+    if (left_translate == "\n") left_translate= "\n\n";
+    if (left_translate != "")   right_translate+= '\n';
+    if (right_son != nullptr)	right_translate+= right_son->translate();
     // std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
     return preTranslate() + left_translate + postTranslate() + right_translate;
 }

@@ -39,7 +39,7 @@ public:
      * @param left : pointer to the left son
      * @param right : pointer to the right son
      */
-    Node(Node* left, Node* right);
+    Node(Node* left, Node* right, const std::string & _name = "");
 
     /**
      * @author ROUINEB Hamza
@@ -49,17 +49,8 @@ public:
     virtual ~Node();
 
     /**
-     * @brief getter on left son
-     */
-    Node * getLeftSon() const;
-    
-    /**
-     * @brief getter on right son
-     */
-    Node * getRightSon() const;
-    
-    /**
-     * @brief getter on right son
+     * @brief getter on name
+     * @return the name of the node. May be an empty string
      */
     inline const std::string & getName() const { return name; }
     
@@ -74,6 +65,17 @@ public:
      * @param node : New right son
      */
     void setRightSon(Node* son);
+    
+    /**
+     * @brief Add a right son to the last of the right sons
+     * @param node : New right son
+     * 
+     * If there is already a right son, the right son of the group formed by the current
+     * son and all its right sons (the right of its right son, of its ... etc) is the
+     * right son of the last current right son (that has no right son)
+     * TL;DR : The right son of a groupd is the right son of the last one of the group
+     */
+    void addRightChild(Node* child);
 
     /**
      * @brief Translate the begining part of the Node

@@ -3,8 +3,14 @@
 using namespace std;
 
 
-MultipleVariable::MultipleVariable(Node * left, Node * right, const vector<string> & n, const string & t): Node(left, right), names(n), type(t)
-{}	
+MultipleVariable::MultipleVariable(const vector<string> & n, const string & t):
+	Node(nullptr, nullptr), names(n), type(t)
+{}
+
+void MultipleVariable::addVar(const std::string& var)
+{
+    names.push_back(var);
+}
 		
 string MultipleVariable::preTranslate() const
 {

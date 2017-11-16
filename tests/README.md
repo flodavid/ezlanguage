@@ -1,4 +1,5 @@
-# Tests
+Tests
+=====
 
 Some files that let you test the compiler (ez langage files for example).
 

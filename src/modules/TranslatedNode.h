@@ -15,9 +15,7 @@ protected:
 
 public:
     //constructors
-    TranslatedNode(const std::string& translated_content):
-        content(translated_content)
-    {}
+    TranslatedNode(const std::string& translated_content, const std::string & _name = "Translated Node");
     
     /**
      * @brief Translate the begining part of the Operator

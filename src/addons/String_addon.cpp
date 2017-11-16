@@ -1,6 +1,8 @@
 //@author : CHARLOT Rodolphe, ELFAQIR Ismail
 #include "String_addon.h"
 
+using namespace std;
+
 string operator+ (string s, int i)
 {
     return s+to_string(i);
@@ -59,7 +61,7 @@ string join(const std::vector<std::string> &array_of_string, const string &join_
 	return result;
 }
 
-string join(const std::vector<std::string> &array_of_string, char join_with){
+std::string join(const std::vector<std::string> &array_of_string, char join_with){
 	string result="";
 	for(unsigned int i=0;i<array_of_string.size();i++){
 		result+=array_of_string[i];

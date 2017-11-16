@@ -3,39 +3,37 @@
 
 using namespace std;
 
-Procedure::Procedure(Node * left, Node * right, const string & name, const vector<Variable> & args): Node(left, right), procedure_name(name), arguments(args)
+Procedure::Procedure(Node * left, const string & name, const vector<Variable*> & args):
+	Node(left, nullptr, "Procedure '"+ name +"'"), procedure_name(name), arguments(args)
 {}
 
 std::string Procedure::preTranslate() const {
-    string res = "";
+    std::string res = "";
 	
-	if (procedure_name == "main") res = "int main(int argc, char ** argv) {";
+	// TODO correct main function check (main name is the program name, not mandatory "main")
+	if (procedure_name == "main") res =
+		"#include <string>\n"
+		"#include <iostream>\n"
+		"\n"
+		"int main(int argc, char ** argv";
+
 	else {
 		res= "void " + getProcedureName() + "(";
 
 		//translation of the arguments
 		if(!arguments.empty()) {
-			
-			if (arguments.size() >= 1) {
-				// TODO use translate (preTranslate for knowing we must put a ",")
-				res+= arguments[0].preTranslate();
-			}
-			if (arguments.size() > 1) {
-				for (unsigned int i = 1; i < arguments.size(); ++i) {
-					// TODO use translate (preTranslate for knowing we must put a ",")
-					res+= ", " + arguments[0].preTranslate();
-				}
+			const Variable* var= arguments[0];
+			// First parameter
+			res += var->translate();
+			// Other parameters
+			for (unsigned int i = 1; i < arguments.size(); ++i) {
+				res += ", " + var->translate();
 			}
 		}
 
-		res += ") {";
 	}
+	res += ")\n{";
 
-    //translation of the instructions
-    res+= " "+ this->getLeftSon()->translate();
-    res+= "}";
-
-    res= this->getRightSon()->translate();
     return res;
 }
 

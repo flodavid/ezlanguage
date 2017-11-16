@@ -18,18 +18,19 @@ class Procedure : public Node {
 
 protected:
     std::string procedure_name;
-    std::vector<Variable> arguments;
+    std::vector<Variable*> arguments; // TODO delete in destructor
 
 public:
 
     /**
      * @brief : Constructor
      * @param left : left son
-     * @param right : right son
      * @param name : procedure's name
      * @param args : arguments list of the procedure
+     * 
+     * Right son is set to null
      */
-    Procedure(Node * left, Node * right, const std::string & name, const std::vector<Variable> & args);
+    Procedure(Node * left, const std::string & name, const std::vector<Variable*> & args);
 
     /**
      * @brief Getter for the procedure's name
@@ -41,19 +42,13 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<Variable> getArguments() const {return arguments;}
-
-    /**
-     * @brief Setter of the procedure's name
-     * @param name : name of the procedure
-     */
-    void setProcedureName(std::string name){procedure_name= name;}
+    std::vector<Variable*> getArguments() const {return arguments;}
 
     /**
      * @brief Setter of the list of arguments
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(std::vector<Variable> args){arguments= args;}
+    void setArguments(std::vector<Variable*> args){arguments= args;}
     
     /**
      * @brief Translate the begining part of the Procedure

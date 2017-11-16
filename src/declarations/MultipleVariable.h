@@ -20,13 +20,15 @@ class MultipleVariable : public Node {
 	public:
 		/**
 		 * @brief Constructor with parameters
-		 * @param left : left son
-		 * @param right : right son
 		 * @param n : names of the variable to declare
 		 * @param t :type of alle the variable to declare 
 		 */
-		MultipleVariable(Node * left, Node * right, const std::vector<std::string> & n, const std::string & t);
-		
+		MultipleVariable(const std::vector<std::string> & n, const std::string & t);
+        
+        /**
+		 * @brief Add a variable
+         */
+        void addVar(const std::string& var);
 		
 		virtual std::string preTranslate() const;
 };

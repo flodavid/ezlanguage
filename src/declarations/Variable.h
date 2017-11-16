@@ -38,6 +38,11 @@ public:
             const std::string & _scope, const std::string & content, bool co = false, bool st = false);
     
     /**
+     * @brief Set variable scope and constancy
+     */
+    void setScope(std::string & _scope) { scope= _scope; }
+
+    /**
      * @brief Translate the begining part of the Variable
      * @return a string containing the C++ code of the declaration
      */

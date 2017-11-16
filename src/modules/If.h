@@ -34,7 +34,7 @@ public:
     * @param bt : block if, else or elseif
     * @author Ismail ELFAQIR
     */
-    If (Node * left, Node * right, Node * condition, const std::string & bt = "if");
+    If(Node * left, Node * condition, const std::string & bt = "if");
 
 	/**
     * Constructor with parameters
@@ -44,7 +44,7 @@ public:
     * @param bt : block if, else or elseif
     * @author Ismail ELFAQIR
     */
-    If(Node * left, Node * right, const std::string & bt = "else");
+    If(Node * left, const std::string & bt = "else");
 
     /* * * * * * * * * * * * * *
     * ACCESSORS  AND MUTATORS *

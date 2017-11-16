@@ -93,9 +93,8 @@ void parse_to_cpp(vector<char*> fic_ezl, string &input_files){
 	            }
 
                 // parsing du fichiers ez en fichier cpp
-                yyparse();
-
                 yyout = cpp_file;
+                yyparse();
 
                 // fermerture du fichier cpp
                 fclose(cpp_file);

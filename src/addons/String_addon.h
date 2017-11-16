@@ -14,13 +14,10 @@
 * Please ask Rodolphe or name him in your commit when you add or remove something here
 */
 
-using namespace std;
-
-
 //Add some help to add number inside a string
-string operator+ (string s, int i);
-string operator+ (string s, double i);
-string operator+ (string s, float i);
+std::string operator+ (std::string s, int i);
+std::string operator+ (std::string s, double i);
+std::string operator+ (std::string s, float i);
 
 //as the document of Morgan (Fonctions string.pdf) i added this functions 
 
@@ -52,7 +49,7 @@ std::vector<std::string> split(std::string const & str, const std::string &delim
 * @return string
 * @author Ismail ELFAQIR
 */
-string join(const std::vector<std::string> &array_of_string, const string &join_with="");
+std::string join(const std::vector<std::string> &array_of_string, const std::string &join_with="");
 
 /**
 * @brief concat an vector of string
@@ -61,7 +58,7 @@ string join(const std::vector<std::string> &array_of_string, const string &join_
 * @return string
 * @author Ismail ELFAQIR, Zakaria LAHYANI
 */
-string join(const std::vector<std::string> &array_of_string, char join_with);
+std::string join(const std::vector<std::string> &array_of_string, char join_with);
 
 /**
 * @brief simpler function to convert an string to upper case
@@ -69,7 +66,7 @@ string join(const std::vector<std::string> &array_of_string, char join_with);
 * @return string
 * @author Ismail ELFAQIR
 */
-string toUpperCase(const string &str);
+std::string toUpperCase(const std::string &str);
 
 /**
 * @brief simpler function to convert an string to lower case
@@ -77,7 +74,7 @@ string toUpperCase(const string &str);
 * @return string
 * @author Ismail ELFAQIR
 */
-string toLowerCase(const string &str);
+std::string toLowerCase(const std::string &str);
 
 /**
 * @brief function to replace all string an another one
@@ -87,7 +84,7 @@ string toLowerCase(const string &str);
 * @return string
 * @author Ismail ELFAQIR, Zakaria LAHYANI
 */
-string replace(const string &str, const string &to_replace, const string &replace_with );
+std::string replace(const std::string &str, const std::string &to_replace, const std::string &replace_with);
 
 /**
 * @brief check if a string contains another one
@@ -96,5 +93,5 @@ string replace(const string &str, const string &to_replace, const string &replac
 * @return boolean
 * @author Ismail ELFAQIR
 */
-bool contains(const string &str, const string &str2);
+bool contains(const std::string &str, const std::string &str2);
 #endif
