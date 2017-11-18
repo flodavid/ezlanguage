@@ -49,7 +49,7 @@ public:
     * getter of array
     * @author Ismail ELFAQIR
     */
-    std::string get_array() const;
+    const std::string & get_array() const;
 
     /**
     * getter of index

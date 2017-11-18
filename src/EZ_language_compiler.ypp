@@ -18,7 +18,10 @@
 #include "../src/declarations/Variable.h"
 #include "../src/modules/Node.h"
 #include "../src/modules/TranslatedNode.h"
+#include "../src/modules/BooleanExpression.h"
+#include "../src/modules/BooleanValue.h"
 #include "../src/modules/If.h"
+#include "../src/modules/Else.h"
 #include "../src/modules/Program.h" // Empty Node
 
 #include "../src/global.h"
@@ -69,8 +72,8 @@ int yycolumn = 1;
 %token<texte> NAME RETOUR STRING STRING_PARAM
 %token COMMA DEGRE POURCENT DIESE POINT QUOTE		// Caractères
 %token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
-%token EGAL NE LT LE GT GE PLUS MINUS MULT DIVISE
-%token  LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
+%token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
+%token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
 %token<texte> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
 %token IMPORT INCLUDE LIBRARY EXTERN						                  // module import - c++ code
 %token IF THEN ELSE   						  // if else 
@@ -78,8 +81,10 @@ int yycolumn = 1;
 %token WHILE ENDWHILE							  // while .. do ...
 %token REPEAT UNTIL ENDREPEAT 			// do .. while ...
 %token FOR IN DO STEP 
-%token FUNCTION PROCEDURE RETURNS RETURN	 	// functions
-%token PRINT
+%token RETURN FALSE TRUE            // words
+%token FUNCTION PROCEDURE RETURNS	 	// functions
+%token PRINT                        // Print text
+%token OPERATOR                     // Overloading
 %token BEGINN END						        // can not use 'BEGIN'
 %token END_OF_FILE
 %token CLASS PROGRAM DESTRUCT			  //class
@@ -100,25 +105,29 @@ int yycolumn = 1;
 %token RESTORE FIRST LAST REMOVE_AT
 %token PUT_AT INSERT EXIST
 
-%left PLUS MINUS EGAL
-%left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS OPERATOR		// Operators
+%left PLUS MINUS EQUALS
+%left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS		// Operators
 
 // Basic elements
-%type<arbre> ROOT
-%type<arbre> imports declaration_classes declarations_list declaration_variables declaration_methods
+%type<tree> ROOT
+%type<tree> imports declaration_classes declarations_list declaration_variables declaration_methods
 %type<vectVar> declaration_arguments param_args parameters methodParameters
 // %type<vectString> 
-%type<arbre> argumentsList argumentsSeparated
-%type<var>   simpleVariable variable variable_construct
-%type<arbre> method affectation declaration function_call
-%type<arbre> destruct printing overloading if when while repeat for
-%type<arbre> function procedure statement class return import
-%type<texte> type operators scope constancy string argument
-%type<arbre> map_declaration array_declaration vector_declaration list_declaration set_declaration
+%type<tree> argumentsList argumentsSeparated arguments
+%type<var>  simpleVariable variable variable_construct
+%type<tree> method affectation containerDeclaration function_call
+%type<tree> map_declaration array_declaration vector_declaration list_declaration set_declaration
+%type<tree> destruct printing // TODO overloading
+%type<tree> if when while repeat for else
+%type<tree> function procedure class import
+%type<tree> statement expression return
+%type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator
+%type<texte> type scope constancy string argument
+%type<condExpr> conditionalExpression
 // Non basic elements
-%type<arbre> function_string
-%type<texte> expression single_expression names nbrOrName params param_type affect
-%type<arbre> statement_sequence
+%type<tree> function_string
+%type<tree> statement_sequence
+%type<texte> single_expression names nbrOrName param_type affect
 %type<texte> forDecl forType forRange forStep forBody returnstype facultativeAssignment
 
 // Parameters
@@ -200,9 +209,7 @@ declaration_classes:
 
 declarations_list:
   /* empty */
-  {
-    $$ = new TranslatedNode("");
-  }
+  { $$ = new TranslatedNode(""); }
 | declaration_methods method declaration_variables
   {
     // PDVariables* vars = (PDVariables*) $1;
@@ -329,8 +336,8 @@ statement_sequence:
     $$ = nullptr;
   }
 | statement statement_sequence {
-    debug("statement: "+ $1->getName(), AT);
-    $1->setRightSon($2);
+    // debug("statement: "+ $1->getName(), AT);
+    $1->addRightChild($2);
     $$ = $1;
   }
 // @see if it is possible to use left recursion
@@ -349,9 +356,9 @@ names:
 | names COMMA NAME  { $$ = $1 + ", " + $3; }
 ;
 
-/* ******************
- *    METHODS    *
- * ******************/
+/* **********************
+ *  METHODS DECLARATION *
+ * **********************/
 
 returnstype:
   RETURNS type
@@ -363,7 +370,9 @@ returnstype:
 return:
   RETURN expression
   {
-    $$ = new TranslatedNode($2);
+    TranslatedNode* returnWord= new TranslatedNode("return ");
+    returnWord->setRightSon($2);
+    $$ = returnWord;
   }
 ;
 
@@ -371,7 +380,33 @@ methodParameters:
   LEFT_PARENTHESIS parameters RIGHT_PARENTHESIS {
     $$ = $2;
   }
-; 
+;
+
+// Parameters are variables that will used in a method, initiliazed with arguments
+// that are passed as arguments at function call
+parameters: 
+  /* empty */ {
+    vector<Variable*> v;
+    $$ = v;
+  }
+| simpleVariable
+ 	{
+    vector<Variable*> vect;
+ 		vect.push_back($1); // TODO use tree construction instead of vector
+ 		$$ = vect;
+ 	}
+| simpleVariable COMMA parameters
+ 	{
+ 		$3.push_back($1);
+ 		$$ = $3;
+ 	}
+// | NAME names ARE type { /* TODO parameters logic */ }
+// TODO handle SHARED parameters
+// | NAME names ARE SHARED type affect
+// 	{
+// 		cout << "Variable des variables1 "<< $1 << endl;
+// 	}
+;
 
 // TODO function scope handling
 function:
@@ -402,7 +437,7 @@ function:
 
 // TODO procedure scope handling
 //    symbolTable.incScope();
-// TODO Add procedure shared/not shared operators
+// TODO Add procedure shared/not shared operator
 procedure:
   PROCEDURE NAME methodParameters BACK_LINE statement_sequence END endprocedure
   {
@@ -439,23 +474,15 @@ procedure:
  *   INSTRUCTIONS   *
  * ******************/
 
-declaration:
-  map_declaration     { $$ = $1; }
-| array_declaration   { $$ = $1; }
-| vector_declaration  { $$ = $1; }
-| list_declaration    { $$ = $1; }
-| set_declaration     { $$ = $1; }
-;
-
 statement:
   BACK_LINE               { $$ = new TranslatedNode("\n"); }
 | variable                { $$ = $1; }
 | affectation             { $$ = $1; }
-| declaration             { $$ = $1; }
+| containerDeclaration             { $$ = $1; }
 | function_call           { $$ = $1; }
 | destruct    { $$ = $1; }
 | printing    { $$ = $1; }
-| overloading { $$ = $1; }
+// | overloading { $$ = $1; }
 | if        { $$ = $1; }
 | when      { $$ = $1; }
 | while     { $$ = $1; }
@@ -463,36 +490,51 @@ statement:
 | for       { $$ = $1; }
 ;
 
-/* ************************
- *  Complex Instructions  *
- * ************************/
-function_call:
-  NAME POINT simple_function {}
-| function_call POINT simple_function {}
-| simple_function { }
-| NAME POINT NAME { }  
-| function_string { $$ = $1;}
-| function_regex { }
-| containers_methods { }
+containerDeclaration:
+  map_declaration     { $$ = $1; }
+| array_declaration   { $$ = $1; }
+| vector_declaration  { $$ = $1; }
+| list_declaration    { $$ = $1; }
+| set_declaration     { $$ = $1; }
 ;
 
-simple_function:
-  // function without parameter
-  NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} 
-  // function with parameter
-| NAME LEFT_PARENTHESIS params RIGHT_PARENTHESIS {} 
+// TODO Avoid shift/reduce by factorising shared/not shared
+variable:
+  /* scope constancy */ simpleVariable BACK_LINE
+  {
+    debug("Variable declaration: "+ $1->getName(), AT);
+    // string scope_consistancy= $1+$2;
+    // $3->setScope(scope_consistancy);
+    $$ = $1;
+  }
+// | variable_construct
+//   {
+//     /* TODO variable construction logic (with class) */
+//     debug("variable construction (class)", AT);
+//     $$ = $1;
+//   }
+;
+
+/* ****************************
+ *  Conditional Instructions  *
+ * ****************************/
+// If and loops
+else:
+  /* empty */
+  { $$ = new TranslatedNode(""); }
+| ELSE statement_sequence {
+    $$ = new Else($2);
+  }
 ;
 
 if:
-  IF expression THEN BACK_LINE statement_sequence END endif {
+  IF conditionalExpression BACK_LINE THEN statement_sequence else END endif {
     /* TODO if-then logic */
-    debug("SI   ALORS \n", AT);
-    // $$ = new If($5, $2,);
-  }
-| IF expression THEN BACK_LINE statement_sequence BACK_LINE ELSE statement_sequence END endif {
-    /* TODO if-then-else logic */
-    debug("SI_SINON_ALORS \n", AT);
-    // $$ = new If($5, $2,);
+    string log= "{";
+    log+= yylineno;
+    log+= "} If";
+    debug(log, AT);
+    $$ = new If($5, $6, $2);
   }
 ;
 
@@ -580,76 +622,36 @@ for:
 ;
 
 /* ************************
- *   Simple Instructions  *
+ *  Complex Instructions  *
  * ************************/
-affectation:
-  NAME EGAL expression { cout << "Affectation name " <<  endl; }
-| NAME POINT NAME EGAL expression { cout << "Affectation name.name " <<  endl; }
-| NAME PLUS PLUS { cout << "Affectation ++" <<  endl; }
-| NAME MINUS MINUS {  cout << "Affectation --" <<  endl; }
-| PLUS PLUS NAME  { cout << "++ Affectation " <<  endl; }
-| MINUS MINUS NAME  { cout << "-- Affectation " <<  endl;  }
+// TODO function call
+function_call:
+  // NAME POINT simple_function {}
+  function_call POINT simple_function {}
+| simple_function { }
+| NAME POINT NAME { }  
+| function_string { $$ = $1;}
+| function_regex { }
+| containers_methods { }
 ;
 
-destruct:
-  // TODO reword destruction definition
-  DESTRUCT BACK_LINE statement_sequence END enddestruct {
-    /* TODO destructions logic */
-    cout << "destructeur " << endl;
+simple_function:
+  // function without parameter
+  NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} 
+  // function with parameter
+| NAME LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS {} 
+;
+
+arguments:
+  /* empty */
+  { $$ = new TranslatedNode(""); }
+| expression { $$ = $1; }
+| expression COMMA arguments {
+    TranslatedNode* comma= new TranslatedNode(", ");
+    $1->setRightSon(comma);
+    comma->setRightSon($3);
+    $$ = $1;
   }
-;
-
-printing:
-  PRINT string BACK_LINE {
-    /* TODO replace string input for PRINT by expressions input */
-    debug("print "+ $2, AT);
-    $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl;\n", "Print (stdout)");
-  }  
-  // PRINT expressions BACK_LINE {
-  //   /* TODO print logic */
-  //   $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl");
-  // }
-;
-
-overloading:
-  OPERATOR operators LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
-    /* TODO overloading logic */
-    cout << "operateur " <<  $2 << endl;
-  }
-;
-
-/* *******************
- *  GENERIC COMPLEX  *
- * ******************/
-
-// one or several new lines
-next_line:
-  BACK_LINE BACK_LINE /* Nothing to do */
-| next_line BACK_LINE /* Nothing to do */
-;
-
-parameters:
-  /* empty */ {
-    vector<Variable*> v;
-    $$ = v;
-  }
-| simpleVariable
- 	{
-    vector<Variable*> vect;
- 		vect.push_back($1); // TODO use tree construction instead of vector
- 		$$ = vect;
- 	}
-| simpleVariable COMMA parameters
- 	{
- 		$3.push_back($1);
- 		$$ = $3;
- 	}
-// | NAME names ARE type { /* TODO parameters logic */ }
-// TODO handle SHARED parameters
-// | NAME names ARE SHARED type affect
-// 	{
-// 		cout << "Variable des variables1 "<< $1 << endl;
-// 	}
 ;
 
 // @see can be merged
@@ -674,6 +676,117 @@ argumentsSeparated:
     $1->setRightSon(arg);
     $$ = $1;
   }
+;
+
+/* ************************
+ *   Simple Instructions  *
+ * ************************/
+// TODO handle unary affectation operators (++, --, ...)*
+affectation:
+  NAME assignmentOperator expression {
+    debug("Affectation on "+ $1, AT);
+    TranslatedNode* affectedVariable= new TranslatedNode($1 + $2 +" ");
+    affectedVariable->setRightSon($3);
+    $$ = affectedVariable;
+  }
+// | NAME POINT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
+// | NAME PLUS PLUS { cout << "Affectation ++" <<  endl; }
+// | NAME MINUS MINUS {  cout << "Affectation --" <<  endl; }
+// | PLUS PLUS NAME  { cout << "++ Affectation " <<  endl; }
+// | MINUS MINUS NAME  { cout << "-- Affectation " <<  endl;  }
+;
+
+destruct:
+  // TODO reword destruction definition
+  DESTRUCT BACK_LINE statement_sequence END enddestruct {
+    /* TODO destructions logic */
+    cout << "destructeur " << endl;
+  }
+;
+
+printing:
+  PRINT string BACK_LINE {
+    /* TODO replace string input for PRINT by expressions input */
+    debug("print "+ $2, AT);
+    $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl;\n", "Print (stdout)");
+  }  
+  // PRINT expressions BACK_LINE {
+  //   /* TODO print logic */
+  //   $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl");
+  // }
+;
+
+// overloading:
+//   OPERATOR operator LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
+//     /* TODO overloading operator logic */
+//     cout << "operateur " <<  $2 << endl;
+//   }
+// ;
+
+/* *******************
+ *  GENERIC COMPLEX  *
+ * ******************/
+
+// one or several new lines
+next_line:
+  BACK_LINE BACK_LINE /* Nothing to do */
+| next_line BACK_LINE /* Nothing to do */
+;
+
+expressions:
+  expression  { cout <<"affichage  : " <<  $1  << endl; }
+| string      { cout << "affichage  : " << $1 << endl; }
+| expression COMMA expressions  { cout <<"affichage  : " <<  $1 << endl; }
+| string COMMA expressions      {   cout << "affichage : " << $1 +"-$3" << endl; }
+;
+
+conditionalExpression:
+  TRUE  { $$ = new BooleanValue(true); }
+| FALSE { $$ = new BooleanValue(false); }
+| NAME  { $$ = new BooleanValue($1); }
+| LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS { $$ = $2; }
+| conditionalExpression logicalOperator conditionalExpression {
+    BooleanExpression* expr= new BooleanExpression($2,$1,$3);
+    $$ = expr;
+
+    // TranslatedNode* relOpe= new TranslatedNode(" "+ $2 +" ");
+    // $1->setRightSon(relOpe);
+    // relOpe->setRightSon($3);
+    // $$ = $1;
+  }
+// TODO add expressions comparison to conditionalExpression
+// | expression relationalOperator expression {
+//     TranslatedNode* operator= new TranslatedNode(" "+ $2 +" ");
+//     $1->setRightSon(operator);
+//     operator->setRightSon($3);
+//     $$ = $1;
+//   }
+;
+
+expression:
+  /* TODO expressions logic */
+  expression arithmeticOperator expression {
+    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ");
+    $1->setRightSon(arithOperator);
+    arithOperator->setRightSon($3);
+    $$ = $1;
+  }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { $$ = $2; }
+| single_expression { yyprint("single_expression");  /* $$ = new Variable(); */ /* $1 = $1 */ }
+;
+
+single_expression:
+  /* single_expressions logic */
+  PLUS single_expression { /* $$ = new Variable(); */ }
+| NOT single_expression { /* $$ = new Variable(); */ }
+| single_expression XOR single_expression { /* $$ = new Variable(); */ }
+| single_expression MOD single_expression { /* $$ = new Variable(); */ }
+| single_expression POW single_expression { /* $$ = new Variable(); */ }
+// | ABS single_expression { /* $$ = new Variable(); */ } // @see how to handle absolute
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new Variable(); */ }
+| NUM_REAL { $$ = $1; } //real
+| NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
+| NAME { /* $$ = String($1); */ }
 ;
 
 simpleVariable:
@@ -704,31 +817,16 @@ simpleVariable:
 // 	}
 ;
 
-// TODO Avoid shift/reduce by factorising shared/not shared
-variable:
-  scope constancy simpleVariable BACK_LINE
-  {
-    debug("Variable declaration: "+ $3->getName(), AT);
-    std::string scope_consistancy= $1+$2;
-    $3->setScope(scope_consistancy);
-    $$ = $3;
-  }
-| variable_construct
-  {
-    /* TODO variable construction logic (with class) */
-    debug("variable construction (class)", AT);
-    $$ = $1;
-  }
-;
-
 scope:
-  /* empty */    { $$ = "local";}
+  /* empty */
+  { $$ = "local"; }
 | LOCAL   { $$ = "local";}
 | GLOBAL  { $$ = "global";}
 ;
 
 constancy:
-  /* empty */ { $$ = ""; }
+  /* empty */
+  { $$ = ""; }
 | CONST { $$ = "const"; }
 ;
 
@@ -736,49 +834,6 @@ variable_construct:
   NAME IS NAME {}  // ex: c is Maclasse
 | NAME IS NAME LEFT_PARENTHESIS argumentsList RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
 | NAME IS NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} // No arguments to construction
-;
-
-expression:
-  /* TODO expressions logic */
-  expression EGAL EGAL expression { /* $$ = new Variable(); */ }
-| expression NE expression {/* $$ = new Variable(); */ }
-| expression LT expression { /* $$ = new Variable(); */ }
-| expression LE expression { /* $$ = new Variable(); */ }
-| expression GT expression {/* $$ = new Variable(); */ }
-| expression GE expression { /* $$ = new Variable(); */ }
-| expression PLUS expression {/* $$ = new Variable(); */ }
-| expression MINUS expression { /* $$ = new Variable(); */ }
-| expression MULT expression {/* $$ = new Variable(); */ }
-| expression DIVISE expression {/* $$ = new Variable(); */ }
-| expression AND AND expression { /* $$ = new Variable(); */ }
-| expression OR OR expression {/* $$ = new Variable(); */ }
-| single_expression { yyprint("single_expression");  /* $$ = new Variable(); */ /* $1 = $1 */ }
-;
-
-expressions:
-  expression  { cout <<"affichage  : " <<  $1  << endl; }
-| string      { cout << "affichage  : " << $1 << endl; }
-| expression COMMA expressions  { cout <<"affichage  : " <<  $1 << endl; }
-| string COMMA expressions      {   cout << "affichage : " << $1 +"-$3" << endl; }
-;
-
-params:
-  expression { $$ = $1;}
-| expression COMMA params { $$ = $1 ;}
-;
-
-single_expression:
-  /* single_expressions logic */
-  PLUS single_expression { /* $$ = new Variable(); */ }
-| single_expression XOR single_expression { /* $$ = new Variable(); */ }
-| NOT single_expression { /* $$ = new Variable(); */ }
-| single_expression MOD single_expression { /* $$ = new Variable(); */ }
-| single_expression POW single_expression { /* $$ = new Variable(); */ }
-| ABS single_expression { /* $$ = new Variable(); */ }
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new Variable(); */ }
-| NUM_REAL { $$ = $1; } //real
-| NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
-| NAME { /* $$ = String($1); */ }
 ;
 
 /* ******************
@@ -792,7 +847,8 @@ lineend:
 ;
 
 doublepoint:
- POINT POINT
+  POINT POINT 
+  {}
 ;
 
 begin:
@@ -803,9 +859,11 @@ begin:
 // @see can it just be a translated Node (variable name don't change) or a Node (Var or value)
 // TODO affect logic
 affect:
-  /* empty */ {  }
-| EGAL expression { }
-| EGAL string { }
+  /* empty */
+  { $$ = ""; }
+| EQUALS argument { debug("===AFFECTATION VALUE=== : "+ $2, AT); $$ = $2; }
+// | EQUALS expression { $$ = $2; } // TODO use expression ?
+// | EQUALS string   { $$ = $2; }
 ;
 
 argument:
@@ -817,22 +875,38 @@ argument:
 
 // TODO facultativeAssignment logic
 facultativeAssignment:
-  /* empty */ { $$ = ""; } // ex: c is myClass(var1, var2)
-| NAME EGAL   { $$ = $1; } // ex: p is Person(name="name")
+  /* empty */
+  { $$ = ""; } // ex: c is myClass(var1, var2)
+| NAME EQUALS   { $$ = $1; } // ex: p is Person(name="name")
 ;
 
-operators:
-  EGAL EGAL { $$ = "==";}
-| EGAL   { $$ = "=";}
-| NE  { $$= "!="; }
-| LT  { $$ =  "<"; }
-| LE  { $$ = "<=";}
-| GT  { $$ = ">";}
-| GE  { $$ = ">=";}
-| PLUS   {$$ ="+";}
-| MINUS  { $$ = "-";}
-| MULT   {$$ = "*";}
-| DIVISE { $$ =  "/";}
+assignmentOperator:
+  EQUALS { $$ = "="; }
+| arithmeticOperator EQUALS { $$ = $1 + "="; }
+;
+
+arithmeticOperator:
+  PLUS    { $$ = "+"; }
+| MINUS   { $$ = "-"; }
+| MULT    { $$ = "*"; }
+| DIVISE  { $$ = "/"; }
+| MOD     { $$ = "%"; }
+;
+
+// NOT is a logical operator, but it is unary, not binary. Must be handle separatly
+// @see if we use operator or TranslatedNode
+logicalOperator:
+  AND { $$ = "&&"; }
+| OR { $$ = "||"; }
+;
+
+relationalOperator:
+  EQUALS EQUALS { $$ = "=="; }
+| NE  { $$ = "!="; }
+| LT  { $$ = "<"; }
+| LE  { $$ = "<="; }
+| GT  { $$ = ">"; }
+| GE  { $$ = ">="; }
 ;
 
 nbrOrName:
@@ -964,8 +1038,8 @@ scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACK
 | scope NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
 | scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
 | scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration with size with initializer list \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
 ;
 
 //    -----------------------------vector declaration----------------------------------------
@@ -973,13 +1047,13 @@ vector_declaration:
 scope NAME IS VECTOR OF type { printf("vector declaration  \n"); }
 | scope NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
 | scope NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| scope NAME IS VECTOR OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+| scope NAME IS VECTOR OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
 ;
 
 //    -----------------------------list declaration----------------------------------------
 list_declaration: 
 scope NAME IS LIST OF type { printf("list declaration  \n"); }
-| scope NAME IS LIST OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
+| scope NAME IS LIST OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
 ;
 
 //    -----------------------------set declaration----------------------------------------
@@ -987,13 +1061,13 @@ set_declaration:
 scope NAME IS SET OF type { printf("set declaration  \n"); }
 | scope NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
 | scope NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| scope NAME IS SET OF type EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
+| scope NAME IS SET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
 ;
 
 //    -----------------------------map declaration----------------------------------------
 map_declaration: 
 scope NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
-| map_declaration EGAL LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
+| map_declaration EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
 ;
 
 //    ---------------------------------------------------------------------------------------

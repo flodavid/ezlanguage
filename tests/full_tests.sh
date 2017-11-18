@@ -2,7 +2,8 @@
 
 error_encountered=0
 function run_test {
-        $(dirname $0)/../bin/EZ_language_compiler $(dirname $0)/$1 -o $1.run
+        output=$(echo $1 | sed s/.ez/.run/)
+        $(dirname $0)/../bin/EZ_language_compiler $(dirname $0)/$1 -o $output
         if [ $? -ne 0 ]
         then echo -e "\n\n    \033[1;31mTest failed \e[0m\n"; error_encountered=1
         else echo -e "\n\n    \033[1;32mTest succeeded !\e[0m\n"

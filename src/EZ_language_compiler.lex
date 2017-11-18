@@ -39,8 +39,8 @@ minus     [-]
 
 {separateurs}   { /* On ignore */ }
 {commentaire}   { /* On ignore */ cout << "Commentaire"<<endl; }
-{entier}	{ yylval.numerical_value=atoi(yytext); return(NUM_INTEGER);}  // integer
-{reel}      { yylval.texte=atof(yytext); return(NUM_REAL);}		 // reel
+{entier}	{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
+{reel}      { yylval.texte= yytext; return(NUM_REAL);}		 // reel
 
 {backLine}	return(BACK_LINE);
 
@@ -50,7 +50,7 @@ minus     [-]
 "°"		return(DEGRE);
 "%"		return(POURCENT);
 "#"		return(DIESE);
-"="		return(EGAL);
+"="		return(EQUALS);
 "!="    return NE; 
 "<"     return LT; 
 "<="    return LE; 
@@ -61,8 +61,8 @@ minus     [-]
 "*"     return MULT; 
 "/"   	return DIVISE;
 
-"&"		return (AND);
-"|"		return (OR);
+(&|and)		return (AND);
+"or"		return (OR);
 "^"	        return (XOR);
 "!"	        return (NOT); 
 
@@ -122,8 +122,10 @@ minus     [-]
 
 (function|FUNCTION)         return(FUNCTION);
 (procedure|PROCEDURE)       return(PROCEDURE);
-(returns|RETURNS)	    return(RETURNS);
+(returns|RETURNS)	        return(RETURNS);
 (return|RETURN)             return(RETURN);
+(true|TRUE)			        return (TRUE);
+(false|FALSE)			    return (FALSE);
 
 (operator|OPERATOR)         return(OPERATOR);
 

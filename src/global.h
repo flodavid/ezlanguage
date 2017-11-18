@@ -3,6 +3,7 @@
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
+#include "./modules/ConditionalExpression.h"
 #include "./declarations/Variable.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
@@ -20,11 +21,12 @@ typedef struct s_mon_type {
     double real_value;
     bool booleen;
     std::string texte;
-    Node* arbre;
+    Node* tree;
     std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
     Variable* var;
     std::vector<Variable*> vectVar;
+    ConditionalExpression* condExpr;
 //    MaClasse	une_maclasse;
 } mon_type;
 

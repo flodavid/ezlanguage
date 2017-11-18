@@ -41,13 +41,13 @@ public:
      * @brief Getter for the function's name
      * @return name of the function
      */
-    std::string getFunctionName() const {return function_name;}
+    const std::string & getFunctionName() const {return function_name;}
 
     /**
      * @brief Getter for the return's type
      * @return return's type
      */
-    std::string getReturnType() const {return return_type;}
+    const std::string & getReturnType() const {return return_type;}
 
     /**
      * @brief Getter for the argument's list

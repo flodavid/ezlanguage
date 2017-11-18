@@ -13,7 +13,7 @@
 class Variable : public Node {
 	
 protected:
-    std::string name;
+    std::string varName;
     std::string type;
     std::string scope;
     std::string affect;

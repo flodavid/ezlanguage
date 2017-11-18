@@ -22,33 +22,35 @@ YACC_FLAGS =
 # --- RAJOUTER CHAQUE FICHIER CPP DE MODULES ICI ! ---
 # --- FAIRE UN FICHIER CPP POUR CHAQUE FICHIER H S'IL Y A UNE CLASSE DEDANS ---
 
-
-# declarations
-DEC_CPP = src/declarations/Class.cpp src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
-
 # Core
 MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNode.cpp
+# Conditional expression
+MOD_CPP += src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp src/modules/ConditionalExpression.cpp
 # Divers
-MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Operator.cpp src/modules/ConditionalExpression.cpp
+MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Else.cpp src/modules/Operator.cpp
 # Boucles
 MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
 
 ADDONS_CPP += src/addons/String_addon.cpp src/addons/log.cpp
+
+# declarations
+DEC_CPP = src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
+DEC_CPP += src/declarations/Class.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
 
 # hash table sources
 HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp
 # declarations
 HT_CPP += src/hash_table/ClassHashed.cpp src/hash_table/FunctionHashed.cpp src/hash_table/VariableHashed.cpp
 
-ALL_CPP = ${DEC_CPP} ${MOD_CPP} ${ADDONS_CPP} ${HT_CPP}
+ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${ADDONS_CPP} ${HT_CPP}
 
 #object files
-DEC_OBJ = $(DEC_CPP:src/declarations/%.cpp=obj/%.o)
 MOD_OBJ = $(MOD_CPP:src/modules/%.cpp=obj/%.o)
+DEC_OBJ = $(DEC_CPP:src/declarations/%.cpp=obj/%.o)
 ADDONS_OBJ = $(ADDONS_CPP:src/addons/%.cpp=obj/%.o)
 HT_OBJ = $(HT_CPP:src/hash_table/%.cpp=obj/%.o)
 
-ALL_OBJ = ${DEC_OBJ} ${MOD_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
+ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
 
 #dependency files
 ALL_DPDCY = $(ALL_OBJ:%.o=%.d)

@@ -9,7 +9,7 @@ ArrayAccess::ArrayAccess(Node * left, Node * right, const string & arrayN, int i
 ArrayAccess::~ArrayAccess()
 {}
 
-string ArrayAccess::get_array() const{
+const string &ArrayAccess::get_array() const {
 	return arrayName;
 }
 

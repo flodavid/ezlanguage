@@ -25,7 +25,7 @@ void Node::setLeftSon(Node *left) {
 }
 
 void Node::setRightSon(Node* son) {
-        right_son= son;
+    right_son= son;
 }
 
 void Node::addRightChild(Node* child) {
@@ -33,12 +33,9 @@ void Node::addRightChild(Node* child) {
     // Right son recursive definition
     if (right_son == nullptr) {
         right_son= child;
-        debug("right child setted:"+ child->getName(), AT);
     } else {
-        debug("This one is already has a right son:"+ getName(), AT);
         right_son->setRightSon(child);
     }
-    debug("setRightChildOK:"+ getName(), AT);
 }
 
 string Node::postTranslate() const
