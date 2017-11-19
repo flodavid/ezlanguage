@@ -16,11 +16,11 @@ extern int yylineno;
 %}
 
 
-separateurs     [ \t]+
-number         [0-9]
-entier          {number}+
+separators     	[ \t]+
+number         	[0-9]
+integer         {number}+
 
-reel			{entier}("."{entier})?
+reel			{integer}("."{integer})?
 
 mot 		    [A-z]+
 
@@ -37,10 +37,10 @@ minus     [-]
 
 %%
 
-{separateurs}   { /* On ignore */ }
+{separators}   	{ /* On ignore */ }
 {commentaire}   { /* On ignore */ cout << "Commentaire"<<endl; }
-{entier}	{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
-{reel}      { yylval.texte= yytext; return(NUM_REAL);}		 // reel
+{integer}	{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
+{reel}      	{ yylval.texte= yytext; return(NUM_REAL);}	// real
 
 {backLine}	return(BACK_LINE);
 

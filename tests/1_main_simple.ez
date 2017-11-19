@@ -16,6 +16,13 @@ print "Second statement"
 print "Third one"
 
 a is integer = 4
+b is boolean
+b = false
+
+while (! b) do
+    print "b is false"
+    b = true
+end while
 
 if (true or false)
 then print "'or' operator working"

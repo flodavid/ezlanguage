@@ -9,6 +9,9 @@
 
 // Generic debug
 #define DEBUG               1
+#define DEBUGYACC           1
+#define MINYACC             0
+#define DEBUGNODE           0
 
 
 #if DEBUG_ALL

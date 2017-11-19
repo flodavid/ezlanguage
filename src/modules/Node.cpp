@@ -29,12 +29,12 @@ void Node::setRightSon(Node* son) {
 }
 
 void Node::addRightChild(Node* child) {
-    debug("setRightChildCall:"+ getName(), AT);
+    debug("addRightChildCall:"+ getName(), AT);
     // Right son recursive definition
     if (right_son == nullptr) {
         right_son= child;
     } else {
-        right_son->setRightSon(child);
+        right_son->addRightChild(child);
     }
 }
 

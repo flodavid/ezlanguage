@@ -6,9 +6,10 @@ set(DEC_CPP src/declarations/Class.cpp src/declarations/Container.cpp src/declar
     src/declarations/MultipleVariable.cpp src/declarations/Procedure.cpp src/declarations/Variable.cpp)
 
 set(MOD_CPP src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNode.cpp
-src/modules/ArrayAccess.cpp src/modules/BooleanExpr.cpp src/modules/If.cpp src/modules/Operator.cpp
-src/modules/ConditionalExpression.cpp src/modules/For.cpp src/modules/Repeat.cpp
-src/modules/While.cpp)
+ src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Operator.cpp
+ src/modules/ConditionalExpression.cpp src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp
+ src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
+)
 
 set(ADDONS_CPP src/addons/String_addon.cpp src/addons/log.cpp)
 
@@ -18,6 +19,8 @@ src/hash_table/ClassHashed.cpp src/hash_table/FunctionHashed.cpp
 src/hash_table/VariableHashed.cpp)
 
 set(ezlanguage_SRCS ${DEC_CPP} ${MOD_CPP} ${ADDONS_CPP} ${HT_CPP} src/main.cpp)
+
+set(YACC_SRCS EZ_language_compiler.ypp)
 
 find_program(MAKE make)
 if (MAKE)

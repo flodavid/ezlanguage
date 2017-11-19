@@ -19,7 +19,7 @@ extern ScopeHashTable symbolTable;
 typedef struct s_mon_type {
     int numerical_value;
     double real_value;
-    bool booleen;
+    bool boolean;
     std::string texte;
     Node* tree;
     std::vector<VariableHashed> vectString;

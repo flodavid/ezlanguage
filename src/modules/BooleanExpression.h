@@ -13,7 +13,7 @@ class BooleanExpression : public ConditionalExpression {
 
 private:
     std::string strOperator;
-    std::string valeur;
+    std::string value;
     const ConditionalExpression * left_part;
     const ConditionalExpression * right_part;
 
@@ -41,7 +41,7 @@ public:
      * @param right_operande : conditionnal expression which is the second operand
      */
     BooleanExpression(const std::string & binary_operator, const ConditionalExpression* first_operande,
-                          const ConditionalExpression* second_operande = nullptr);
+                        const ConditionalExpression* second_operande);
 
     /**
      * @brief Translate the begining part of the Forall

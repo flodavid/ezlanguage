@@ -4,7 +4,7 @@
 using namespace std;
 
 Variable::Variable(Node * right, const std::string & _name, const std::string & _type,
-        const std::string & _scope, const std::string & content, bool co, bool st):
+        const std::string & _scope, const Node* content, bool co, bool st):
     Node(nullptr, right, "Variable "+_name), varName(_name), type(_type), scope(_scope), affect(content), isConst(co), isStatic(st)
 {
     // TODO create a hashed instance of the variable and store it in the hash table
@@ -34,10 +34,11 @@ string Variable::preTranslate() const {
         res += type + " ";
     }
     res += varName;
-    if (affect != "") {
+    const string& affectStr= affect->translate();
+    if ( affectStr != "") {
         // TODO check that we just need the string value of affect, not the Node
         // (or if we just need the HashedVariable)
-		res += " = " + affect + ";";
+		res += " = " + affectStr + ";";
 	}
 	else res += ";";
     return res;

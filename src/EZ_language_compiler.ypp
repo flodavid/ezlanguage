@@ -22,6 +22,7 @@
 #include "../src/modules/BooleanValue.h"
 #include "../src/modules/If.h"
 #include "../src/modules/Else.h"
+#include "../src/modules/While.h"
 #include "../src/modules/Program.h" // Empty Node
 
 #include "../src/global.h"
@@ -120,14 +121,14 @@ int yycolumn = 1;
 %type<tree> destruct printing // TODO overloading
 %type<tree> if when while repeat for else
 %type<tree> function procedure class import
-%type<tree> statement expression return
+%type<tree> statement expression argument return 
 %type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator
-%type<texte> type scope constancy string argument
-%type<condExpr> conditionalExpression
+%type<texte> type scope constancy string
+%type<condExpr> conditionalExpression boolean
+
 // Non basic elements
-%type<tree> function_string
-%type<tree> statement_sequence
-%type<texte> single_expression names nbrOrName param_type affect
+%type<tree> function_string statement_sequence affect single_expression
+%type<texte> names nbrOrName param_type
 %type<texte> forDecl forType forRange forStep forBody returnstype facultativeAssignment
 
 // Parameters
@@ -178,9 +179,10 @@ imports:
   { $$= new TranslatedNode(""); }
 | imports import {
     /* TODO import logic */
-    debug("import;", AT);
-    $1->setRightSon($2);
-    $$=$1;
+    debugYacc("import;", AT);
+		TranslatedNode* importNode = (TranslatedNode *) $1;
+    importNode->setRightSon($2);
+    $$ = importNode;
   }
 ;
 
@@ -189,9 +191,9 @@ declaration_arguments:
   { $$= vector<Variable*>(); }
 | ARGUMENTS BACK_LINE param_args END endargument next_line {
     /* TODO arguements declaration logic */
-    debug("arguments declaration;", AT);
+    debugYacc("arguments declaration;", AT);
     vector<Variable*> vars($3);
-    $$= vars;
+    $$ = vars;
   }
 ;
 
@@ -200,10 +202,9 @@ declaration_classes:
   { $$= new TranslatedNode(""); }
 | declaration_classes class BACK_LINE
 	{
-		Class* c = (Class *) $1;
-    debug("class declared : " + c->getName()+":", AT);
-		$1->setRightSon($2);
-		$$ = c;
+    debugYacc("class declared: "+ $1->getName(), AT);
+		$1->addRightChild($2);
+		$$ = $1;
 	}
 ;
 
@@ -212,21 +213,14 @@ declarations_list:
   { $$ = new TranslatedNode(""); }
 | declaration_methods method declaration_variables
   {
-    // PDVariables* vars = (PDVariables*) $1;
-    // PDFunctions* functs = (PDFunctions*) $2;
-    Node* vars= $3;
-    $2->setRightSon(vars);
-    vars->setRightSon($2);
+    $1->addRightChild($2);
+    $2->setRightSon($3);
     $$ = $1;
   }
 | declaration_variables variable declaration_methods
   {
-    // PDVariables* vars = (PDVariables*) $1;
-    // PDFunctions* functs = (PDFunctions*) $2;
-    Node* vars=  $1;
-    Node* functs= $3;
-    $2->setRightSon(functs);
-    vars->setRightSon($2);
+    $1->addRightChild($2);
+    $2->setRightSon($3);
     $$ = $1;
   }
 ;
@@ -239,19 +233,19 @@ declarations_list:
 import:
   IMPORT NAME BACK_LINE {
     /* TODO import logic (name of module) */
-    debug("importation du module "+ $2, AT);
+    debugYacc("importation du module "+ $2, AT);
     TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"\n");
     $$= trans_node;
   }
 | INCLUDE string BACK_LINE {
     /* TODO include import logic */
-    debug(" inclusion de la bibliothèque "+ $2, AT);
+    debugYacc(" inclusion de la bibliothèque "+ $2, AT);
     TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2+ "\"\n");
     $$= trans_node;
   }
 | LIBRARY string BACK_LINE {
     /* TODO library import logic */
-    debug(" inclusion de la LIBRARY "+ $2, AT);
+    debugYacc(" inclusion de la LIBRARY "+ $2, AT);
     TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2+ "\"\n");
     $$= trans_node;
   }
@@ -262,15 +256,17 @@ param_args:
   NAME IS param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
     cout << "parameter " << get_argument_value($5) << endl;
     vector<Variable*> var;
-    var.push_back(new Variable(nullptr, $1, $3, "local", $5));
+    TranslatedNode* string_param= new TranslatedNode($5);
+    var.push_back(new Variable(nullptr, $1, $3, "local", string_param));
     $$= var;
   }
 | NAME IS param_type AS STRING_PARAM BACK_LINE param_args {
   // TODO transform it into left recursive
-    debug("paramètre "+ get_argument_value($5), AT);
+    debugYacc("paramètre "+ get_argument_value($5), AT);
+    TranslatedNode* string_param= new TranslatedNode($5);
     // Add parameter declaration to vector
     // TODO Variable should have right son, instead, of using Vector (replace nullptr) ?
-    $7.push_back(new Variable(nullptr, $1, $3, "local", $5));
+    $7.push_back(new Variable(nullptr, $1, $3, "local", string_param));
     $$= $7;
   }
 ;
@@ -281,7 +277,7 @@ declaration_variables:
   { $$ = new TranslatedNode(""); }
 | declaration_variables variable
 	{
-    $1->setRightSon($2);
+    $1->addRightChild($2);
 	  $$ = $1;
 	}
 ;
@@ -292,7 +288,7 @@ declaration_methods:
   { $$ = new TranslatedNode(""); }
 | declaration_methods method BACK_LINE
 	{
-		$1->setRightSon($2);
+		$1->addRightChild($2);
 		$$ = $1;
 	}
 ;
@@ -320,8 +316,8 @@ class:
   CLASS NAME BACK_LINE begin statement_sequence END endclass
 	{
     /* TODO class declaration logic */
-		$$ = new Class();
-		debug("class declaration "+ $2, AT);
+		debugYacc("class declaration "+ $2, AT);
+		// $$ = new Class();
 	}
 ;
 
@@ -332,17 +328,20 @@ class:
 statement_sequence:
   /* empty */
   {
-    debug("last statement", AT);
+    debugYacc("last statement", AT);
     $$ = nullptr;
   }
 | statement statement_sequence {
-    // debug("statement: "+ $1->getName(), AT);
+    debugYacc("statement: "+ $1->getName(), AT);
+    // Add line jump at end of statement
+    $1->addRightChild(new TranslatedNode("\n"));
+
     $1->addRightChild($2);
     $$ = $1;
   }
 // @see if it is possible to use left recursion
 // | statement_sequence statement {
-//     debug("statement: "+ $2->getName(), AT);
+//     debugYacc("statement: "+ $2->getName(), AT);
 //     if ($1 == nullptr) $$ = $2;
 //     else {
 //       $1->addRightChild($2);
@@ -414,7 +413,7 @@ function:
   begin statement_sequence return BACK_LINE END endfunction
   {
 		// symbolTable.decScope();
-		debug("fonction declaration: "+ $2, AT);
+		debugYacc("fonction declaration: "+ $2, AT);
     // Right son of last instruction is return statement
     $7->setRightSon($8);
 
@@ -430,7 +429,7 @@ function:
 //   begin statement_sequence return BACK_LINE END endfunction
 //   {
 //     /* TODO shared function declaration logic */
-//     debug("fonction declaration: "+ $3, AT);
+//     debugYacc("fonction declaration: "+ $3, AT);
 //     $$ = new Function($10, nullptr, $3,$5,$7)
 //   }
 ;
@@ -442,7 +441,7 @@ procedure:
   PROCEDURE NAME methodParameters BACK_LINE statement_sequence END endprocedure
   {
     /* TODO procedure creation logic 1 */
-    debug("Procedure declaration : "+$2+ ";", AT);
+    debugYacc("Procedure declaration : "+ $2 +";", AT);
     Procedure *proc = new Procedure($5,$2,$3);
 		$$ = proc;
 		// symbolTable.decScope();
@@ -459,7 +458,7 @@ procedure:
 //     /* TODO shared procedure declaration logic */
 // | SHARED procedureDecl BACK_LINE statement_sequence END endprocedure {
 //     /* TODO procedure creation logic 2 */
-//     debug("Procedure creation ", AT);
+//     debugYacc("Procedure creation ", AT);
 //     // Procedure *f = new Procedure($1,$4,$4);
 // 		$$ = nullptr; // = f
 //   }
@@ -475,9 +474,15 @@ procedure:
  * ******************/
 
 statement:
-  BACK_LINE               { $$ = new TranslatedNode("\n"); }
-| variable                { $$ = $1; }
-| affectation             { $$ = $1; }
+  BACK_LINE               { $$ = new TranslatedNode(""); }
+| variable                {
+    $$ = $1;
+  }
+| affectation             {
+    TranslatedNode* semicolon= new TranslatedNode(";");
+    $1->addRightChild(semicolon);
+    $$ = $1;
+  }
 | containerDeclaration             { $$ = $1; }
 | function_call           { $$ = $1; }
 | destruct    { $$ = $1; }
@@ -502,7 +507,7 @@ containerDeclaration:
 variable:
   /* scope constancy */ simpleVariable BACK_LINE
   {
-    debug("Variable declaration: "+ $1->getName(), AT);
+    debugYacc("Variable declaration: "+ $1->getName(), AT);
     // string scope_consistancy= $1+$2;
     // $3->setScope(scope_consistancy);
     $$ = $1;
@@ -510,7 +515,7 @@ variable:
 // | variable_construct
 //   {
 //     /* TODO variable construction logic (with class) */
-//     debug("variable construction (class)", AT);
+//     debugYacc("variable construction (class)", AT);
 //     $$ = $1;
 //   }
 ;
@@ -533,15 +538,15 @@ if:
     string log= "{";
     log+= yylineno;
     log+= "} If";
-    debug(log, AT);
+    debugYacc(log, AT);
     $$ = new If($5, $6, $2);
   }
 ;
 
 when:
-  WHEN expression IS BACK_LINE whenbody whendefault END endwhen {
+  WHEN conditionalExpression IS BACK_LINE whenbody whendefault END endwhen {
     /* TODO when logic */
-    printf("when .. case .. \n");
+    debugYacc("when .. case ..", AT);
   }
 ;
 
@@ -564,16 +569,16 @@ whendefault: /* May not be specified */
 ;
 
 while:
-  WHILE expression DO statement_sequence END endwhile {
-    /* TODO while logic */
-    printf("WHILE .. DO .. \n");
+  WHILE conditionalExpression DO BACK_LINE statement_sequence END endwhile {
+    debugYacc("WHILE .. DO ..", AT);
+    $$ = new While($5, $2);
   }
 ;
 
 repeat:
   REPEAT statement_sequence UNTIL BACK_LINE expression BACK_LINE END endrepeat {
     /* TODO repeat-until logic */
-    printf("REPEAT .. UNTIL .. \n");
+    debugYacc("REPEAT .. UNTIL ..", AT);
   }
 ;
 
@@ -629,7 +634,7 @@ function_call:
   // NAME POINT simple_function {}
   function_call POINT simple_function {}
 | simple_function { }
-| NAME POINT NAME { }  
+| NAME POINT NAME { }
 | function_string { $$ = $1;}
 | function_regex { }
 | containers_methods { }
@@ -648,7 +653,7 @@ arguments:
 | expression { $$ = $1; }
 | expression COMMA arguments {
     TranslatedNode* comma= new TranslatedNode(", ");
-    $1->setRightSon(comma);
+    $1->addRightChild(comma);
     comma->setRightSon($3);
     $$ = $1;
   }
@@ -660,10 +665,9 @@ argumentsList:
 | facultativeAssignment argument argumentsSeparated // One or more arguments
 // arguments are separated by commas : they have a comma before, except the first one
   {
-    // TODO Take assignment into account when passing argument @see what's the goal ?
-    TranslatedNode* arg= new TranslatedNode($2);
-    arg->setRightSon($3);
-    $$ = arg;
+    // TODO Take assignment into account when passing argument (facultativeAssignment)
+    $2->addRightChild($3);
+    $$ = $2;
   }
 ;
 
@@ -671,9 +675,9 @@ argumentsSeparated:
   /* empty */ { $$ = new TranslatedNode(""); }
 | argumentsSeparated COMMA facultativeAssignment argument
   {
-    // TODO Take assignment into account when passing argument @see what's the goal ?
+    // TODO Take assignment into account when passing argument
     TranslatedNode* arg= new TranslatedNode($4);
-    $1->setRightSon(arg);
+    $1->addRightChild(arg);
     $$ = $1;
   }
 ;
@@ -684,10 +688,10 @@ argumentsSeparated:
 // TODO handle unary affectation operators (++, --, ...)*
 affectation:
   NAME assignmentOperator expression {
-    debug("Affectation on "+ $1, AT);
-    TranslatedNode* affectedVariable= new TranslatedNode($1 + $2 +" ");
-    affectedVariable->setRightSon($3);
-    $$ = affectedVariable;
+    debugYacc("Affectation on "+ $1, AT);
+    TranslatedNode* affect= new TranslatedNode($1 + $2 +" ");
+    affect->setRightSon($3);
+    $$ = affect;
   }
 // | NAME POINT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
 // | NAME PLUS PLUS { cout << "Affectation ++" <<  endl; }
@@ -707,8 +711,8 @@ destruct:
 printing:
   PRINT string BACK_LINE {
     /* TODO replace string input for PRINT by expressions input */
-    debug("print "+ $2, AT);
-    $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl;\n", "Print (stdout)");
+    debugYacc("print "+ $2, AT);
+    $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl;", "Print (stdout)");
   }  
   // PRINT expressions BACK_LINE {
   //   /* TODO print logic */
@@ -741,18 +745,16 @@ expressions:
 ;
 
 conditionalExpression:
-  TRUE  { $$ = new BooleanValue(true); }
-| FALSE { $$ = new BooleanValue(false); }
-| NAME  { $$ = new BooleanValue($1); }
+  boolean { $$ = $1; }
+| NAME    { $$ = new BooleanExpression($1); }
 | LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS { $$ = $2; }
 | conditionalExpression logicalOperator conditionalExpression {
     BooleanExpression* expr= new BooleanExpression($2,$1,$3);
     $$ = expr;
-
-    // TranslatedNode* relOpe= new TranslatedNode(" "+ $2 +" ");
-    // $1->setRightSon(relOpe);
-    // relOpe->setRightSon($3);
-    // $$ = $1;
+  }
+| NOT conditionalExpression {
+    BooleanExpression* negation= new BooleanExpression("!", $2);
+    $$ = negation;
   }
 // TODO add expressions comparison to conditionalExpression
 // | expression relationalOperator expression {
@@ -764,10 +766,11 @@ conditionalExpression:
 ;
 
 expression:
-  /* TODO expressions logic */
+  /* TODO expressions logic and check that there is no other operators*/
   expression arithmeticOperator expression {
+    debugYacc("Operations between two expressions", AT);
     TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ");
-    $1->setRightSon(arithOperator);
+    $1->addRightChild(arithOperator);
     arithOperator->setRightSon($3);
     $$ = $1;
   }
@@ -775,24 +778,21 @@ expression:
 | single_expression { yyprint("single_expression");  /* $$ = new Variable(); */ /* $1 = $1 */ }
 ;
 
+/* single_expressions logic */
 single_expression:
-  /* single_expressions logic */
   PLUS single_expression { /* $$ = new Variable(); */ }
 | NOT single_expression { /* $$ = new Variable(); */ }
 | single_expression XOR single_expression { /* $$ = new Variable(); */ }
 | single_expression MOD single_expression { /* $$ = new Variable(); */ }
 | single_expression POW single_expression { /* $$ = new Variable(); */ }
 // | ABS single_expression { /* $$ = new Variable(); */ } // @see how to handle absolute
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { /* $$ = new Variable(); */ }
-| NUM_REAL { $$ = $1; } //real
-| NUM_INTEGER { $$ = $1; }  // integer /* TODO ADD litteral creation */
-| NAME { /* $$ = String($1); */ }
+| argument  { $$ = $1; }
 ;
 
 simpleVariable:
   NAME IS type affect
   {
-    debug("Variable : "+ $1, AT);
+    debugYacc("Variable : "+ $1, AT);
     VariableHashed v($1,$3); // @see if same thing if function parameters
     symbolTable.addElement(v);
     $$ = new Variable(nullptr, $1,$3,"local",$4,false);
@@ -800,7 +800,7 @@ simpleVariable:
 // | NAME names ARE type affect BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 1 */
-// 		debug("Variable declaration: "+ $1, AT);
+// 		debugYacc("Variable declaration: "+ $1, AT);
 // 	}
 //     // TODO Handle SHARED
 // | NAME IS SHARED type affect BACK_LINE
@@ -813,7 +813,7 @@ simpleVariable:
 // | NAME names ARE SHARED type BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 2 */
-// 		debug("  Variable des variables  avec portee "+ $1, AT);
+// 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
 // 	}
 ;
 
@@ -860,17 +860,30 @@ begin:
 // TODO affect logic
 affect:
   /* empty */
-  { $$ = ""; }
-| EQUALS argument { debug("===AFFECTATION VALUE=== : "+ $2, AT); $$ = $2; }
+  { $$ = new TranslatedNode(""); }
+| EQUALS argument { debugYacc("Affectation value: "+ $2->translate(), AT); $$ = $2; }
 // | EQUALS expression { $$ = $2; } // TODO use expression ?
 // | EQUALS string   { $$ = $2; }
 ;
 
+type:
+  TYPE_INTEGER  { $$ = "int"; }
+| TYPE_REAL     { $$ = "real"; }
+| TYPE_STRING   { $$ = "string"; }
+| TYPE_BOOLEAN  { $$ = "bool"; }
+;
+
+boolean:
+  TRUE  { $$ = new BooleanValue(true); }
+| FALSE { $$ = new BooleanValue(false); }
+;
+
 argument:
-  string      { $$ = $1; }
-| NUM_INTEGER { $$ = $1; }
-| NUM_REAL    { $$ = $1; }
-| NAME        { $$ = $1; /* @see if variable must be retrieved from name */ }
+  string      { $$ =  new TranslatedNode($1); }
+| boolean     { $$ = $1; }
+| NUM_INTEGER { $$ = new TranslatedNode($1); }
+| NUM_REAL    { $$ = new TranslatedNode($1); }
+| NAME        { $$ = new TranslatedNode($1); /* @see if variable must be retrieved from name */ }
 ;
 
 // TODO facultativeAssignment logic
@@ -913,13 +926,6 @@ nbrOrName:
   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
 | NUM_REAL    { /* $$ = Real($1); */ }
 | NAME        { /* $$ = String($1); */ }
-;
-
-type:
-  TYPE_INTEGER  { $$ = "int";}
-| TYPE_REAL     { $$ = "real";}
-| TYPE_STRING   { $$ = "string";}
-| TYPE_BOOLEAN  { $$ = "bool";}
 ;
 
 string:

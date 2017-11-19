@@ -6,7 +6,7 @@ using namespace std;
 TranslatedNode::TranslatedNode(const std::string& translated_content, const std::string & _name):
     Node(nullptr, nullptr, "["+ translated_content +"]<-"+ _name), content(translated_content)
 {
-    debug("["+ content +"] in '"+ _name +"' at construction", AT);
+    debugNode("["+ content +"] in '"+ _name +"' at construction", AT);
 }
 
 string TranslatedNode::preTranslate() const {
