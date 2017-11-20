@@ -115,19 +115,20 @@ int yycolumn = 1;
 %type<vectVar> declaration_arguments param_args parameters methodParameters
 // %type<vectString> 
 %type<tree> argumentsList argumentsSeparated arguments
-%type<var>  simpleVariable variable variable_construct
 %type<tree> method affectation containerDeclaration function_call
 %type<tree> map_declaration array_declaration vector_declaration list_declaration set_declaration
 %type<tree> destruct printing // TODO overloading
 %type<tree> if when while repeat for else
 %type<tree> function procedure class import
-%type<tree> statement expression argument return 
+%type<tree> statement return
 %type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator
 %type<texte> type scope constancy string
+%type<var>  simpleVariable variable variable_construct
 %type<condExpr> conditionalExpression boolean
+%type<transNode> expression basicExpression
 
 // Non basic elements
-%type<tree> function_string statement_sequence affect single_expression
+%type<tree> function_string statement_sequence affect streamedExpressions
 %type<texte> names nbrOrName param_type
 %type<texte> forDecl forType forRange forStep forBody returnstype facultativeAssignment
 
@@ -158,6 +159,8 @@ ROOT:
     racine->setRightSon(p_imports);
 
 		const std::string & translation= racine->translate();
+    delete racine;
+
     // debug log
     debug("\n      TRANSLATION\n======================>>>>>\n"+ translation +
         "\n<<<<<======================\n        END TRANSLATION\n", AT);
@@ -179,7 +182,7 @@ imports:
   { $$= new TranslatedNode(""); }
 | imports import {
     /* TODO import logic */
-    debugYacc("import;", AT);
+    debugYacc("import", AT);
 		TranslatedNode* importNode = (TranslatedNode *) $1;
     importNode->setRightSon($2);
     $$ = importNode;
@@ -191,7 +194,7 @@ declaration_arguments:
   { $$= vector<Variable*>(); }
 | ARGUMENTS BACK_LINE param_args END endargument next_line {
     /* TODO arguements declaration logic */
-    debugYacc("arguments declaration;", AT);
+    debugYacc("arguments declaration", AT);
     vector<Variable*> vars($3);
     $$ = vars;
   }
@@ -240,13 +243,13 @@ import:
 | INCLUDE string BACK_LINE {
     /* TODO include import logic */
     debugYacc(" inclusion de la bibliothèque "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2+ "\"\n");
+    TranslatedNode* trans_node= new TranslatedNode("#include "+ $2+ "\n");
     $$= trans_node;
   }
 | LIBRARY string BACK_LINE {
     /* TODO library import logic */
     debugYacc(" inclusion de la LIBRARY "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2+ "\"\n");
+    TranslatedNode* trans_node= new TranslatedNode("#include "+ $2+ "\n");
     $$= trans_node;
   }
 ;
@@ -334,8 +337,7 @@ statement_sequence:
 | statement statement_sequence {
     debugYacc("statement: "+ $1->getName(), AT);
     // Add line jump at end of statement
-    $1->addRightChild(new TranslatedNode("\n"));
-
+    $1->addRightChild(new TranslatedNode(""));
     $1->addRightChild($2);
     $$ = $1;
   }
@@ -441,7 +443,7 @@ procedure:
   PROCEDURE NAME methodParameters BACK_LINE statement_sequence END endprocedure
   {
     /* TODO procedure creation logic 1 */
-    debugYacc("Procedure declaration : "+ $2 +";", AT);
+    debugYacc("Procedure declaration : "+ $2, AT);
     Procedure *proc = new Procedure($5,$2,$3);
 		$$ = proc;
 		// symbolTable.decScope();
@@ -475,15 +477,13 @@ procedure:
 
 statement:
   BACK_LINE               { $$ = new TranslatedNode(""); }
-| variable                {
-    $$ = $1;
-  }
+| variable                { $$ = $1; }
 | affectation             {
-    TranslatedNode* semicolon= new TranslatedNode(";");
+    TranslatedNode* semicolon= new TranslatedNode(";\n");
     $1->addRightChild(semicolon);
     $$ = $1;
   }
-| containerDeclaration             { $$ = $1; }
+| containerDeclaration    { $$ = $1; }
 | function_call           { $$ = $1; }
 | destruct    { $$ = $1; }
 | printing    { $$ = $1; }
@@ -534,11 +534,7 @@ else:
 
 if:
   IF conditionalExpression BACK_LINE THEN statement_sequence else END endif {
-    /* TODO if-then logic */
-    string log= "{";
-    log+= yylineno;
-    log+= "} If";
-    debugYacc(log, AT);
+    debugYacc("If", AT);
     $$ = new If($5, $6, $2);
   }
 ;
@@ -636,8 +632,8 @@ function_call:
 | simple_function { }
 | NAME POINT NAME { }
 | function_string { $$ = $1;}
-| function_regex { }
 | containers_methods { }
+// | function_regex { }
 ;
 
 simple_function:
@@ -661,8 +657,10 @@ arguments:
 
 // @see can be merged
 argumentsList:
-  /* empty */ { $$ = new TranslatedNode(""); } // No argument
-| facultativeAssignment argument argumentsSeparated // One or more arguments
+  /* empty */ // No argument
+  { $$ = new TranslatedNode(""); }
+  // TODO replace basicExpression by expression when validated
+| facultativeAssignment basicExpression argumentsSeparated // One or more arguments
 // arguments are separated by commas : they have a comma before, except the first one
   {
     // TODO Take assignment into account when passing argument (facultativeAssignment)
@@ -672,12 +670,12 @@ argumentsList:
 ;
 
 argumentsSeparated:
-  /* empty */ { $$ = new TranslatedNode(""); }
-| argumentsSeparated COMMA facultativeAssignment argument
+  /* empty */
+  { $$ = new TranslatedNode(""); }
+| argumentsSeparated COMMA facultativeAssignment basicExpression
   {
     // TODO Take assignment into account when passing argument
-    TranslatedNode* arg= new TranslatedNode($4);
-    $1->addRightChild(arg);
+    $1->addRightChild($4);
     $$ = $1;
   }
 ;
@@ -704,20 +702,28 @@ destruct:
   // TODO reword destruction definition
   DESTRUCT BACK_LINE statement_sequence END enddestruct {
     /* TODO destructions logic */
-    cout << "destructeur " << endl;
+    debugYacc("destructeur ", AT);
+  }
+;
+
+streamedExpressions:
+  /* empty */
+  { $$ = new TranslatedNode(""); }
+| streamedExpressions basicExpression {
+    TranslatedNode* streamOperator= new TranslatedNode("<< ");
+
+    $1->addRightChild(streamOperator);
+    $1->addRightChild($2);
+    $$ = $1;
   }
 ;
 
 printing:
-  PRINT string BACK_LINE {
-    /* TODO replace string input for PRINT by expressions input */
-    debugYacc("print "+ $2, AT);
-    $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl;", "Print (stdout)");
-  }  
-  // PRINT expressions BACK_LINE {
-  //   /* TODO print logic */
-  //   $$ = new TranslatedNode("std::cout << \""+ $2 + "\"<< std::endl");
-  // }
+  PRINT streamedExpressions BACK_LINE {
+    debugYacc("print "+ $2->translate(), AT);
+    $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
+    delete $2;
+  }
 ;
 
 // overloading:
@@ -737,57 +743,67 @@ next_line:
 | next_line BACK_LINE /* Nothing to do */
 ;
 
-expressions:
-  expression  { cout <<"affichage  : " <<  $1  << endl; }
-| string      { cout << "affichage  : " << $1 << endl; }
-| expression COMMA expressions  { cout <<"affichage  : " <<  $1 << endl; }
-| string COMMA expressions      {   cout << "affichage : " << $1 +"-$3" << endl; }
-;
-
+// TODO handle parenthesis logic. Rework needs to be done on BooleanExpression class
 conditionalExpression:
   boolean { $$ = $1; }
-| NAME    { $$ = new BooleanExpression($1); }
-| LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS { $$ = $2; }
+  // NAME should be boolean
+| NAME    {
+    debugYacc("BooleanExpression from variable "+ $1, AT);
+    $$ = new BooleanExpression($1);
+  }
+// | LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS {
+//     TranslatedNode* parenthCond= new TranslatedNode("("+ $2->translate() +")");
+//     delete $2;
+//     $$ = parenthCond;
+//   }
 | conditionalExpression logicalOperator conditionalExpression {
     BooleanExpression* expr= new BooleanExpression($2,$1,$3);
     $$ = expr;
   }
 | NOT conditionalExpression {
+    debugYacc("Negation", AT);
     BooleanExpression* negation= new BooleanExpression("!", $2);
     $$ = negation;
   }
-// TODO add expressions comparison to conditionalExpression
-// | expression relationalOperator expression {
-//     TranslatedNode* operator= new TranslatedNode(" "+ $2 +" ");
-//     $1->setRightSon(operator);
-//     operator->setRightSon($3);
-//     $$ = $1;
-//   }
+| expression relationalOperator expression {
+    debugYacc("conditionalExpression by comparison", AT);
+    BooleanExpression* comparison= new BooleanExpression($2,$1,$3);
+
+    $$ = comparison;
+  }
 ;
 
 expression:
-  /* TODO expressions logic and check that there is no other operators*/
+  /* TODO check that there is no other operators*/
   expression arithmeticOperator expression {
-    debugYacc("Operations between two expressions", AT);
+    debugYacc("Operation between two expressions", AT);
     TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ");
+
     $1->addRightChild(arithOperator);
     arithOperator->setRightSon($3);
     $$ = $1;
   }
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS { $$ = $2; }
-| single_expression { yyprint("single_expression");  /* $$ = new Variable(); */ /* $1 = $1 */ }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
+    TranslatedNode* parenthExpr= new TranslatedNode("("+ $2->translate() +")");
+    delete $2;
+    $$ = parenthExpr;
+  }
+| basicExpression {
+    debugYacc("expression from basicExpression", AT);
+    $$ = $1;
+  }
 ;
 
-/* single_expressions logic */
-single_expression:
-  PLUS single_expression { /* $$ = new Variable(); */ }
-| NOT single_expression { /* $$ = new Variable(); */ }
-| single_expression XOR single_expression { /* $$ = new Variable(); */ }
-| single_expression MOD single_expression { /* $$ = new Variable(); */ }
-| single_expression POW single_expression { /* $$ = new Variable(); */ }
-// | ABS single_expression { /* $$ = new Variable(); */ } // @see how to handle absolute
-| argument  { $$ = $1; }
-;
+/* TODO single_expressions logic. What's the goal ? */
+// single_expression:
+//   PLUS single_expression { /* $$ = new Variable(); */ }
+// | NOT single_expression { /* $$ = new Variable(); */ }
+// | single_expression XOR single_expression { /* $$ = new Variable(); */ }
+// | single_expression MOD single_expression { /* $$ = new Variable(); */ }
+// | single_expression POW single_expression { /* $$ = new Variable(); */ }
+// // | ABS single_expression { /* $$ = new Variable(); */ } // @see how to handle absolute
+// | argument  { $$ = $1; }
+// ;
 
 simpleVariable:
   NAME IS type affect
@@ -861,7 +877,10 @@ begin:
 affect:
   /* empty */
   { $$ = new TranslatedNode(""); }
-| EQUALS argument { debugYacc("Affectation value: "+ $2->translate(), AT); $$ = $2; }
+| EQUALS basicExpression {
+    debugYacc("Affectation value: "+ $2->translate(), AT);
+    $$ = $2;
+  }
 // | EQUALS expression { $$ = $2; } // TODO use expression ?
 // | EQUALS string   { $$ = $2; }
 ;
@@ -878,9 +897,9 @@ boolean:
 | FALSE { $$ = new BooleanValue(false); }
 ;
 
-argument:
-  string      { $$ =  new TranslatedNode($1); }
-| boolean     { $$ = $1; }
+basicExpression:
+  string      { $$ = new TranslatedNode($1); }
+| boolean     { $$ = new TranslatedNode($1->translate()); delete $1; }
 | NUM_INTEGER { $$ = new TranslatedNode($1); }
 | NUM_REAL    { $$ = new TranslatedNode($1); }
 | NAME        { $$ = new TranslatedNode($1); /* @see if variable must be retrieved from name */ }
@@ -929,12 +948,7 @@ nbrOrName:
 ;
 
 string:
-  STRING  { $$ = delete_quote($1); }
-;
-
-strOrName:
-  string { }
-| NAME { }
+  STRING  { $$ = $1; }
 ;
 
 /* *********************
@@ -1009,11 +1023,11 @@ endargument:
 ;*/
 
 //    -----------------------------REGEX METHODS-----------------------------------------
-function_regex:
-  NAME POINT MATCH LEFT_PARENTHESIS strOrName RIGHT_PARENTHESIS { cout << "regular expression MATCH " << endl ;}
-| NAME POINT SEARCH LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression SEARCH " << endl ;}
-| NAME POINT REPLACE LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression REPLACE " << endl ;}
-;
+// function_regex:
+//   NAME POINT MATCH LEFT_PARENTHESIS strOrName RIGHT_PARENTHESIS { cout << "regular expression MATCH " << endl ;}
+// | NAME POINT SEARCH LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression SEARCH " << endl ;}
+// | NAME POINT REPLACE LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression REPLACE " << endl ;}
+// ;
 
 //    -----------------------------STRING METHODS----------------------------------------
 function_string: 

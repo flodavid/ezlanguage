@@ -3,6 +3,7 @@
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
+#include "./modules/TranslatedNode.h"
 #include "./modules/ConditionalExpression.h"
 #include "./declarations/Variable.h"
 #include "./hash_table/VariableHashed.h"
@@ -27,6 +28,7 @@ typedef struct s_mon_type {
     Variable* var;
     std::vector<Variable*> vectVar;
     ConditionalExpression* condExpr;
+    TranslatedNode* transNode;
 //    MaClasse	une_maclasse;
 } mon_type;
 

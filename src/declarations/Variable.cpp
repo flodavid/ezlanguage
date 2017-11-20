@@ -38,9 +38,10 @@ string Variable::preTranslate() const {
     if ( affectStr != "") {
         // TODO check that we just need the string value of affect, not the Node
         // (or if we just need the HashedVariable)
-		res += " = " + affectStr + ";";
-	}
-	else res += ";";
+		res += " = " + affectStr;
+    }
+    
+	res += ";\n";
     return res;
 }
 

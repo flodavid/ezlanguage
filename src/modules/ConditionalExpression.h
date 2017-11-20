@@ -5,8 +5,8 @@
 #include "Node.h"
 
 /**
- * @brief Represent a node of the tree which will traduct a condtional expression such as : (a and b) or (b or c)
- * @author Antoine GARNIER && Valentin GINISTY
+ * @brief Represent a node of the tree which will traduct any type of conditional expression
+ * It is an abstract class
  */
 class ConditionalExpression : public Node {
 
