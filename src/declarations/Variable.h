@@ -13,10 +13,10 @@
 class Variable : public Node {
 	
 protected:
-    std::string name;
+    std::string varName;
     std::string type;
     std::string scope;
-    std::string affect;
+    const Node* affect;
     VariableHashed* hashed;
     bool isConst;
     bool isStatic;
@@ -35,7 +35,7 @@ public:
 	 * @param st : if the variable is static
 	 */
     Variable(Node * right, const std::string & _name, const std::string & _type,
-            const std::string & _scope, const std::string & content, bool co = false, bool st = false);
+            const std::string & _scope, const Node* content, bool co = false, bool st = false);
     
     /**
      * @brief Set variable scope and constancy

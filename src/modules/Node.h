@@ -6,8 +6,6 @@
 
 #include "../addons/log.h"
 
-using namespace std;
-
 /**
  * @brief Base class, used to structure the others classes as nodes of the main tree
  * @authors : GARNIER Antoine, ROUINEB Hamza

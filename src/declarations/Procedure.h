@@ -36,7 +36,7 @@ public:
      * @brief Getter for the procedure's name
      * @return name of the procedure
      */
-    std::string getProcedureName() const {return procedure_name;}
+    const std::string & getProcedureName() const { return procedure_name; }
 
     /**
      * @brief Getter for the argument's list

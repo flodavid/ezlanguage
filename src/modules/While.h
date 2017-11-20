@@ -28,10 +28,8 @@ public:
      * @param right : right son
      * @param cond : condition of the loop
      */
-    While(Node * left, Node * right, Node * cond);
+    While(Node * left, Node * cond);
 
-
-    
     /*** Translations ***/
     
     /**

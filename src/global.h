@@ -3,6 +3,8 @@
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
+#include "./modules/TranslatedNode.h"
+#include "./modules/ConditionalExpression.h"
 #include "./declarations/Variable.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
@@ -18,13 +20,15 @@ extern ScopeHashTable symbolTable;
 typedef struct s_mon_type {
     int numerical_value;
     double real_value;
-    bool booleen;
+    bool boolean;
     std::string texte;
-    Node* arbre;
+    Node* tree;
     std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
     Variable* var;
     std::vector<Variable*> vectVar;
+    ConditionalExpression* condExpr;
+    TranslatedNode* transNode;
 //    MaClasse	une_maclasse;
 } mon_type;
 

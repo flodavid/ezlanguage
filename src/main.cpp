@@ -114,7 +114,7 @@ void display(vector<char*> fic_ezl){
 }
 
 /**
- * Compiles les fichiers cpp générer
+ * Compile les fichiers cpp générés
  * @brief exec_cpp
  * @param commande_gpp commande gpp execute
  * @param output_name nom de l'output
@@ -129,8 +129,8 @@ void exec_cpp(std::string commande_gpp, std::string output_name){
 				if(output_name != ""){
 					string tmp_output= "./" + output_name;
 					system(tmp_output.c_str());
-				}else{
-					string tmp_output= "./a.out";
+				} else {
+					string tmp_output= "./a.run";
 					system(tmp_output.c_str());
 				}
 			}

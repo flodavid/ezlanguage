@@ -7,14 +7,32 @@ procedure main_simple_vide
 this is
 
 a multiple lines comment
-    if (1 == 1)
-    then print "1 is equal to 1"
-    else print "1 is not equal to 1 !?"
-    end if
+
 */
 print "Hello World"
 print "Second statement"
 
 //this is a test
 print "Third one"
+
+a is integer = 4
+b is boolean
+b = false
+
+while a - 1 * 2 > 0 do
+    if b
+    then print "b is true"
+    else print "b is false"
+    end if
+    
+    a = a -1
+    b = true
+    print "a : " a
+end while
+
+if b or true
+then print "'or' operator working"
+else print "'or' operator not working"
+end if
+
 end procedure

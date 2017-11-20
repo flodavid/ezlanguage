@@ -3,11 +3,12 @@
 
 using namespace std;
 
-While::While(Node * left, Node * right, Node * cond) : Node(left, right), condition(cond)
+While::While(Node * left, Node * cond):
+    Node(left, nullptr, "While"), condition(cond)
 {}
 
 string While::preTranslate() const {
-    string res = "while (" + condition->translate() + ") {";
+    string res = "while (" + condition->translate() + ") {\n";
     return res;
 }
 

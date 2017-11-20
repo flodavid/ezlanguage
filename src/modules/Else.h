@@ -1,33 +1,23 @@
-#ifndef IF_H
-#define IF_H
+#ifndef ELSE_H
+#define ELSE_H
 
 #include "Node.h"
 
 /**
- * @brief Node of the tree which represent a condition else
+ * @brief Node of the tree which represent a condition if
+ * else is another node, can be passed as right node
  */
 
-class If : public Node {
-
+class Else : public Node {
+		
 protected:
-	Node * cond;
-    int block_type;
 	
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
     * * * * * * * * */
 
-
-    /**
-    * Constructor with parameters
-    * Set the block_type to the parameter passed to the constructor
-    * @param condition : the condition of the if
-    * @param left : left son
-    * @param bt : block if, else or elseif
-    * @author Ismail ELFAQIR
-    */
-    If(Node * left, Node * elseNode, Node * condition);
+    Else(Node * left);
 
     /* * * * * * * *
      * Translation *
