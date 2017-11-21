@@ -22,6 +22,7 @@
 #include "../src/modules/BooleanValue.h"
 #include "../src/modules/If.h"
 #include "../src/modules/Else.h"
+#include "../src/modules/For.h"
 #include "../src/modules/While.h"
 #include "../src/modules/Program.h" // Empty Node
 
@@ -71,7 +72,7 @@ int yycolumn = 1;
 %token<texte>	NUM_INTEGER     // Integer
 %token<texte>	NUM_REAL			  // Real
 %token<texte> NAME RETOUR STRING STRING_PARAM
-%token COMMA DEGRE POURCENT DIESE POINT QUOTE		// Caractères
+%token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
 %token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
 %token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
@@ -128,9 +129,10 @@ int yycolumn = 1;
 %type<transNode> expression basicExpression
 
 // Non basic elements
-%type<tree> function_string statement_sequence affect streamedExpressions
+%type<tree> function_string statement_sequence forBody affect streamedExpressions
 %type<texte> names nbrOrName param_type
-%type<texte> forDecl forType forRange forStep forBody returnstype facultativeAssignment
+%type<texte> forDecl forType returnstype facultativeAssignment
+%type<transNode> forStep forRangeStart forRangeEnd
 
 // Parameters
 // %define parse.trace
@@ -580,6 +582,7 @@ repeat:
 
 /* for */
 forDecl:
+  // This should a name that is not already in current scope
   FOR NAME { $$= $2; }
 ;
 
@@ -587,38 +590,43 @@ forType:
   IS type { $$= $2; }
 ;
 
-forRange:
-  IN expression doublepoint expression { 
-    /* TODO for range logic */
-  }
+forRangeStart:
+  IN expression { $$ = $2; }
 ;
 
-forStep: // @see do step should be text or real_value
-  STEP nbrOrName { $$= $2; }
+forRangeEnd:
+  DOUBLE_DOT expression { $$ = $2; }
+;
+
+forStep: // @see do step should be text or numeric_value ?
+  STEP expression { $$= $2; }
 ;
 
 forBody:
-  DO BACK_LINE statement_sequence END endfor { 
-    /* TODO for body logic */
-  }
+  DO BACK_LINE statement_sequence END endfor { $$ = $3; }
 ;
 
+// TODO Add 'for' logics that handle going through containers
 for:
-  forDecl forRange forBody {
-    /* TODO 'for a in b .. c' logic */
-    printf("FOR .. IN ... \n");
+  forDecl forRangeStart forRangeEnd forBody {
+    debugYacc("FOR  IN .. ...", AT);
+    TranslatedNode* simpleStep= new TranslatedNode("1");
+    $$ = new For($1,$2,$3,simpleStep,$4);
   }
-| forDecl forRange forStep forBody {
-    /* TODO 'for a in b .. c step x' logic */
-    printf("FOR .. IN ... \n");
+| forDecl forRangeStart forRangeEnd forStep forBody {
+    debugYacc("FOR  IN .. STEP ...", AT);
+    $$ = new For($1,$2,$3,$4,$5);
   }
-| forDecl forType forRange forBody {
+| forDecl forType forRangeStart forRangeEnd forBody {
     /* TODO 'for a is TYPE in b .. c' logic */
-    printf("FOR a IN b .. c\n");
+    debugYacc("FOR type  IN .. ...", AT);
+    TranslatedNode* simpleStep= new TranslatedNode("1");
+    $$ = new For($1,$3,$4,simpleStep,$5,$2);
   }
-| forDecl forType forRange forStep forBody {
+| forDecl forType forRangeStart forRangeEnd forStep forBody {
     /* TODO 'for a is TYPE in b .. c step x' logic */
-    printf("FOR a is TYPE IN b .. c STEP x\n");
+    debugYacc("FOR type  IN .. STEP ...", AT);
+    $$ = new For($1,$3,$4,$5,$6,$2);
   }
 ;
 
@@ -627,10 +635,10 @@ for:
  * ************************/
 // TODO function call
 function_call:
-  // NAME POINT simple_function {}
-  function_call POINT simple_function {}
+  // NAME SIMPLE_DOT simple_function {}
+  function_call SIMPLE_DOT simple_function {}
 | simple_function { }
-| NAME POINT NAME { }
+| NAME SIMPLE_DOT NAME { }
 | function_string { $$ = $1;}
 | containers_methods { }
 // | function_regex { }
@@ -691,7 +699,7 @@ affectation:
     affect->setRightSon($3);
     $$ = affect;
   }
-// | NAME POINT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
+// | NAME SIMPLE_DOT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
 // | NAME PLUS PLUS { cout << "Affectation ++" <<  endl; }
 // | NAME MINUS MINUS {  cout << "Affectation --" <<  endl; }
 // | PLUS PLUS NAME  { cout << "++ Affectation " <<  endl; }
@@ -862,11 +870,6 @@ lineend:
 | BACK_LINE /* Nothing to do */
 ;
 
-doublepoint:
-  POINT POINT 
-  {}
-;
-
 begin:
   BACK_LINE         { }
 | BEGINN BACK_LINE  { }
@@ -1024,38 +1027,38 @@ endargument:
 
 //    -----------------------------REGEX METHODS-----------------------------------------
 // function_regex:
-//   NAME POINT MATCH LEFT_PARENTHESIS strOrName RIGHT_PARENTHESIS { cout << "regular expression MATCH " << endl ;}
-// | NAME POINT SEARCH LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression SEARCH " << endl ;}
-// | NAME POINT REPLACE LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression REPLACE " << endl ;}
+//   NAME SIMPLE_DOT MATCH LEFT_PARENTHESIS strOrName RIGHT_PARENTHESIS { cout << "regular expression MATCH " << endl ;}
+// | NAME SIMPLE_DOT SEARCH LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression SEARCH " << endl ;}
+// | NAME SIMPLE_DOT REPLACE LEFT_PARENTHESIS strOrName COMMA strOrName RIGHT_PARENTHESIS { cout << "regular expression REPLACE " << endl ;}
 // ;
 
 //    -----------------------------STRING METHODS----------------------------------------
 function_string: 
-  NAME POINT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
-| NAME POINT TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
-| NAME POINT TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
-| NAME POINT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
-| NAME POINT SUBSTRING LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
-| NAME POINT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER COMMA NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME POINT SUBSTRING LEFT_PARENTHESIS NAME COMMA NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME POINT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER COMMA NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME POINT SUBSTRING LEFT_PARENTHESIS NAME COMMA NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME POINT SPLIT LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("SPLIT(\"str\") called \n"); }
-| NAME POINT STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("strip() called \n"); }
-| NAME POINT STRIP LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("strip(\"str\") called \n"); }
-| NAME POINT REPLACE LEFT_PARENTHESIS STRING COMMA STRING RIGHT_PARENTHESIS { printf("replace(\"str\",\"str\") called \n"); }
-| NAME POINT CONTAINS LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("contain(\"str\") called \n"); }
-| NAME POINT FIND LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("find(\"str\") called \n"); }
-| NAME POINT FINDFIRSTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
-| NAME POINT FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
+  NAME SIMPLE_DOT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
+| NAME SIMPLE_DOT TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
+| NAME SIMPLE_DOT TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
+| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
+| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
+| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER COMMA NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
+| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NAME COMMA NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
+| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER COMMA NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
+| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NAME COMMA NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
+| NAME SIMPLE_DOT SPLIT LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("SPLIT(\"str\") called \n"); }
+| NAME SIMPLE_DOT STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("strip() called \n"); }
+| NAME SIMPLE_DOT STRIP LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("strip(\"str\") called \n"); }
+| NAME SIMPLE_DOT REPLACE LEFT_PARENTHESIS STRING COMMA STRING RIGHT_PARENTHESIS { printf("replace(\"str\",\"str\") called \n"); }
+| NAME SIMPLE_DOT CONTAINS LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("contain(\"str\") called \n"); }
+| NAME SIMPLE_DOT FIND LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("find(\"str\") called \n"); }
+| NAME SIMPLE_DOT FINDFIRSTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
+| NAME SIMPLE_DOT FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
 ;
 
 
 //    -----------------------------array Déclaration----------------------------------------
 array_declaration:
-scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER POINT POINT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NAME POINT POINT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
+scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope NAME IS ARRAY LEFT_BRACKET NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
 | scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
 | scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
 | scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
@@ -1095,41 +1098,41 @@ scope NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
 //    ---------------------------------------------------------------------------------------
 
 containers_methods : 
-NAME POINT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS        { printf("utilisation de la méthode size  \n"); }
-| NAME POINT IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
-| NAME POINT CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
-| NAME POINT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
-| NAME POINT FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
-| NAME POINT RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
-| NAME POINT MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
-| NAME POINT MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
-| NAME POINT MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
-| NAME POINT MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
-| NAME POINT SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
-| NAME POINT SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
-| NAME POINT SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("SUM() called \n"); }
-| NAME POINT SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("SUM(attr) called \n"); }
-| NAME POINT COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
-| NAME POINT COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
-| NAME POINT REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
-| NAME POINT RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
-| NAME POINT FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
-| NAME POINT FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
-| NAME POINT PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
-| NAME POINT PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
-| NAME POINT REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
-| NAME POINT REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
-| NAME POINT AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
-| NAME POINT AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
-| NAME POINT STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
-| NAME POINT RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
-| NAME POINT FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("first() called \n"); }
-| NAME POINT LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
-| NAME POINT REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
-| NAME POINT PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
-| NAME POINT INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
-| NAME POINT INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
-| NAME POINT EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
+  NAME SIMPLE_DOT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS      { printf("utilisation de la méthode size  \n"); }
+| NAME SIMPLE_DOT IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
+| NAME SIMPLE_DOT CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
+| NAME SIMPLE_DOT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
+| NAME SIMPLE_DOT FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
+| NAME SIMPLE_DOT RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
+| NAME SIMPLE_DOT MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
+| NAME SIMPLE_DOT MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
+| NAME SIMPLE_DOT MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
+| NAME SIMPLE_DOT MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
+| NAME SIMPLE_DOT SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
+| NAME SIMPLE_DOT SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
+| NAME SIMPLE_DOT SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("SUM() called \n"); }
+| NAME SIMPLE_DOT SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS   { printf("SUM(attr) called \n"); }
+| NAME SIMPLE_DOT COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
+| NAME SIMPLE_DOT COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
+| NAME SIMPLE_DOT REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
+| NAME SIMPLE_DOT RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
+| NAME SIMPLE_DOT FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
+| NAME SIMPLE_DOT FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
+| NAME SIMPLE_DOT PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
+| NAME SIMPLE_DOT PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
+| NAME SIMPLE_DOT REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
+| NAME SIMPLE_DOT REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
+| NAME SIMPLE_DOT AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
+| NAME SIMPLE_DOT AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
+| NAME SIMPLE_DOT STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
+| NAME SIMPLE_DOT RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
+| NAME SIMPLE_DOT FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
+| NAME SIMPLE_DOT LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
+| NAME SIMPLE_DOT REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
+| NAME SIMPLE_DOT PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
+| NAME SIMPLE_DOT INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
+| NAME SIMPLE_DOT INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
+| NAME SIMPLE_DOT EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
 ;
 
 

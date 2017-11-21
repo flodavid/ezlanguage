@@ -47,9 +47,9 @@ minus     [-]
 
 ","		return(COMMA);
 
-"°"		return(DEGRE);
-"%"		return(POURCENT);
-"#"		return(DIESE);
+"°"		return(DEGREE);
+"%"		return(PERCENT);
+"#"		return(SHARP);
 "="		return(EQUALS);
 "!="    return NE; 
 "<"     return LT; 
@@ -74,7 +74,8 @@ minus     [-]
 
 "["		return (LEFT_BRACKET);
 "]"		return (RIGHT_BRACKET);
-"."	        return (POINT);
+".."		return (DOUBLE_DOT);
+"."	        return (SIMPLE_DOT);
 
 {quote}		return (QUOTE);
 

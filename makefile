@@ -126,7 +126,7 @@ obj/%.o: src/addons/%.cpp
 #clean  
 clean:
 	@echo -e "\033[1;33mSuppression des fichiers générés et des fichiers objets\033[0m"
-	rm -rf obj/lex.yy.c 
+	rm -rf obj/lex.yy.c
 	rm -rf obj/*.tab.*
 	rm -rf obj/*.d
 	rm -rf obj/*.o

@@ -19,6 +19,10 @@ a is integer = 4
 b is boolean
 b = false
 
+for i is integer in 1..7 step 2 do
+    print "for looping, i : " i
+end
+
 while a - 1 * 2 > 0 do
     if b
     then print "b is true"

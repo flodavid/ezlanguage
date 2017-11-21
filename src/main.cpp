@@ -151,7 +151,7 @@ int main(int argc , char ** argv){
     string output_name = "";
 
     // Ligne de commande g++
-    string commande_gpp = "g++ ";
+    string commande_gpp = "g++ -std=c++11 ";
 
     // vecteurs des fichiers EZ à traiter
     vector<char*> fic_ezl;
