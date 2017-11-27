@@ -1,11 +1,11 @@
 %{
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdarg>
 #include <iostream>
 #include <list>
 #include <string>
 #include <vector>
-#include <cstdarg>
 
 #include "../src/global.h"	 // we start from ../obj because it's important
 #include "../src/hash_table/FunctionHashed.h"
@@ -28,10 +28,11 @@
 
 #include "../src/global.h"
 
-
 bool existing_parsing_error= false;
 
+extern std::string INPUT_FUNC_NAME;
 extern FILE* yyin;
+
 using namespace std;
 
 int yyparse (void);
@@ -85,7 +86,7 @@ int yycolumn = 1;
 %token FOR IN DO STEP 
 %token RETURN FALSE TRUE            // words
 %token FUNCTION PROCEDURE RETURNS	 	// functions
-%token PRINT                        // Print text
+%token PRINT INPUT                  // Print and get input text 
 %token OPERATOR                     // Overloading
 %token BEGINN END						        // can not use 'BEGIN'
 %token END_OF_FILE
@@ -112,26 +113,26 @@ int yycolumn = 1;
 
 // Basic elements
 %type<tree> ROOT
-%type<tree> imports declaration_classes declarations_list declaration_variables declaration_methods
-%type<vectVar> declaration_arguments param_args parameters methodParameters
+%type<tree> imports declaration_classes declaration_variables declaration_methods // declarations_list
+%type<vectVar> declaration_arguments parameters methodParameters
 // %type<vectString> 
-%type<tree> argumentsList argumentsSeparated arguments
-%type<tree> method affectation containerDeclaration function_call
+%type<tree> arguments argumentsList argumentElement
+%type<tree> method affectation containerDeclaration
 %type<tree> map_declaration array_declaration vector_declaration list_declaration set_declaration
-%type<tree> destruct printing // TODO overloading
+%type<tree> destruct printing input // TODO overloading
 %type<tree> if when while repeat for else
 %type<tree> function procedure class import
-%type<tree> statement return
-%type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator
-%type<texte> type scope constancy string
+%type<tree> statement return functionCall
+%type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
+%type<texte> type string scope constancy
 %type<var>  simpleVariable variable variable_construct
 %type<condExpr> conditionalExpression boolean
-%type<transNode> expression basicExpression
+%type<transNode> expression basicExpression integerExpression
 
 // Non basic elements
-%type<tree> function_string statement_sequence forBody affect streamedExpressions
-%type<texte> names nbrOrName param_type
-%type<texte> forDecl forType returnstype facultativeAssignment
+%type<tree> function_string statement_sequence forBody affect streamedExpressions argumentsSeparated
+%type<texte> names nbrOrName // param_type
+%type<texte> forDecl forType returnstype facultativeAssignment varDecl arrayDecl vectDecl
 %type<transNode> forStep forRangeStart forRangeEnd
 
 // Parameters
@@ -142,23 +143,32 @@ int yycolumn = 1;
 
 ROOT:
   PROGRAM NAME next_line imports declaration_arguments declaration_classes // 6 emt
-  declarations_list PROCEDURE NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
+  declaration_variables declaration_methods NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
 	{
 		Node* p_imports = $4;
-		Program *racine = new Program(p_imports, $2);
+		Program *racine = new Program($2, p_imports);
     /* TODO add program arguments logic */
-		Node* p_decl_class = $6;
-		Node* p_decl_list = $7;
+		Node* p_decl_classes = $6;
+		// Node* p_decl_list = $7;
+		Node* p_decl_vars = $7;
+		Node* p_decl_methods = $8;
+    
+    if ($9 != $2) {
+        cerr<< "Program and main procedure should have same names"<< endl;
+        exit(EXIT_FAILURE);
+    }
     
 		Node* p_prog = $11;
     // $5 : parameters (vector<Variable*>)
     // @see main : procedure or function with int return ?
     Procedure* main= new Procedure(p_prog, "main", $5);
 
-    p_decl_list->setRightSon(main);
-		p_decl_class->setRightSon(p_decl_list);
-    p_imports->setRightSon(p_decl_class);
-    racine->setRightSon(p_imports);
+    // p_decl_list->addRightChild(main);
+    // racine->addRightChild(p_imports);
+    p_imports->addRightChild(p_decl_classes);
+		p_decl_classes->addRightChild(p_decl_vars);
+    p_decl_vars->addRightChild(p_decl_methods);
+    p_decl_methods->addRightChild(main);
 
 		const std::string & translation= racine->translate();
     delete racine;
@@ -174,6 +184,11 @@ ROOT:
 	}
 ;
 
+emptyOrJump:
+  /* empty */
+| emptyOrJump BACK_LINE
+;
+
 /* ******************
  *  PROGRAM MODULES *
  * ******************/
@@ -185,27 +200,26 @@ imports:
 | imports import {
     /* TODO import logic */
     debugYacc("import", AT);
-		TranslatedNode* importNode = (TranslatedNode *) $1;
-    importNode->setRightSon($2);
-    $$ = importNode;
+    $1->addRightChild($2);
+    $$ = $1;
   }
 ;
 
 declaration_arguments:
   /* empty */
   { $$= vector<Variable*>(); }
-| ARGUMENTS BACK_LINE param_args END endargument next_line {
-    /* TODO arguements declaration logic */
-    debugYacc("arguments declaration", AT);
-    vector<Variable*> vars($3);
-    $$ = vars;
-  }
+// | ARGUMENTS BACK_LINE param_args END endargument next_line {
+//     /* TODO arguements declaration logic */
+//     debugYacc("arguments declaration", AT);
+//     vector<Variable*> vars($3);
+//     $$ = vars;
+//   }
 ;
 
 declaration_classes:
   /* empty */
   { $$= new TranslatedNode(""); }
-| declaration_classes class BACK_LINE
+| declaration_classes class 
 	{
     debugYacc("class declared: "+ $1->getName(), AT);
 		$1->addRightChild($2);
@@ -213,22 +227,22 @@ declaration_classes:
 	}
 ;
 
-declarations_list:
-  /* empty */
-  { $$ = new TranslatedNode(""); }
-| declaration_methods method declaration_variables
-  {
-    $1->addRightChild($2);
-    $2->setRightSon($3);
-    $$ = $1;
-  }
-| declaration_variables variable declaration_methods
-  {
-    $1->addRightChild($2);
-    $2->setRightSon($3);
-    $$ = $1;
-  }
-;
+// declarations_list:
+//   // /* empty */
+//   // { $$ = new TranslatedNode(""); }
+// declaration_variables declaration_methods
+//   {
+//     $1->addRightChild($2);
+//     // $2->addRightChild($3);
+//     $$ = $1;
+//   }
+// // | declaration_methods method declaration_variables
+// //   {
+// //     $1->addRightChild($2);
+// //     $2->addRightChild($3);
+// //     $$ = $1;
+// //   }
+// ;
 
 /* ******************
  *    SUBMODULES    *
@@ -257,32 +271,32 @@ import:
 ;
 
 /* declaration_arguments */
-param_args:
-  NAME IS param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
-    cout << "parameter " << get_argument_value($5) << endl;
-    vector<Variable*> var;
-    TranslatedNode* string_param= new TranslatedNode($5);
-    var.push_back(new Variable(nullptr, $1, $3, "local", string_param));
-    $$= var;
-  }
-| NAME IS param_type AS STRING_PARAM BACK_LINE param_args {
-  // TODO transform it into left recursive
-    debugYacc("paramètre "+ get_argument_value($5), AT);
-    TranslatedNode* string_param= new TranslatedNode($5);
-    // Add parameter declaration to vector
-    // TODO Variable should have right son, instead, of using Vector (replace nullptr) ?
-    $7.push_back(new Variable(nullptr, $1, $3, "local", string_param));
-    $$= $7;
-  }
-;
+// param_args:
+//    varDecl param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
+//     cout << "parameter " << get_argument_value($4) << endl;
+//     vector<Variable*> var;
+//     TranslatedNode* string_param= new TranslatedNode($4);
+//     var.push_back(new Variable(nullptr, $1, $2, "local ", string_param));
+//     $$= var;
+//   }
+// |  varDecl param_type AS STRING_PARAM BACK_LINE param_args {
+//   // TODO transform it into left recursive
+//     debugYacc("paramètre "+ get_argument_value($4), AT);
+//     TranslatedNode* string_param= new TranslatedNode($4);
+//     // Add parameter declaration to vector
+//     // TODO Variable should have right son, instead, of using Vector (replace nullptr) ?
+//     $6.push_back(new Variable(nullptr, $1, $2, "local ", string_param));
+//     $$= $6;
+//   }
+// ;
 
 /* declarations_list */
 declaration_variables:
   /* empty */
   { $$ = new TranslatedNode(""); }
-| declaration_variables variable
+| declaration_variables BACK_LINE variable
 	{
-    $1->addRightChild($2);
+    $1->addRightChild($3);
 	  $$ = $1;
 	}
 ;
@@ -291,9 +305,9 @@ declaration_variables:
 declaration_methods:
   /* empty */
   { $$ = new TranslatedNode(""); }
-| declaration_methods method BACK_LINE
+| declaration_methods emptyOrJump method emptyOrJump
 	{
-		$1->addRightChild($2);
+		$1->addRightChild($3);
 		$$ = $1;
 	}
 ;
@@ -310,11 +324,11 @@ method:
 ;
 
 // Past arguments should be of only one of the following types: 
-param_type:
-  TYPE_INTEGER  { $$ = $1; }
-| TYPE_REAL     { $$ = $1; } 
-| TYPE_STRING   { $$ = $1; } 
-;
+// param_type:
+//   TYPE_INTEGER  { $$ = $1; }
+// | TYPE_REAL     { $$ = $1; } 
+// | TYPE_STRING   { $$ = $1; } 
+// ;
 
 /* declaration_classes */
 class:
@@ -334,12 +348,12 @@ statement_sequence:
   /* empty */
   {
     debugYacc("last statement", AT);
-    $$ = nullptr;
+    $$ = new TranslatedNode("");
   }
-| statement statement_sequence {
-    debugYacc("statement: "+ $1->getName(), AT);
+| statement_sequence statement {
+    debugYacc("statement: "+ $2->getName(), AT);
     // Add line jump at end of statement
-    $1->addRightChild(new TranslatedNode(""));
+    // $1->addRightChild(new TranslatedNode("\n"));
     $1->addRightChild($2);
     $$ = $1;
   }
@@ -373,8 +387,7 @@ returnstype:
 return:
   RETURN expression
   {
-    TranslatedNode* returnWord= new TranslatedNode("return ");
-    returnWord->setRightSon($2);
+    TranslatedNode* returnWord= new TranslatedNode("return ", $2);
     $$ = returnWord;
   }
 ;
@@ -419,7 +432,7 @@ function:
 		// symbolTable.decScope();
 		debugYacc("fonction declaration: "+ $2, AT);
     // Right son of last instruction is return statement
-    $7->setRightSon($8);
+    $7->addRightChild($8);
 
 		Function *func = new Function($7,$2,$3,$4);
 		$$ = func;
@@ -485,10 +498,11 @@ statement:
     $1->addRightChild(semicolon);
     $$ = $1;
   }
-| containerDeclaration    { $$ = $1; }
-| function_call           { $$ = $1; }
-| destruct    { $$ = $1; }
-| printing    { $$ = $1; }
+| containerDeclaration  { $$ = $1; }
+| functionCall          { $$ = $1; }
+| destruct  { $$ = $1; }
+| printing  { $$ = $1; }
+| input     { $$ = $1; }
 // | overloading { $$ = $1; }
 | if        { $$ = $1; }
 | when      { $$ = $1; }
@@ -634,57 +648,69 @@ for:
  *  Complex Instructions  *
  * ************************/
 // TODO function call
-function_call:
-  // NAME SIMPLE_DOT simple_function {}
-  function_call SIMPLE_DOT simple_function {}
+functionCall:
+  // objectDotOperator simple_function {}
+  functionCall objectFunctionCall {}
 | simple_function { }
-| NAME SIMPLE_DOT NAME { }
+// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?) 
 | function_string { $$ = $1;}
 | containers_methods { }
 // | function_regex { }
 ;
 
 simple_function:
-  // function without parameter
-  NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} 
-  // function with parameter
-| NAME LEFT_PARENTHESIS arguments RIGHT_PARENTHESIS {} 
+  // function call without parenthesis
+  NAME argumentsList { // TODO function call with arguments
+  }
+  // function call with parenthesis
+| NAME arguments { // TODO function call with arguments and parenthesis
+  }
+// @see Should it be "object" instead of NAME ?
 ;
 
-arguments:
-  /* empty */
-  { $$ = new TranslatedNode(""); }
-| expression { $$ = $1; }
-| expression COMMA arguments {
-    TranslatedNode* comma= new TranslatedNode(", ");
-    $1->addRightChild(comma);
-    comma->setRightSon($3);
-    $$ = $1;
+objectFunctionCall:
+  SIMPLE_DOT arguments {
+    
   }
 ;
 
-// @see can be merged
+arguments:
+  LEFT_PARENTHESIS argumentsList LEFT_PARENTHESIS
+  {
+    TranslatedNode* leftPar= new TranslatedNode("(", $2);
+    TranslatedNode* rightPar= new TranslatedNode(")");
+
+    $2->addRightChild(rightPar);
+    $$ = leftPar;
+  }
+;
+
+// arguments are separated by commas : they have a comma before, except the first one
 argumentsList:
   /* empty */ // No argument
   { $$ = new TranslatedNode(""); }
-  // TODO replace basicExpression by expression when validated
-| facultativeAssignment basicExpression argumentsSeparated // One or more arguments
-// arguments are separated by commas : they have a comma before, except the first one
-  {
-    // TODO Take assignment into account when passing argument (facultativeAssignment)
-    $2->addRightChild($3);
-    $$ = $2;
+| argumentElement argumentsSeparated {// One or more arguments
+    $1->addRightChild($2);
+    $$ = $1;
   }
 ;
 
 argumentsSeparated:
   /* empty */
   { $$ = new TranslatedNode(""); }
-| argumentsSeparated COMMA facultativeAssignment basicExpression
+| argumentsSeparated COMMA argumentElement
   {
-    // TODO Take assignment into account when passing argument
-    $1->addRightChild($4);
+    TranslatedNode* comma= new TranslatedNode(", ", $3);
+
+    $1->addRightChild(comma);
     $$ = $1;
+  }
+;
+
+argumentElement:
+  facultativeAssignment expression {
+    // TODO Take assignment ($1) into account when passing argument (facultativeAssignment)
+    $$ = $2;
   }
 ;
 
@@ -695,8 +721,7 @@ argumentsSeparated:
 affectation:
   NAME assignmentOperator expression {
     debugYacc("Affectation on "+ $1, AT);
-    TranslatedNode* affect= new TranslatedNode($1 + $2 +" ");
-    affect->setRightSon($3);
+    TranslatedNode* affect= new TranslatedNode($1 + $2 +" ", $3);
     $$ = affect;
   }
 // | NAME SIMPLE_DOT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
@@ -726,6 +751,14 @@ streamedExpressions:
   }
 ;
 
+// TODO create a function call cpp class, for input, string funcs and generics (and printing)
+input:
+  INPUT IN NAME BACK_LINE {
+    debugYacc("input in "+ $3, AT);
+    $$ = new TranslatedNode(INPUT_FUNC_NAME +"(&"+ $3 + ");\n", "Get input (stdin)");
+  }
+;
+
 printing:
   PRINT streamedExpressions BACK_LINE {
     debugYacc("print "+ $2->translate(), AT);
@@ -735,7 +768,7 @@ printing:
 ;
 
 // overloading:
-//   OPERATOR operator LEFT_PARENTHESIS NAME IS NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
+//   OPERATOR operator LEFT_PARENTHESIS  varDecl NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
 //     /* TODO overloading operator logic */
 //     cout << "operateur " <<  $2 << endl;
 //   }
@@ -785,10 +818,9 @@ expression:
   /* TODO check that there is no other operators*/
   expression arithmeticOperator expression {
     debugYacc("Operation between two expressions", AT);
-    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ");
+    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ", $3);
 
     $1->addRightChild(arithOperator);
-    arithOperator->setRightSon($3);
     $$ = $1;
   }
 | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
@@ -814,12 +846,12 @@ expression:
 // ;
 
 simpleVariable:
-  NAME IS type affect
+  varDecl type affect
   {
     debugYacc("Variable : "+ $1, AT);
-    VariableHashed v($1,$3); // @see if same thing if function parameters
+    VariableHashed v($1,$2); // @see if same thing if function parameters
     symbolTable.addElement(v);
-    $$ = new Variable(nullptr, $1,$3,"local",$4,false);
+    $$ = new Variable(nullptr, $1,$2,"local ",$3,false);
   }
 // | NAME names ARE type affect BACK_LINE
 // 	{
@@ -827,7 +859,7 @@ simpleVariable:
 // 		debugYacc("Variable declaration: "+ $1, AT);
 // 	}
 //     // TODO Handle SHARED
-// | NAME IS SHARED type affect BACK_LINE
+// | varDecl SHARED type affect BACK_LINE
 // 	{
 // 		VariableHashed v($1,$3);
 // 		symbolTable.addElement(v);
@@ -843,9 +875,9 @@ simpleVariable:
 
 scope:
   /* empty */
-  { $$ = "local"; }
-| LOCAL   { $$ = "local";}
-| GLOBAL  { $$ = "global";}
+  { $$ = "local "; }
+| LOCAL   { $$ = "local ";}
+| GLOBAL  { $$ = "global ";}
 ;
 
 constancy:
@@ -854,10 +886,13 @@ constancy:
 | CONST { $$ = "const"; }
 ;
 
+varDecl:
+  NAME IS { $$ = $1; }
+;
+
 variable_construct:
-  NAME IS NAME {}  // ex: c is Maclasse
-| NAME IS NAME LEFT_PARENTHESIS argumentsList RIGHT_PARENTHESIS {} // c is MaClass(val1,va2)
-| NAME IS NAME LEFT_PARENTHESIS RIGHT_PARENTHESIS {} // No arguments to construction
+  varDecl NAME {}  // ex: c is Maclasse
+| varDecl NAME arguments {} // c is MaClass(val1,va2)
 ;
 
 /* ******************
@@ -890,9 +925,13 @@ affect:
 
 type:
   TYPE_INTEGER  { $$ = "int"; }
-| TYPE_REAL     { $$ = "real"; }
+| TYPE_REAL     { $$ = "float"; }
 | TYPE_STRING   { $$ = "string"; }
 | TYPE_BOOLEAN  { $$ = "bool"; }
+;
+
+string:
+  STRING  { $$ = $1; }
 ;
 
 boolean:
@@ -905,15 +944,33 @@ basicExpression:
 | boolean     { $$ = new TranslatedNode($1->translate()); delete $1; }
 | NUM_INTEGER { $$ = new TranslatedNode($1); }
 | NUM_REAL    { $$ = new TranslatedNode($1); }
-| NAME        { $$ = new TranslatedNode($1); /* @see if variable must be retrieved from name */ }
+// @see if variable must be retrieved from name for type checking
+| NAME        { $$ = new TranslatedNode($1); }
 ;
+
+integerExpression:
+  NUM_INTEGER { $$ = new TranslatedNode($1); }
+// @see if variable must be retrieved from name for type checking
+| NAME        { $$ = new TranslatedNode($1); }
+
 
 // TODO facultativeAssignment logic
 facultativeAssignment:
-  /* empty */
-  { $$ = ""; } // ex: c is myClass(var1, var2)
-| NAME EQUALS   { $$ = $1; } // ex: p is Person(name="name")
+  /* empty */ // ex: c is myClass("name")
+  { $$ = ""; } 
+  // ex: p is Person(name="name")
+| NAME EQUALS   { $$ = $1; }
 ;
+
+nbrOrName:
+  NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
+| NUM_REAL    { /* $$ = Real($1); */ }
+| NAME        { /* $$ = String($1); */ }
+;
+
+/* ******************
+ *    OPERATORS     *
+ * ******************/
 
 assignmentOperator:
   EQUALS { $$ = "="; }
@@ -944,14 +1001,10 @@ relationalOperator:
 | GE  { $$ = ">="; }
 ;
 
-nbrOrName:
-  NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
-| NUM_REAL    { /* $$ = Real($1); */ }
-| NAME        { /* $$ = String($1); */ }
-;
-
-string:
-  STRING  { $$ = $1; }
+objectDotOperator:
+  NAME SIMPLE_DOT { $$ = $1; }
+  // TODO add dot operator on more complex structures ( "a.getPos().getX()" )
+  // @see Define "object" rule ?
 ;
 
 /* *********************
@@ -1033,49 +1086,57 @@ endargument:
 // ;
 
 //    -----------------------------STRING METHODS----------------------------------------
-function_string: 
-  NAME SIMPLE_DOT LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
-| NAME SIMPLE_DOT TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
-| NAME SIMPLE_DOT TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
-| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
-| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
-| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER COMMA NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NAME COMMA NUM_INTEGER RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NUM_INTEGER COMMA NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME SIMPLE_DOT SUBSTRING LEFT_PARENTHESIS NAME COMMA NAME RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| NAME SIMPLE_DOT SPLIT LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("SPLIT(\"str\") called \n"); }
-| NAME SIMPLE_DOT STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("strip() called \n"); }
-| NAME SIMPLE_DOT STRIP LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("strip(\"str\") called \n"); }
-| NAME SIMPLE_DOT REPLACE LEFT_PARENTHESIS STRING COMMA STRING RIGHT_PARENTHESIS { printf("replace(\"str\",\"str\") called \n"); }
-| NAME SIMPLE_DOT CONTAINS LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("contain(\"str\") called \n"); }
-| NAME SIMPLE_DOT FIND LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("find(\"str\") called \n"); }
-| NAME SIMPLE_DOT FINDFIRSTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
-| NAME SIMPLE_DOT FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
+function_string:
+  objectDotOperator LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
+| objectDotOperator TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
+| objectDotOperator TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
+| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
+| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression COMMA integerExpression RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
+| objectDotOperator SPLIT LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("SPLIT(\"str\") called \n"); }
+| objectDotOperator STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("strip() called \n"); }
+| objectDotOperator STRIP LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("strip(\"str\") called \n"); }
+| objectDotOperator REPLACE LEFT_PARENTHESIS STRING COMMA STRING RIGHT_PARENTHESIS { printf("replace(\"str\",\"str\") called \n"); }
+| objectDotOperator CONTAINS LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("contain(\"str\") called \n"); }
+| objectDotOperator FIND LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("find(\"str\") called \n"); }
+| objectDotOperator FINDFIRSTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
+| objectDotOperator FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
 ;
 
 
 //    -----------------------------array Déclaration----------------------------------------
+arrayDecl:
+  varDecl ARRAY LEFT_BRACKET { $$ = $1; }
+;
+
 array_declaration:
-scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| scope NAME IS ARRAY LEFT_BRACKET NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
+  scope arrayDecl NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope arrayDecl NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope arrayDecl NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
+| scope arrayDecl NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope arrayDecl NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope arrayDecl NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
+| scope arrayDecl NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
 ;
 
 //    -----------------------------vector declaration----------------------------------------
+vectDecl:
+  scope NAME IS VECTOR OF type {
+    // TODO create an instance of Container (add a methor in Container to add init list after construction)
+    // TranslatedNode* vectorDecl= new TranslatedNode("std::vector< "+ $6 +" >", $);
+
+    // $$ = $1;
+  }
+;
+
+// We assume vector does not has a size defined at initialization
 vector_declaration: 
-scope NAME IS VECTOR OF type { printf("vector declaration  \n"); }
-| scope NAME IS VECTOR LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| scope NAME IS VECTOR LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("vector declaration with size \n"); }
-| scope NAME IS VECTOR OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+   vectDecl  { printf("vector declaration  \n"); }
+| scope vectDecl type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
 ;
 
 //    -----------------------------list declaration----------------------------------------
 list_declaration: 
-scope NAME IS LIST OF type { printf("list declaration  \n"); }
+  scope NAME IS LIST OF type { printf("list declaration  \n"); }
 | scope NAME IS LIST OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
 ;
 
@@ -1089,7 +1150,7 @@ scope NAME IS SET OF type { printf("set declaration  \n"); }
 
 //    -----------------------------map declaration----------------------------------------
 map_declaration: 
-scope NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
+  scope varDecl MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
 | map_declaration EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
 ;
 
@@ -1098,41 +1159,41 @@ scope NAME IS MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
 //    ---------------------------------------------------------------------------------------
 
 containers_methods : 
-  NAME SIMPLE_DOT SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS      { printf("utilisation de la méthode size  \n"); }
-| NAME SIMPLE_DOT IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
-| NAME SIMPLE_DOT CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
-| NAME SIMPLE_DOT PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
-| NAME SIMPLE_DOT FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
-| NAME SIMPLE_DOT RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
-| NAME SIMPLE_DOT MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
-| NAME SIMPLE_DOT MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
-| NAME SIMPLE_DOT MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
-| NAME SIMPLE_DOT MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
-| NAME SIMPLE_DOT SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
-| NAME SIMPLE_DOT SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
-| NAME SIMPLE_DOT SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("SUM() called \n"); }
-| NAME SIMPLE_DOT SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS   { printf("SUM(attr) called \n"); }
-| NAME SIMPLE_DOT COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
-| NAME SIMPLE_DOT COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
-| NAME SIMPLE_DOT REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
-| NAME SIMPLE_DOT RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
-| NAME SIMPLE_DOT FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
-| NAME SIMPLE_DOT FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
-| NAME SIMPLE_DOT PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
-| NAME SIMPLE_DOT PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
-| NAME SIMPLE_DOT REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
-| NAME SIMPLE_DOT REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
-| NAME SIMPLE_DOT AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
-| NAME SIMPLE_DOT AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
-| NAME SIMPLE_DOT STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
-| NAME SIMPLE_DOT RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
-| NAME SIMPLE_DOT FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
-| NAME SIMPLE_DOT LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
-| NAME SIMPLE_DOT REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
-| NAME SIMPLE_DOT PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
-| NAME SIMPLE_DOT INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
-| NAME SIMPLE_DOT INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
-| NAME SIMPLE_DOT EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
+  objectDotOperator SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS      { printf("utilisation de la méthode size  \n"); }
+| objectDotOperator IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
+| objectDotOperator CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
+| objectDotOperator PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
+| objectDotOperator FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
+| objectDotOperator RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
+| objectDotOperator MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
+| objectDotOperator MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
+| objectDotOperator MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
+| objectDotOperator MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
+| objectDotOperator SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
+| objectDotOperator SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
+| objectDotOperator SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("SUM() called \n"); }
+| objectDotOperator SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS   { printf("SUM(attr) called \n"); }
+| objectDotOperator COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
+| objectDotOperator COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
+| objectDotOperator REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
+| objectDotOperator RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
+| objectDotOperator FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
+| objectDotOperator FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
+| objectDotOperator PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
+| objectDotOperator PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
+| objectDotOperator REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
+| objectDotOperator REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
+| objectDotOperator AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
+| objectDotOperator AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
+| objectDotOperator STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
+| objectDotOperator RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
+| objectDotOperator FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
+| objectDotOperator LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
+| objectDotOperator REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
+| objectDotOperator PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
+| objectDotOperator INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
+| objectDotOperator INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
+| objectDotOperator EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
 ;
 
 
@@ -1197,6 +1258,6 @@ void yyerror(const std::string& mess){
 //   fprintf(stderr, "\n");
 // }
 
-void yyprint(const std::string& mess){
-    std::cout << "[l" << yylineno << "] "<<mess  << std::endl;
+void yyprint(const std::string& msg){
+    std::cout << "[l" << yylineno << "] "<< msg<< std::endl;
 }

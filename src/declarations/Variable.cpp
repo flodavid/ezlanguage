@@ -19,14 +19,14 @@ string Variable::preTranslate() const {
     if(isConst){
         res = res + "const ";
     }
-    // On ne s'occupe pas du scope
+    // TODO Scope is not used ("local " or "global ")
 
     if(type == "integer"){
         res = res + "int ";
     }else if (type == "real"){
         res = res + "double ";
     }else if (type == "string"){
-        res = res + "string ";
+        res = res + "std::string ";
     }else if (type == "boolean"){
         res = res + "bool ";
     }else{

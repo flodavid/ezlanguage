@@ -16,8 +16,8 @@ Node::Node(Node* left, Node* right, const std::string & _name):
 
 Node::~Node()
 {
-    delete right_son;
-    delete left_son;
+    if (right_son != nullptr) delete right_son;
+    if (left_son != nullptr) delete left_son;
 }
 
 void Node::setLeftSon(Node *left) {
@@ -29,7 +29,7 @@ void Node::setRightSon(Node* son) {
 }
 
 void Node::addRightChild(Node* child) {
-    debug("addRightChildCall:"+ getName(), AT);
+    // debug("addRightChildCall:"+ getName(), AT);
     // Right son recursive definition
     if (right_son == nullptr) {
         right_son= child;

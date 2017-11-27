@@ -12,9 +12,6 @@ std::string Procedure::preTranslate() const {
 	
 	// TODO correct main function check (main name is the program name, not mandatory "main")
 	if (procedure_name == "main") res =
-		"#include <string>\n"
-		"#include <iostream>\n"
-		"\n"
 		"int main(int argc, char ** argv";
 
 	else {
@@ -32,12 +29,12 @@ std::string Procedure::preTranslate() const {
 		}
 
 	}
-	res += ")\n{";
+	res += ") {\n";
 
     return res;
 }
 
 string Procedure::postTranslate() const
 {
-    return "}";
+    return "}\n";
 }

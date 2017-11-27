@@ -46,12 +46,7 @@ public:
      */
     virtual ~Node();
 
-    /**
-     * @brief getter on name
-     * @return the name of the node. May be an empty string
-     */
-    inline const std::string & getName() const { return name; }
-    
+private:
     /**
      * @brief setter on left son
      * @param node : New left son
@@ -61,12 +56,20 @@ public:
     /**
      * @brief setter on right son
      * @param node : New right son
+     * @note should only be could right after the node construction
      */
     void setRightSon(Node* son);
+
+public:
+    /**
+     * @brief getter on name
+     * @return the name of the node. May be an empty string
+     */
+    inline const std::string & getName() const { return name; }
     
     /**
      * @brief Add a right son to the last of the right sons
-     * @param node : New right son
+     * @param child : New right son
      * 
      * If there is already a right son, the right son of the group formed by the current
      * son and all its right sons (the right of its right son, of its ... etc) is the

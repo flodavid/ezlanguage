@@ -2,33 +2,44 @@ program main_simple_vide
 //author: Valentin GINISTY
 //+ test commentaires
 
-procedure main_simple_vide
+procedure hello_world()
+print "Hello World !"
+end
+
+main_simple_vide
 /*
 this is
 
 a multiple lines comment
 
 */
-print "Hello World"
-print "Second statement"
+print "First statement"
 
 //this is a test
-print "Third one"
+print "Second one"
 
 a is integer = 4
 b is boolean
-b = false
+name is string
+
+print "What's your name ?"
+input in name
+print "Hello " name ", are you happy ?"
+input in b
+
+if b
+then print "Cool !"
+else print "So sad :'("
+end if
 
 for i is integer in 1..7 step 2 do
     print "for looping, i : " i
 end
+print "how many loops ?"
+input in a
+print "a: " a
 
 while a - 1 * 2 > 0 do
-    if b
-    then print "b is true"
-    else print "b is false"
-    end if
-    
     a = a -1
     b = true
     print "a : " a

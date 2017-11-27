@@ -20,5 +20,5 @@ string If::preTranslate() const
 
 string If::postTranslate() const
 {
-    return "}";
+    return "}\n";
 }

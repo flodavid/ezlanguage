@@ -16,28 +16,13 @@ class Container : public Node {
 	std::string typeContainer; // Vector, Array, Set, Map or List
 	std::string typeElement; // int, double, string etc ...
 	std::string listInit;
-    int size; 
+    unsigned mSize; 
     
   public:
 
     /* * * * * * * * *
      * CONSTRUCTORS  *
      * * * * * * * * */
-		
-
-   /**
-    * Constructor with parameters
-    * @param left: left son 
-    * @param right : right son
-    * @param nameC : name of the container
-    * @param typeC : type of the container
-    * @param typeE : type of the element in the container
-    * @param s : size
-    * @author LAHYANI Zakaria
-    */
-    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, int s = 0);
-
-
 
    /**
     * Constructor with parameters
@@ -49,7 +34,8 @@ class Container : public Node {
     * @param listI : list of initialisation (only available for the "array")
     * @author Johan Defaye
     */
-    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, const std::string & listI);
+    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC,
+            const std::string & typeE, const std::string & listI, unsigned size = 0);
 
 
 	/**

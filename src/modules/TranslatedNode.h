@@ -15,7 +15,15 @@ protected:
 
 public:
     //constructors
+    /**
+     * @brief constructor without right son
+     */
     TranslatedNode(const std::string& translated_content, const std::string & _name = "Translated Node");
+    
+    /**
+     * @brief constructor with a right son
+     */
+    TranslatedNode(const std::string& translated_content, Node* right_son,  const std::string & _name = "Translated Node");
 
     /**
      * @brief Translate the begining part of the Operator

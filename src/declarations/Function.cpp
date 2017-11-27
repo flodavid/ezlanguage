@@ -24,13 +24,13 @@ string Function::preTranslate() const {
         }
     }
 
-    res+= ")\n{";
+    res+= ") {\n";
 
     return res;
 }
 
 string Function::postTranslate() const
 {
-    return "}";
+    return "}\n";
 }
 
