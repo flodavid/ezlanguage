@@ -69,42 +69,41 @@ bool file_test_exists(string filename){
  * @param fic_ezl
  * @param input_files
  */
-void parse_to_cpp(vector<char*> fic_ezl, string &input_files){
-	if(!directinput){
-		for(unsigned int i=0; i<fic_ezl.size(); ++i){
-		    cout << "\033[1;36mFile parsing : \033[1;37m" << fic_ezl[i] << endl;
-		    cout << "\033[1;36m=====================================\033[0m" << endl;
-		    yyin = fopen(fic_ezl[i], "r");
+bool parse_to_cpp(vector<char*> fic_ezl, string &input_files){
+	for(unsigned int i=0; i<fic_ezl.size(); ++i) {
+		cout << "\033[1;36mFile parsing : \033[1;37m" << fic_ezl[i] << endl;
+		cout << "\033[1;36m=====================================\033[0m" << endl;
+		yyin = fopen(fic_ezl[i], "r");
 
-	        if(!yyin){
-	            cerr <<  fic_ezl[i] << ": file opening failed." << endl;
-	        }else{
-	            // creation des fichiers cpp
-	            string fichier_tmp = string(fic_ezl[i]);
+	if(!yyin){
+		cerr <<  fic_ezl[i] << ": file opening failed." << endl;
+	} else {
+		// creation des fichiers cpp
+		string tmp_file = string(fic_ezl[i]);
 
-                fichier_tmp = fichier_tmp.substr(fichier_tmp.find_last_of("/")+1, fichier_tmp.find_last_of(".") - fichier_tmp.find_last_of("/"));
-                fichier_tmp +="cpp";
-                FILE * cpp_file = fopen(fichier_tmp.c_str(), "w");
+        tmp_file = tmp_file.substr(tmp_file.find_last_of("/")+1, tmp_file.find_last_of(".") - tmp_file.find_last_of("/"));
+        tmp_file +="cpp";
+        FILE * cpp_file = fopen(tmp_file.c_str(), "w");
 
-		    	// cas où la création du fichier échoue
-	            if(cpp_file == NULL) {
-	                cerr << fichier_tmp << ": creation failed;" << endl;
-	                break;
-	            }
-
-                // parsing du fichiers ez en fichier cpp
-                yyout = cpp_file;
-                yyparse();
-
-                // fermerture du fichier cpp
-                fclose(cpp_file);
-                input_files+=fichier_tmp + " ";
-
-                cout << "\033[1;36m=====================================\033[0m" << endl;
-                cout << endl;
+            // cas où la création du fichier échoue
+            if(cpp_file == NULL) {
+                cerr << tmp_file << ": creation failed;" << endl;
+                return false;
             }
+
+        // parsing du fichiers ez en fichier cpp
+        yyout = cpp_file;
+        yyparse();
+
+        // fermerture du fichier cpp
+        fclose(cpp_file);
+        input_files+= tmp_file + " ";
+
+		cout << "\033[1;36m ====== Parsing ended. ======\033[0m" << endl;
+        cout << endl;
         }
     }
+    return true;
 }
 
 void display(vector<char*> fic_ezl){
@@ -116,15 +115,21 @@ void display(vector<char*> fic_ezl){
 /**
  * Compile les fichiers cpp générés
  * @brief exec_cpp
- * @param commande_gpp commande gpp execute
+ * @param gpp_command commande gpp execute
  * @param output_name nom de l'output
  */
-void exec_cpp(std::string commande_gpp, std::string output_name){
-	//cout << "commande cpp: " << commande_gpp << endl;
+int exec_cpp(std::string gpp_command, std::string output_name){
+    //cout << "commande cpp: " << gpp_command << endl;
+    int system_return= EXIT_SUCCESS;
 	if(help != 1){
 		if(directinput != 1){
-			cout << commande_gpp << endl;
-			system(commande_gpp.c_str());
+			cout << gpp_command << endl;
+            system_return= system(gpp_command.c_str());
+            if (system_return != 0) {
+                cerr << "RETURN OF system(" << gpp_command.c_str()  <<") : " << system_return<< endl;
+            }
+            
+            // Compilation success is independant of execution success
 			if(no_execution != 1){
 				if(output_name != ""){
 					string tmp_output= "./" + output_name;
@@ -135,8 +140,9 @@ void exec_cpp(std::string commande_gpp, std::string output_name){
 				}
 			}
 		}
-		cout << "\033[1;36mParsing ended.\033[0m" << endl;
-	}
+		cout << "\033[1;36mCompilation ended.\033[0m" << endl;
+    }
+    return system_return;
 }
 
 /**
@@ -146,12 +152,12 @@ void exec_cpp(std::string commande_gpp, std::string output_name){
  * @return
  */
 int main(int argc , char ** argv){
-	int no_options = 0;
+	bool no_options = true;
     int opt;
     string output_name = "";
 
     // Ligne de commande g++
-    string commande_gpp = "g++ -std=c++11 ";
+    string gpp_command = "g++ -std=c++11";
 
     // vecteurs des fichiers EZ à traiter
     vector<char*> fic_ezl;
@@ -164,12 +170,12 @@ int main(int argc , char ** argv){
 			{"verbose",			no_argument,	&verbose_flag, 	1},
 			{"brief",			no_argument,	&verbose_flag, 	0},
 			{"noexec",			no_argument,	&no_execution, 	1},
-			{"nocpp",			no_argument,	&no_cpp, 		1},
-			{"directinput",		no_argument,	&directinput,	1},
+			{"nocpp",			no_argument,	&no_cpp, 	1},
+			{"directinput",			no_argument,	&directinput,	1},
 			
 			//autres
 			{"help",			no_argument,		0, 	'h'},
-			{"optimisation",	required_argument,	0, 	'O'},
+			{"optimisation",		required_argument,	0, 	'O'},
 			{"warning",			no_argument,		0, 	'w'},
 			{"output",			required_argument,	0, 	'o'},
 			{0, 0, 0, 0}
@@ -189,7 +195,7 @@ int main(int argc , char ** argv){
 		switch(opt){
 			//flags
 			case 0:
-				no_options = 1;
+				no_options = false;
 				// flag indiquant que l' exécutable ne doit pas être lancé après la compilation
 				if (string(long_options[option_index].name) == "noexec"){
 					clog << "Not launching .exe file after compiling..." << endl;
@@ -206,35 +212,34 @@ int main(int argc , char ** argv){
 			// Compiler options computing
 			// Affiche l'aide
 			case 'h':
-				no_options = 1;
+				no_options = false;
 				help = 1;
 				// teste l'existence du fichier d'aide
 				cout << AIDE_PROG << endl;
 				break;
-
 			// Ajoute le fichier de sortie au compilateur g++
 			case 'o':
-				no_options = 1;
+				no_options = false;
 				//cout << "Indicates the name of the output file" << endl;
-				commande_gpp += "-o "+string(optarg)+" ";
+				gpp_command += " -o "+ string(optarg);
 				output_name = string(optarg);
 				break;
 			case 'v':
-				no_options = 1;
+				no_options = false;
 				verbose_flag = 1;
 				break;
 			case 'w':
-				//cout << "Displays warning messages" << endl;
-				no_options = 1;
-				commande_gpp += "-Wall ";
+				cout << "Warning messages will be displayed" << endl;
+				no_options = false;
+				gpp_command += " -Wall";
 				break;
 
 			// Ajoute l'option -o(1..3) au compilateur g++
 			case 'O':
-				no_options = 1;
+				no_options = false;
 				//cout << "Optimization option level: " << optarg << endl;
 				if(atoi(optarg) >= 1 && atoi(optarg) <= 3){
-					commande_gpp += "-O"+string(optarg)+" "; 
+					gpp_command += " -O"+string(optarg); 
 				}
 				break;
 			// Option inconnue, s'il y a une option avec un tiret ou deux, c'est forcement autre chose qu'un fichier donc erreur
@@ -269,24 +274,35 @@ int main(int argc , char ** argv){
 		}
 	}
 
-	string input_files = "";
+	// Parses all EZ files into CPP files and add them to input files, to compile them
+	if(!directinput) {
+    	string input_files = "";
+        // If parsing from EZ to CPP fails, we stop the program
+	    if (!parse_to_cpp(fic_ezl, input_files) || existing_parsing_error) {
+            cerr<< "Error encountered during compilation, correct them, then re-run";
+            exit(EXIT_FAILURE);
+        }
 
-	// Parse tous les fichiers ez contenus dans fic_ez en fichier cpp et les ajoute dans input_files 
-	parse_to_cpp(fic_ezl, input_files);
-
-	commande_gpp += " " + input_files;
-
-	//execution des cpp
-	if(no_options == 0 && fic_ezl.size() == 0){
-				cout << "Usage : EZ_language_compiler [OPTION]... FILE [FILES]..." << endl;
-				cout << "Try « EZ_language_compiler --help » for more information." << endl;
-				cout << endl;
-	}
-	if(fic_ezl.size() != 0)	exec_cpp(commande_gpp, output_name);
-
-	if (existing_parsing_error == true) {
-        cerr<< "Error encountered during compilation, correct them, then re-run";
-        exit(EXIT_FAILURE);
+        gpp_command += " " + input_files;
     }
-    exit(EXIT_SUCCESS);
+
+	// cpp files compilation
+	if(no_options && fic_ezl.size() == 0){
+        cout << "Usage : EZ_language_compiler [OPTION]... FILE [FILES]..." << endl;
+        cout << "Try « EZ_language_compiler --help » for more information." << endl;
+        cout << endl;
+	}
+    if(fic_ezl.size() != 0) {
+        // If we did not encountered any error(s) at this point, success depends on final
+        // compilation
+
+        int return_code= exec_cpp(gpp_command, output_name);
+        if (return_code != 0) {
+            cerr << "Parsing to C++ succeeded, but compilation failed. Report the problem."
+            "(Maybe you used undeclared variable of function)"<< endl;
+            return EXIT_FAILURE;
+        }
+        else return return_code;
+    } else return EXIT_FAILURE;
+    
 }

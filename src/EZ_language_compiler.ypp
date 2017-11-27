@@ -141,9 +141,17 @@ int yycolumn = 1;
 %start ROOT
 %%
 
+// baseROOT:
+//   PROGRAM NAME next_line imports declaration_arguments declaration_classes declaration_variables // 7 emt
+//   {
+
+//   }
+// ;
+
 ROOT:
-  PROGRAM NAME next_line imports declaration_arguments declaration_classes // 6 emt
-  declaration_variables declaration_methods NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
+  PROGRAM NAME next_line imports declaration_arguments declaration_classes declaration_variables // 7 emt
+  // baseROOT
+  declaration_methods NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
 	{
 		Node* p_imports = $4;
 		Program *racine = new Program($2, p_imports);
@@ -182,6 +190,7 @@ ROOT:
 		return 1; // No other file
     // return 0; // other file
 	}
+  // | baseROOT NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 ;
 
 emptyOrJump:

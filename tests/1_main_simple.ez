@@ -50,4 +50,4 @@ then print "'or' operator working"
 else print "'or' operator not working"
 end if
 
-end procedure
+end

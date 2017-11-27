@@ -28,8 +28,8 @@ string Program::preTranslate() const
 "        *input= false;\n"
 "    }\n"
 "    else {\n"
-"        std::cerr<< \"You did not entered text, please enter an floating number\"<< std::endl\n";
-"       exit(EXIT_FAILURE);\n"
+"        std::cerr<< \"You did not entered text, please enter an floating number\"<< std::endl;\n"
+"        exit(EXIT_FAILURE);\n"
 "    }\n"
 "}\n"
 "\n"
