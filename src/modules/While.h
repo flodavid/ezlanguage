@@ -29,6 +29,13 @@ public:
      * @param cond : condition of the loop
      */
     While(Node * left, Node * cond);
+        
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "While"; }
 
     /*** Translations ***/
     

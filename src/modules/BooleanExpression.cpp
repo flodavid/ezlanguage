@@ -4,22 +4,22 @@
 using namespace std;
 
 BooleanExpression::BooleanExpression(const string & operande):
-    ConditionalExpression(nullptr, nullptr), strOperator(""), value(operande), left_part(nullptr), right_part(nullptr)
+    strOperator(""), value(operande), left_part(nullptr), right_part(nullptr)
 { }
 
 BooleanExpression::BooleanExpression(const string & unary_operator, const ConditionalExpression* operande):
-    ConditionalExpression(nullptr, nullptr), strOperator(unary_operator), value(""), left_part(nullptr), right_part(operande)
+    strOperator(unary_operator), value(""), left_part(nullptr), right_part(operande)
 { }
 
 BooleanExpression::BooleanExpression(const string & binary_operator, const ConditionalExpression* first_operande,
         const ConditionalExpression* second_operande):
-    ConditionalExpression(nullptr, nullptr), strOperator(binary_operator), value(""), left_part(first_operande),
+    strOperator(binary_operator), value(""), left_part(first_operande),
     right_part(second_operande)
 { }
 
 BooleanExpression::BooleanExpression(const string & relational_operator, const TranslatedNode* first_expression,
         const TranslatedNode* second_expression):
-    ConditionalExpression(nullptr, nullptr), strOperator(relational_operator), value(""), left_part(first_expression),
+    strOperator(relational_operator), value(""), left_part(first_expression),
     right_part(second_expression)
 { }
 

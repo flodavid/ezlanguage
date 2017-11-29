@@ -31,6 +31,21 @@ public:
      * Right son is set to null
      */
     Procedure(Node * left, const std::string & name, const std::vector<Variable*> & args);
+    
+
+protected:
+    /**
+     * @brief Get some details about the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string details() const { return "'"+ procedure_name +"'"; }
+
+public:
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Procedure declaration"; }
 
     /**
      * @brief Getter for the procedure's name

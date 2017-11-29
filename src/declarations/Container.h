@@ -1,5 +1,5 @@
-#ifndef DECLARATIONCONTAINER_H
-#define DECLARATIONCONTAINER_H
+#ifndef CONTAINER_H
+#define CONTAINER_H
 
 #include "../modules/Node.h"
 
@@ -11,14 +11,14 @@
  */
 class Container : public Node {
 	
-  protected:
+protected:
 	std::string nameContainer;
 	std::string typeContainer; // Vector, Array, Set, Map or List
 	std::string typeElement; // int, double, string etc ...
 	std::string listInit;
     unsigned mSize; 
     
-  public:
+public:
 
     /* * * * * * * * *
      * CONSTRUCTORS  *
@@ -37,6 +37,12 @@ class Container : public Node {
     Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC,
             const std::string & typeE, const std::string & listI, unsigned size = 0);
 
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Container declaration"; }
 
 	/**
 	 * @brief Translate the node after the translation of the left son

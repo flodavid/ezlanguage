@@ -1,14 +1,13 @@
-//@author Antoine GARNIER
 #include "Program.h"
 
 std::string INPUT_FUNC_NAME = "getUserInput";
 
 using namespace std;
 
-Program::Program(std::string prg_name, Node* right) : Node(nullptr, right)
+Program::Program(std::string name, Node* right) : Node(nullptr, right)
 {
-    name= prg_name; // TODO
-    debug("Program : " + prg_name, AT);
+    mName= name; // TODO
+    debug("Program : " + mName, AT);
 }
 
 string Program::preTranslate() const

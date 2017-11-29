@@ -4,53 +4,43 @@
 #include <iostream>
 using namespace std;
 
-Class::Class():m_class(),public_functions(),static_functions(),public_variables(){
-}
-
-Class::Class(ClassHashed *c)
-			:m_class(c),public_functions(),static_functions(),public_variables()
-{
-}
-
+Class::Class(ClassHashed *c):
+	m_class(c),public_functions(),static_functions(),public_variables()
+{ }
 
 Class::Class(ClassHashed *c,
 	     		const vector<Function *> &functions, 
 	     		const vector<Function *> &s_functions,  
-	     		const vector<Variable *> &variables )
-		   :m_class(c),
-			public_functions(functions),
-			static_functions(s_functions),
-			public_variables(variables) 
-{
-}
+	     		const vector<Variable *> &variables ):
+	m_class(c),
+	public_functions(functions),
+	static_functions(s_functions),
+	public_variables(variables) 
+{ }
 
 Class::Class(ClassHashed *c,
 			const vector<Function *> &functions, 
-			const vector<Variable *> &variables )
-	   		:m_class(c),public_functions(functions),static_functions(),public_variables(variables) 
-{
-}
+			const vector<Variable *> &variables ):
+	m_class(c),public_functions(functions),static_functions(),public_variables(variables) 
+{ }
 
-Class::Class(ClassHashed *c, const vector<Function *> &functions)
-				   :m_class(c),public_functions(functions),static_functions(),public_variables() 
-{
-}
+Class::Class(ClassHashed *c, const vector<Function *> &functions):
+	m_class(c),public_functions(functions),static_functions(),public_variables() 
+{ }
 
-Class::Class(ClassHashed *c, const vector<Variable *> &variables )
-				   :m_class(c),public_functions(),static_functions(),public_variables(variables) 
-{
-}
+Class::Class(ClassHashed *c, const vector<Variable *> &variables ):
+	m_class(c),public_functions(),static_functions(),public_variables(variables) 
+{ }
 
-Class::Class(const Class & cpy)
-				   :m_class(cpy.m_class), 
-					public_functions(cpy.public_functions),
-					static_functions(cpy.static_functions),
-				    	public_variables(cpy.public_variables)
-{
-}
+Class::Class(const Class & cpy):
+	m_class(cpy.m_class), 
+	public_functions(cpy.public_functions),
+	static_functions(cpy.static_functions),
+	public_variables(cpy.public_variables)
+{ }
 
-Class::~Class(){
-}
+Class::~Class()
+{ }
 
 ClassHashed * Class::get_class() const{
 	return m_class;

@@ -3,14 +3,15 @@
 
 using namespace std;
 
-ArrayAccess::ArrayAccess(Node * left, Node * right, const string & arrayN, int ind): Node(left, right), arrayName(arrayN), index(ind) 
+ArrayAccess::ArrayAccess(Node * left, Node * right, const string & arrayN, int ind):
+	Node(left, right), mArrayName(arrayN), index(ind) 
 {}
 
 ArrayAccess::~ArrayAccess()
 {}
 
 const string &ArrayAccess::get_array() const {
-	return arrayName;
+	return mArrayName;
 }
 
 int ArrayAccess::get_index() const{
@@ -18,7 +19,7 @@ int ArrayAccess::get_index() const{
 }
 
 void ArrayAccess::set_array(const string & a) {
-	arrayName=a;
+	mArrayName=a;
 }
 
 void ArrayAccess::set_index(int i) {
@@ -26,7 +27,7 @@ void ArrayAccess::set_index(int i) {
 }
 
 string ArrayAccess::preTranslate() const {
-	string result= arrayName+"["+to_string(index)+"]";
+	string result= mArrayName+"["+to_string(index)+"]";
 	return result;
 }
 

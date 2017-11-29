@@ -12,7 +12,8 @@ For::For(const string & iterator, const TranslatedNode* start, const TranslatedN
 {}
 
 For::For (Node * left, const string & iterator, const string & container):
-    Node(left, nullptr), mIteratorName(iterator), mIndStart(nullptr), mIndEnd(nullptr), mStep(nullptr), mType(""), mContainerName(container)
+    Node(left, nullptr), mIteratorName(iterator), mIndStart(nullptr), mIndEnd(nullptr),
+	mStep(nullptr), mType(""), mContainerName(container)
 {}
 
 

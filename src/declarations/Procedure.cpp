@@ -4,7 +4,7 @@
 using namespace std;
 
 Procedure::Procedure(Node * left, const string & name, const vector<Variable*> & args):
-	Node(left, nullptr, "Procedure '"+ name +"'"), procedure_name(name), arguments(args)
+	Node(left, nullptr), procedure_name(name), arguments(args)
 {}
 
 std::string Procedure::preTranslate() const {

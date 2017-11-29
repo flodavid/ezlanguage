@@ -27,7 +27,7 @@ MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNod
 # Conditional expression
 MOD_CPP += src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp src/modules/ConditionalExpression.cpp
 # Divers
-MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Else.cpp src/modules/Operator.cpp
+MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Else.cpp src/modules/Operation.cpp
 # Boucles
 MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
 

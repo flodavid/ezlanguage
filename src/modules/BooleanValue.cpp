@@ -3,17 +3,17 @@
 using namespace std;
 
 BooleanValue::BooleanValue(bool boolean):
-    ConditionalExpression(nullptr, nullptr, "Boolean-litteral"), value(boolean)
+    value(boolean), isLitteral(false), mLitteralName("")
 { }
 
-BooleanValue::BooleanValue(const std::string & name):
-    ConditionalExpression(nullptr, nullptr, "Boolean-variable")
-{
-
-}
+BooleanValue::BooleanValue(const std::string & litteralName):
+    value(false), isLitteral(true), mLitteralName(litteralName)
+{ }
 
 string BooleanValue::preTranslate() const {
     string res;
+
+    if (isLitteral) res= mLitteralName;
 
     // Set the boolean string accord to its value (true or false)
     if (value) res= "true";

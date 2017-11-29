@@ -3,7 +3,8 @@
 
 using namespace std;
 
-Repeat::Repeat(Node * left, Node* right , Node * cond) : Node(left, right), condition(cond)
+Repeat::Repeat(Node * left, Node* right , Node * cond):
+    Node(left, right), condition(cond)
 {}
 
 string Repeat::preTranslate() const

@@ -3,7 +3,7 @@
 using namespace std;
 
 Else::Else(Node * left):
-	Node(left, nullptr, "else")
+	Node(left, nullptr)
 { }
 
 string Else::preTranslate() const

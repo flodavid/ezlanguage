@@ -38,6 +38,12 @@ public:
         const std::vector< Variable* > & arguments, const std::string & type);
 
     /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Function declaration"; }
+
+    /**
      * @brief Getter for the function's name
      * @return name of the function
      */

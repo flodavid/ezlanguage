@@ -13,9 +13,6 @@
  */
 class Node {
 
-protected:
-    std::string name;
-
 private:
     Node* left_son;
     Node* right_son;
@@ -27,17 +24,11 @@ public:
     Node();
 
     /**
-     * @brief Constructor with a name
-     * @param name : Name of the node
-     */
-    Node(const std::string& _name);
-
-    /**
      * @brief Constructor with nodes
      * @param left : pointer to the left son
      * @param right : pointer to the right son
      */
-    Node(Node* left, Node* right, const std::string & _name = "");
+    Node(Node* left, Node* right);
 
     /**
      * @author ROUINEB Hamza
@@ -60,12 +51,25 @@ private:
      */
     void setRightSon(Node* son);
 
+protected:
+    /**
+     * @brief Get some details about the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string details() const { return ""; }
+
 public:
     /**
-     * @brief getter on name
-     * @return the name of the node. May be an empty string
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
      */
-    inline const std::string & getName() const { return name; }
+    virtual const std::string getName() const =0;
+    
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getDetails() const { return getName() +": "+ details(); }
     
     /**
      * @brief Add a right son to the last of the right sons

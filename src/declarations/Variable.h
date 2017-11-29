@@ -36,7 +36,22 @@ public:
 	 */
     Variable(Node * right, const std::string & _name, const std::string & _type,
             const std::string & _scope, const Node* content, bool co = false, bool st = false);
-    
+
+
+protected:
+    /**
+     * @brief Get some details about the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string details() const { return varName; }
+
+public:
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Variable declaration"; }
+
     /**
      * @brief Set variable scope and constancy
      */

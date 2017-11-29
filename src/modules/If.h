@@ -28,6 +28,13 @@ public:
     * @author Ismail ELFAQIR
     */
     If(Node * left, Node * elseNode, Node * condition);
+    
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "If"; }
 
     /* * * * * * * *
      * Translation *

@@ -4,14 +4,12 @@
 
 using namespace std;
 
-Node::Node(): name(""), left_son(nullptr), right_son(nullptr)
+Node::Node():
+    left_son(nullptr), right_son(nullptr)
 {}
 
-Node::Node(const string &_name) : name(_name), left_son(nullptr), right_son(nullptr)
-{}
-
-Node::Node(Node* left, Node* right, const std::string & _name):
-    name(_name), left_son(left), right_son(right)
+Node::Node(Node* left, Node* right):
+    left_son(left), right_son(right)
 {}
 
 Node::~Node()

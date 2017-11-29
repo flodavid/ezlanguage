@@ -24,6 +24,21 @@ public:
      * @brief constructor with a right son
      */
     TranslatedNode(const std::string& translated_content, Node* right_son,  const std::string & _name = "Translated Node");
+    
+
+protected:
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string details() const { return "["+ content +"]"; }
+
+public:
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Already translated Node"; }
 
     /**
      * @brief Translate the begining part of the Operator

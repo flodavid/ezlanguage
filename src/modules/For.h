@@ -42,7 +42,14 @@ public:
      * @param container : name of the container to browse
      */
      For (Node * left, const std::string & iterator, const std::string & container);
-    
+        
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "For"; }
+
     /**
      * @brief Translate the begining part of the Forall
      * @return a string containing the C++ code of the node

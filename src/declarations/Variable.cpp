@@ -5,7 +5,7 @@ using namespace std;
 
 Variable::Variable(Node * right, const std::string & _name, const std::string & _type,
         const std::string & _scope, const Node* content, bool co, bool st):
-    Node(nullptr, right, "Variable "+_name), varName(_name), type(_type), scope(_scope), affect(content), isConst(co), isStatic(st)
+    Node(nullptr, right), varName(_name), type(_type), scope(_scope), affect(content), isConst(co), isStatic(st)
 {
     // TODO create a hashed instance of the variable and store it in the hash table
     hashed= new VariableHashed();

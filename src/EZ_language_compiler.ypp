@@ -91,7 +91,7 @@ int yycolumn = 1;
 %token BEGINN END						        // can not use 'BEGIN'
 %token END_OF_FILE
 %token CLASS PROGRAM DESTRUCT			  //class
-%token ARGUMENTS AS							    // program arguments	
+%token PARAMETERS AS							    // program arguments	
 %token REGEX SEARCH MATCH 					// Regular expression
 
 %token LENGTH TOUPPERCASE TOLOWERCASE
@@ -112,9 +112,9 @@ int yycolumn = 1;
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS		// Operators
 
 // Basic elements
-%type<tree> ROOT
-%type<tree> imports declaration_classes declaration_variables declaration_methods // declarations_list
-%type<vectVar> declaration_arguments parameters methodParameters
+%type<tree> program
+%type<tree> program.imports program.classes program.variables program.methods // declarations_list
+%type<vectVar> program.parameters parameters methodParameters
 // %type<vectString> 
 %type<tree> arguments argumentsList argumentElement
 %type<tree> method affectation containerDeclaration
@@ -124,42 +124,42 @@ int yycolumn = 1;
 %type<tree> function procedure class import
 %type<tree> statement return functionCall
 %type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
-%type<texte> type string scope constancy
-%type<var>  simpleVariable variable variable_construct
+%type<texte> type string scope // TODO constancy
+%type<var>  simpleVariable variable // TODO variable_construct
 %type<condExpr> conditionalExpression boolean
 %type<transNode> expression basicExpression integerExpression
 
 // Non basic elements
 %type<tree> function_string statement_sequence forBody affect streamedExpressions argumentsSeparated
 %type<texte> names nbrOrName // param_type
-%type<texte> forDecl forType returnstype facultativeAssignment varDecl arrayDecl vectDecl
-%type<transNode> forStep forRangeStart forRangeEnd
+%type<texte> for.decl for.type returnstype facultativeAssignment var.decl array.decl vect.decl
+%type<transNode> for.step for.rangeStart for.rangeEnd
 
 // Parameters
 // %define parse.trace
 
-%start ROOT
+%start program
 %%
 
 // baseROOT:
-//   PROGRAM NAME next_line imports declaration_arguments declaration_classes declaration_variables // 7 emt
+//   PROGRAM NAME next_line imports declaration_arguments program.classes program.variables // 7 emt
 //   {
 
 //   }
 // ;
 
-ROOT:
-  PROGRAM NAME next_line imports declaration_arguments declaration_classes declaration_variables // 7 emt
+program:
+  PROGRAM NAME next_line program.imports program.parameters program.classes program.variables // 7 emt
   // baseROOT
-  declaration_methods NAME BACK_LINE statement_sequence END endprocedure END_OF_FILE
+  program.methods NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 	{
 		Node* p_imports = $4;
-		Program *racine = new Program($2, p_imports);
-    /* TODO add program arguments logic */
+    // Node* p_decl_parameters = $5; TODO parameters declaration implementation
 		Node* p_decl_classes = $6;
-		// Node* p_decl_list = $7;
 		Node* p_decl_vars = $7;
 		Node* p_decl_methods = $8;
+		Program *racine = new Program($2, p_imports);
+    /* TODO add program arguments logic */
     
     if ($9 != $2) {
         cerr<< "Program and main procedure should have same names"<< endl;
@@ -171,8 +171,6 @@ ROOT:
     // @see main : procedure or function with int return ?
     Procedure* main= new Procedure(p_prog, "main", $5);
 
-    // p_decl_list->addRightChild(main);
-    // racine->addRightChild(p_imports);
     p_imports->addRightChild(p_decl_classes);
 		p_decl_classes->addRightChild(p_decl_vars);
     p_decl_vars->addRightChild(p_decl_methods);
@@ -203,10 +201,10 @@ emptyOrJump:
  * ******************/
 
 // import modules or libraries
-imports:
+program.imports:
   /* empty */
   { $$= new TranslatedNode(""); }
-| imports import {
+| program.imports import {
     /* TODO import logic */
     debugYacc("import", AT);
     $1->addRightChild($2);
@@ -214,10 +212,10 @@ imports:
   }
 ;
 
-declaration_arguments:
+program.parameters:
   /* empty */
   { $$= vector<Variable*>(); }
-// | ARGUMENTS BACK_LINE param_args END endargument next_line {
+// | PARAMETERS BACK_LINE param_args END endargument next_line {
 //     /* TODO arguements declaration logic */
 //     debugYacc("arguments declaration", AT);
 //     vector<Variable*> vars($3);
@@ -225,12 +223,12 @@ declaration_arguments:
 //   }
 ;
 
-declaration_classes:
+program.classes:
   /* empty */
   { $$= new TranslatedNode(""); }
-| declaration_classes class 
+| program.classes class
 	{
-    debugYacc("class declared: "+ $1->getName(), AT);
+    debugYacc("class declared: "+ $1->getDetails(), AT);
 		$1->addRightChild($2);
 		$$ = $1;
 	}
@@ -239,13 +237,13 @@ declaration_classes:
 // declarations_list:
 //   // /* empty */
 //   // { $$ = new TranslatedNode(""); }
-// declaration_variables declaration_methods
+// program.variables program.methods
 //   {
 //     $1->addRightChild($2);
 //     // $2->addRightChild($3);
 //     $$ = $1;
 //   }
-// // | declaration_methods method declaration_variables
+// // | program.methods method program.variables
 // //   {
 // //     $1->addRightChild($2);
 // //     $2->addRightChild($3);
@@ -281,14 +279,14 @@ import:
 
 /* declaration_arguments */
 // param_args:
-//    varDecl param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
+//    var.decl param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
 //     cout << "parameter " << get_argument_value($4) << endl;
 //     vector<Variable*> var;
 //     TranslatedNode* string_param= new TranslatedNode($4);
 //     var.push_back(new Variable(nullptr, $1, $2, "local ", string_param));
 //     $$= var;
 //   }
-// |  varDecl param_type AS STRING_PARAM BACK_LINE param_args {
+// |  var.decl param_type AS STRING_PARAM BACK_LINE param_args {
 //   // TODO transform it into left recursive
 //     debugYacc("paramètre "+ get_argument_value($4), AT);
 //     TranslatedNode* string_param= new TranslatedNode($4);
@@ -300,10 +298,10 @@ import:
 // ;
 
 /* declarations_list */
-declaration_variables:
+program.variables:
   /* empty */
   { $$ = new TranslatedNode(""); }
-| declaration_variables BACK_LINE variable
+| program.variables BACK_LINE variable
 	{
     $1->addRightChild($3);
 	  $$ = $1;
@@ -311,10 +309,10 @@ declaration_variables:
 ;
 
 /* declarations_list */
-declaration_methods:
+program.methods:
   /* empty */
   { $$ = new TranslatedNode(""); }
-| declaration_methods emptyOrJump method emptyOrJump
+| program.methods emptyOrJump method emptyOrJump
 	{
 		$1->addRightChild($3);
 		$$ = $1;
@@ -339,7 +337,7 @@ method:
 // | TYPE_STRING   { $$ = $1; } 
 // ;
 
-/* declaration_classes */
+/* program.classes */
 class:
   CLASS NAME BACK_LINE begin statement_sequence END endclass
 	{
@@ -604,24 +602,24 @@ repeat:
 ;
 
 /* for */
-forDecl:
+for.decl:
   // This should a name that is not already in current scope
   FOR NAME { $$= $2; }
 ;
 
-forType:
+for.type:
   IS type { $$= $2; }
 ;
 
-forRangeStart:
+for.rangeStart:
   IN expression { $$ = $2; }
 ;
 
-forRangeEnd:
+for.rangeEnd:
   DOUBLE_DOT expression { $$ = $2; }
 ;
 
-forStep: // @see do step should be text or numeric_value ?
+for.step: // @see do step should be text or numeric_value ?
   STEP expression { $$= $2; }
 ;
 
@@ -631,22 +629,22 @@ forBody:
 
 // TODO Add 'for' logics that handle going through containers
 for:
-  forDecl forRangeStart forRangeEnd forBody {
+  for.decl for.rangeStart for.rangeEnd forBody {
     debugYacc("FOR  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     $$ = new For($1,$2,$3,simpleStep,$4);
   }
-| forDecl forRangeStart forRangeEnd forStep forBody {
+| for.decl for.rangeStart for.rangeEnd for.step forBody {
     debugYacc("FOR  IN .. STEP ...", AT);
     $$ = new For($1,$2,$3,$4,$5);
   }
-| forDecl forType forRangeStart forRangeEnd forBody {
+| for.decl for.type for.rangeStart for.rangeEnd forBody {
     /* TODO 'for a is TYPE in b .. c' logic */
     debugYacc("FOR type  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     $$ = new For($1,$3,$4,simpleStep,$5,$2);
   }
-| forDecl forType forRangeStart forRangeEnd forStep forBody {
+| for.decl for.type for.rangeStart for.rangeEnd for.step forBody {
     /* TODO 'for a is TYPE in b .. c step x' logic */
     debugYacc("FOR type  IN .. STEP ...", AT);
     $$ = new For($1,$3,$4,$5,$6,$2);
@@ -777,7 +775,7 @@ printing:
 ;
 
 // overloading:
-//   OPERATOR operator LEFT_PARENTHESIS  varDecl NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
+//   OPERATOR operator LEFT_PARENTHESIS  var.decl NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
 //     /* TODO overloading operator logic */
 //     cout << "operateur " <<  $2 << endl;
 //   }
@@ -855,7 +853,7 @@ expression:
 // ;
 
 simpleVariable:
-  varDecl type affect
+  var.decl type affect
   {
     debugYacc("Variable : "+ $1, AT);
     VariableHashed v($1,$2); // @see if same thing if function parameters
@@ -868,7 +866,7 @@ simpleVariable:
 // 		debugYacc("Variable declaration: "+ $1, AT);
 // 	}
 //     // TODO Handle SHARED
-// | varDecl SHARED type affect BACK_LINE
+// | var.decl SHARED type affect BACK_LINE
 // 	{
 // 		VariableHashed v($1,$3);
 // 		symbolTable.addElement(v);
@@ -889,20 +887,22 @@ scope:
 | GLOBAL  { $$ = "global ";}
 ;
 
-constancy:
-  /* empty */
-  { $$ = ""; }
-| CONST { $$ = "const"; }
-;
+// TODO use 'constancy' in declarations
+// constancy:
+//   /* empty */
+//   { $$ = ""; }
+// | CONST { $$ = "const"; }
+// ;
 
-varDecl:
+var.decl:
   NAME IS { $$ = $1; }
 ;
 
-variable_construct:
-  varDecl NAME {}  // ex: c is Maclasse
-| varDecl NAME arguments {} // c is MaClass(val1,va2)
-;
+// TODO creation of a variable as an instance of a class, when class declaration is implemented
+// variable_construct:
+//   var.decl NAME {}  // ex: c is Maclasse
+// | var.decl NAME arguments {} // c is MaClass(val1,va2)
+// ;
 
 /* ******************
  *  GENERIC SIMPLE  *
@@ -1070,10 +1070,11 @@ enddestruct:
 | DESTRUCT lineend {}
 ;
 
-endargument:
-  lineend
-| ARGUMENTS lineend {}
-;
+// TODO implement program parameters
+// endargument:
+//   lineend
+// | ARGUMENTS lineend {}
+// ;
 
 
 /* ************
@@ -1113,22 +1114,22 @@ function_string:
 
 
 //    -----------------------------array Déclaration----------------------------------------
-arrayDecl:
-  varDecl ARRAY LEFT_BRACKET { $$ = $1; }
+array.decl:
+  var.decl ARRAY LEFT_BRACKET { $$ = $1; }
 ;
 
 array_declaration:
-  scope arrayDecl NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope arrayDecl NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope arrayDecl NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
-| scope arrayDecl NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope arrayDecl NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope arrayDecl NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| scope arrayDecl NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
+  scope array.decl NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope array.decl NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
+| scope array.decl NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
+| scope array.decl NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope array.decl NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
+| scope array.decl NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
+| scope array.decl NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
 ;
 
 //    -----------------------------vector declaration----------------------------------------
-vectDecl:
+vect.decl:
   scope NAME IS VECTOR OF type {
     // TODO create an instance of Container (add a methor in Container to add init list after construction)
     // TranslatedNode* vectorDecl= new TranslatedNode("std::vector< "+ $6 +" >", $);
@@ -1139,8 +1140,8 @@ vectDecl:
 
 // We assume vector does not has a size defined at initialization
 vector_declaration: 
-   vectDecl  { printf("vector declaration  \n"); }
-| scope vectDecl type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+   vect.decl  { printf("vector declaration  \n"); }
+| scope vect.decl type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
 ;
 
 //    -----------------------------list declaration----------------------------------------
@@ -1159,7 +1160,7 @@ scope NAME IS SET OF type { printf("set declaration  \n"); }
 
 //    -----------------------------map declaration----------------------------------------
 map_declaration: 
-  scope varDecl MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
+  scope var.decl MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
 | map_declaration EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
 ;
 

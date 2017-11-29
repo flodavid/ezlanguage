@@ -138,7 +138,7 @@ minus     [-]
 (print|PRINT)     	        return(PRINT);
 (input|INPUT)		        return(INPUT);
 
-(arguments|ARGUMENTS)           return(ARGUMENTS);
+(parameters|PARAMETERS)         return(PARAMETERS);
 (as|AS)     		        return(AS);
 
 (length|LENGTH)     	        { return(LENGTH);}
