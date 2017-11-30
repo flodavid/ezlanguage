@@ -123,7 +123,7 @@ int yycolumn = 1;
 %type<tree> destruct printing input // TODO overloading
 %type<tree> if when while repeat for else
 %type<tree> function procedure class import
-%type<tree> statement return functionCall
+%type<tree> statement return functionCall simpleFunction
 %type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
 %type<texte> type string scope // TODO constancy
 %type<var>  simpleVariable variable // TODO variable_construct
@@ -132,6 +132,7 @@ int yycolumn = 1;
 
 // Non basic elements
 %type<tree> function_string statement_sequence forBody affect streamedExpressions argumentsSeparated
+%type<tree> objectFunctionCall
 %type<texte> names nbrOrName // param_type
 %type<texte> for.decl for.type returnstype facultativeAssignment var.decl array.decl vect.decl
 %type<transNode> for.step for.rangeStart for.rangeEnd
@@ -502,7 +503,11 @@ statement:
     $$ = $1;
   }
 | containerDeclaration  { $$ = $1; }
-| functionCall          { $$ = $1; }
+| functionCall {
+    TranslatedNode* semicolon= new TranslatedNode(";\n");
+    $1->addRightChild(semicolon);
+    $$ = $1;
+  }
 | destruct  { $$ = $1; }
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
@@ -652,28 +657,44 @@ for:
  * ************************/
 // TODO function call
 functionCall:
-  // objectDotOperator simple_function {}
-  functionCall objectFunctionCall {}
-| simple_function { }
+  // objectDotOperator simpleFunction {}
+  functionCall objectFunctionCall {
+    $1->addRightChild($2);
+    $$ = $1;
+  }
+| simpleFunction {
+    $$ = $1;
+  }
 // | objectDotOperator NAME { } attributeAccess ? (in classAccess ?) 
 | function_string { $$ = $1;}
-| containers_methods { }
+// | containers_methods { } // TODO implement containers methods
 // | function_regex { }
 ;
 
-simple_function:
+simpleFunction:
   // function call without parenthesis
-  NAME argumentsList { // TODO function call with arguments
+  NAME argumentsList {
+    debugYacc("Call of function"+ $1, AT);
+
+    TranslatedNode* leftPar= new TranslatedNode("(", $2);
+    TranslatedNode* rightPar= new TranslatedNode(")");
+
+    $2->addRightChild(rightPar);
+    $$ = new TranslatedNode($1, leftPar);
   }
   // function call with parenthesis
-| NAME arguments { // TODO function call with arguments and parenthesis
+| NAME arguments {
+    debugYacc("Call of function (w/ parenthesis) "+ $1, AT);
+    $$ = new TranslatedNode($1 +" ", $2);
   }
 // @see Should it be "object" instead of NAME ?
 ;
 
 objectFunctionCall:
   SIMPLE_DOT arguments {
-    
+    TranslatedNode* dot= new TranslatedNode(".");
+    dot->addRightChild($2);
+    $$ = dot;
   }
 ;
 
@@ -1174,43 +1195,43 @@ map_declaration:
 //    -----------------------------Containers methods---------------------------------------
 //    ---------------------------------------------------------------------------------------
 
-containers_methods : 
-  objectDotOperator SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS      { printf("utilisation de la méthode size  \n"); }
-| objectDotOperator IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
-| objectDotOperator CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
-| objectDotOperator PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
-| objectDotOperator FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
-| objectDotOperator RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
-| objectDotOperator MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
-| objectDotOperator MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
-| objectDotOperator MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
-| objectDotOperator MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
-| objectDotOperator SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
-| objectDotOperator SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
-| objectDotOperator SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("SUM() called \n"); }
-| objectDotOperator SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS   { printf("SUM(attr) called \n"); }
-| objectDotOperator COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
-| objectDotOperator COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
-| objectDotOperator REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
-| objectDotOperator RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
-| objectDotOperator FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
-| objectDotOperator FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
-| objectDotOperator PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
-| objectDotOperator PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
-| objectDotOperator REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
-| objectDotOperator REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
-| objectDotOperator AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
-| objectDotOperator AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
-| objectDotOperator STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
-| objectDotOperator RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
-| objectDotOperator FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
-| objectDotOperator LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
-| objectDotOperator REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
-| objectDotOperator PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
-| objectDotOperator INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
-| objectDotOperator INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
-| objectDotOperator EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
-;
+// containers_methods : 
+//   objectDotOperator SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS      { printf("utilisation de la méthode size  \n"); }
+// | objectDotOperator IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
+// | objectDotOperator CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
+// | objectDotOperator PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
+// | objectDotOperator FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
+// | objectDotOperator RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
+// | objectDotOperator MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
+// | objectDotOperator MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
+// | objectDotOperator MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
+// | objectDotOperator MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
+// | objectDotOperator SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
+// | objectDotOperator SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
+// | objectDotOperator SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("SUM() called \n"); }
+// | objectDotOperator SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS   { printf("SUM(attr) called \n"); }
+// | objectDotOperator COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
+// | objectDotOperator COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
+// | objectDotOperator REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
+// | objectDotOperator RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
+// | objectDotOperator FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
+// | objectDotOperator FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
+// | objectDotOperator PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
+// | objectDotOperator PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
+// | objectDotOperator REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
+// | objectDotOperator REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
+// | objectDotOperator AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
+// | objectDotOperator AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
+// | objectDotOperator STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
+// | objectDotOperator RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
+// | objectDotOperator FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
+// | objectDotOperator LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
+// | objectDotOperator REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
+// | objectDotOperator PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
+// | objectDotOperator INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
+// | objectDotOperator INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
+// | objectDotOperator EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
+// ;
 
 
 %%

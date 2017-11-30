@@ -15,6 +15,8 @@ a multiple lines comment
 */
     print "First statement"
 
+    hello_world
+
     //this is a test
     print "Second one"
 
