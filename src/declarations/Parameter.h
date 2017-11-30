@@ -1,23 +1,25 @@
 #pragma once
 
-#include "Node.h"
+#include "CommonDeclaration.h"
 
 /**
  * @brief Represent the root node of the tree
  * 
  * @author Florian DAVID
  */
-class Parameter : public Node {
-    	
+class Parameter : public CommonDeclaration {
+
+private:
+    std::string mType;
+
 public:
-    
     /**
      * @brief constructor with parameters
      * @param right : right son
      * @param prg_name : name of the program
      * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
      */
-    Parameter(std::string parameter_name);
+    Parameter(const std::string & type, const std::string & name);
     
 
     /**
@@ -33,5 +35,4 @@ public:
      * Defines program imports and functions definitions
      */
     virtual std::string preTranslate() const;
-
-}
+};

@@ -1,19 +1,19 @@
 #ifndef CLASS_H
 #define CLASS_H
 
-#include <string>
-#include <vector>
-#include "../modules/Node.h"
+#include "CommonDeclaration.h"
 #include "../hash_table/ClassHashed.h"
 #include "Function.h"
 #include "Variable.h"
+#include <string>
+#include <vector>
 
 /**
  * @brief 
  * @author : Ismail ELFAQIR
  * 
  */
-class Class : public Node {
+class Class : public CommonDeclaration {
 
 protected:
     ClassHashed *m_class;
@@ -102,14 +102,15 @@ public:
      */
     virtual inline const std::string getName() const { return "Class declaration"; }
 
-protected:
-    /**
-     * @brief Get some details about the node
-     * @return the name of the node. Defined at class creation
-     */
-    virtual inline const std::string details() const { return m_class->get_id(); }
 
 public:
+    /**
+     * @brief Getter for the procedure's name
+     * @return name of the procedure
+     */
+    const std::string & getClassName() const { return getDeclarationName(); }
+
+
     /**
     * getter of the class declaration
     * @author Ismail ELFAQIR

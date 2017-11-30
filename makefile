@@ -34,8 +34,10 @@ MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
 ADDONS_CPP += src/addons/String_addon.cpp src/addons/log.cpp
 
 # declarations
-DEC_CPP = src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
+DEC_CPP = src/declarations/CommonDeclaration.cpp
+DEC_CPP += src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
 DEC_CPP += src/declarations/Class.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
+DEC_CPP += src/declarations/Parameter.cpp
 
 # hash table sources
 HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp

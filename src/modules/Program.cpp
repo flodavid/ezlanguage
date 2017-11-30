@@ -7,7 +7,7 @@ using namespace std;
 Program::Program(std::string name, Node* right) : Node(nullptr, right)
 {
     mName= name; // TODO
-    debug("Program : " + mName, AT);
+    debugNode("Program : " + mName, AT);
 }
 
 string Program::preTranslate() const
@@ -27,7 +27,7 @@ string Program::preTranslate() const
 "        *input= false;\n"
 "    }\n"
 "    else {\n"
-"        std::cerr<< \"You did not entered text, please enter an floating number\"<< std::endl;\n"
+"        std::cerr<< \"You did not entered text, please enter an boolean text\"<< std::endl;\n"
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 "}\n"

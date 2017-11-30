@@ -5,14 +5,14 @@
 using namespace std;
 
 Class::Class(ClassHashed *c):
-	m_class(c),public_functions(),static_functions(),public_variables()
+	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(),static_functions(),public_variables()
 { }
 
 Class::Class(ClassHashed *c,
 	     		const vector<Function *> &functions, 
 	     		const vector<Function *> &s_functions,  
 	     		const vector<Variable *> &variables ):
-	m_class(c),
+	CommonDeclaration(nullptr, c->get_id()), m_class(c),
 	public_functions(functions),
 	static_functions(s_functions),
 	public_variables(variables) 
@@ -21,19 +21,19 @@ Class::Class(ClassHashed *c,
 Class::Class(ClassHashed *c,
 			const vector<Function *> &functions, 
 			const vector<Variable *> &variables ):
-	m_class(c),public_functions(functions),static_functions(),public_variables(variables) 
+	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(functions),static_functions(),public_variables(variables) 
 { }
 
 Class::Class(ClassHashed *c, const vector<Function *> &functions):
-	m_class(c),public_functions(functions),static_functions(),public_variables() 
+	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(functions),static_functions(),public_variables() 
 { }
 
 Class::Class(ClassHashed *c, const vector<Variable *> &variables ):
-	m_class(c),public_functions(),static_functions(),public_variables(variables) 
+	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(),static_functions(),public_variables(variables) 
 { }
 
 Class::Class(const Class & cpy):
-	m_class(cpy.m_class), 
+	CommonDeclaration(nullptr, cpy.getClassName()), m_class(cpy.m_class), 
 	public_functions(cpy.public_functions),
 	static_functions(cpy.static_functions),
 	public_variables(cpy.public_variables)
@@ -118,6 +118,7 @@ string Class::preTranslate() const
 {
 	string res="#ifndef "+toUpperCase(m_class->get_id())+"_H\n";
 	res+="#define "+toUpperCase(m_class->get_id())+"_H\n";
+	// TODO see how to handle imports (set flags ? Always import ?)
 	res+"#include <iostream>\n";
 	res+="class "+m_class->get_id()+" {\n";
 		res+="\tpublic:\n";

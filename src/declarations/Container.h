@@ -1,7 +1,7 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 
-#include "../modules/Node.h"
+#include "CommonDeclaration.h"
 
 /**
  * @class Container
@@ -9,7 +9,7 @@
  * 
  * @author LAHYANI Zakaria - Ismail ELFAQIR
  */
-class Container : public Node {
+class Container : public CommonDeclaration {
 	
 protected:
 	std::string nameContainer;
@@ -34,7 +34,7 @@ public:
     * @param listI : list of initialisation (only available for the "array")
     * @author Johan Defaye
     */
-    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC,
+    Container(Node * left, const std::string & nameC, const std::string & typeC,
             const std::string & typeE, const std::string & listI, unsigned size = 0);
 
 

@@ -2,9 +2,9 @@
 
 using namespace std;
 
-Container::Container(Node * left, Node * right, const string & nameC, const string & typeC,
+Container::Container(Node * left, const string & nameC, const string & typeC,
                     const string & typeE, const string & listI, unsigned size):
-	Node(left, right), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI), mSize(size)
+	CommonDeclaration(left, nameC), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI), mSize(size)
 {}
 
 

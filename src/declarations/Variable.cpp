@@ -3,9 +3,9 @@
 
 using namespace std;
 
-Variable::Variable(Node * right, const std::string & _name, const std::string & _type,
-        const std::string & _scope, const Node* content, bool co, bool st):
-    Node(nullptr, right), varName(_name), type(_type), scope(_scope), affect(content), isConst(co), isStatic(st)
+Variable::Variable(const std::string & name, const std::string & type,
+        const std::string & scope, const Node* content, bool co, bool st):
+    CommonDeclaration(nullptr, name), mType(type), mScope(scope), affect(content), isConst(co), isStatic(st)
 {
     // TODO create a hashed instance of the variable and store it in the hash table
     hashed= new VariableHashed();
@@ -21,19 +21,19 @@ string Variable::preTranslate() const {
     }
     // TODO Scope is not used ("local " or "global ")
 
-    if(type == "integer"){
+    if(mType == "integer"){
         res = res + "int ";
-    }else if (type == "real"){
+    }else if (mType == "real"){
         res = res + "double ";
-    }else if (type == "string"){
+    }else if (mType == "string"){
         res = res + "std::string ";
-    }else if (type == "boolean"){
+    }else if (mType == "boolean"){
         res = res + "bool ";
     }else{
         // Case of object
-        res += type + " ";
+        res += mType + " ";
     }
-    res += varName;
+    res += getVariableName();
     const string& affectStr= affect->translate();
     if ( affectStr != "") {
         // TODO check that we just need the string value of affect, not the Node

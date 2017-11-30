@@ -6,6 +6,7 @@
 #include "./modules/TranslatedNode.h"
 #include "./modules/ConditionalExpression.h"
 #include "./declarations/Variable.h"
+#include "./declarations/Parameter.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
 #include <vector>
@@ -26,7 +27,6 @@ typedef struct s_mon_type {
     std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
     Variable* var;
-    std::vector<Variable*> vectVar;
     ConditionalExpression* condExpr;
     TranslatedNode* transNode;
 //    MaClasse	une_maclasse;

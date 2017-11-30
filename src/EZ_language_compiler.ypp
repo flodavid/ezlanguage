@@ -14,6 +14,7 @@
 #include "../src/main.cpp"	 // we start from ../obj because it's important
 #include "../src/declarations/Class.h"
 #include "../src/declarations/Function.h"
+#include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
 #include "../src/declarations/Variable.h"
 #include "../src/modules/Node.h"
@@ -114,7 +115,7 @@ int yycolumn = 1;
 // Basic elements
 %type<tree> program
 %type<tree> program.imports program.classes program.variables program.methods // declarations_list
-%type<vectVar> program.parameters parameters methodParameters
+%type<tree> program.parameters method.parameters parameters parameter
 // %type<vectString> 
 %type<tree> arguments argumentsList argumentElement
 %type<tree> method affectation containerDeclaration
@@ -169,7 +170,7 @@ program:
 		Node* p_prog = $11;
     // $5 : parameters (vector<Variable*>)
     // @see main : procedure or function with int return ?
-    Procedure* main= new Procedure(p_prog, "main", $5);
+    Procedure* main= new Procedure("main", $5, p_prog);
 
     p_imports->addRightChild(p_decl_classes);
 		p_decl_classes->addRightChild(p_decl_vars);
@@ -214,7 +215,7 @@ program.imports:
 
 program.parameters:
   /* empty */
-  { $$= vector<Variable*>(); }
+  { $$ = new TranslatedNode(""); }
 // | PARAMETERS BACK_LINE param_args END endargument next_line {
 //     /* TODO arguements declaration logic */
 //     debugYacc("arguments declaration", AT);
@@ -399,7 +400,7 @@ return:
   }
 ;
 
-methodParameters:
+method.parameters:
   LEFT_PARENTHESIS parameters RIGHT_PARENTHESIS {
     $$ = $2;
   }
@@ -408,20 +409,15 @@ methodParameters:
 // Parameters are variables that will used in a method, initiliazed with arguments
 // that are passed as arguments at function call
 parameters: 
-  /* empty */ {
-    vector<Variable*> v;
-    $$ = v;
-  }
-| simpleVariable
+  /* empty */
+  { $$ = new TranslatedNode(""); }
+| parameter
+ 	{ $$ = $1; }
+| parameter COMMA parameters
  	{
-    vector<Variable*> vect;
- 		vect.push_back($1); // TODO use tree construction instead of vector
- 		$$ = vect;
- 	}
-| simpleVariable COMMA parameters
- 	{
- 		$3.push_back($1);
- 		$$ = $3;
+    TranslatedNode* varComma= new TranslatedNode(", ", $3);
+    $1->addRightChild(varComma);
+    $$ = $1;
  	}
 // | NAME names ARE type { /* TODO parameters logic */ }
 // TODO handle SHARED parameters
@@ -433,7 +429,7 @@ parameters:
 
 // TODO function scope handling
 function:
-  FUNCTION NAME methodParameters returnstype BACK_LINE // { symbolTable.incScope(); }
+  FUNCTION NAME method.parameters returnstype BACK_LINE // { symbolTable.incScope(); }
   begin statement_sequence return BACK_LINE END endfunction
   {
 		// symbolTable.decScope();
@@ -444,12 +440,12 @@ function:
 		Function *func = new Function($7,$2,$3,$4);
 		$$ = func;
 	}
-// | FUNCTION NAME methodParameters IS EXTERN NAME
+// | FUNCTION NAME method.parameters IS EXTERN NAME
 //   {
 //     /* TODO extern function declaration logic @see hash table, but not no function creation ? */
 //     cout << "declaration d'une fonction externe " << endl;
 //   }
-// | SHARED FUNCTION NAME methodParameters returnstype BACK_LINE // 6 elements {symbolTable.incScope(); }
+// | SHARED FUNCTION NAME method.parameters returnstype BACK_LINE // 6 elements {symbolTable.incScope(); }
 //   begin statement_sequence return BACK_LINE END endfunction
 //   {
 //     /* TODO shared function declaration logic */
@@ -462,11 +458,11 @@ function:
 //    symbolTable.incScope();
 // TODO Add procedure shared/not shared operator
 procedure:
-  PROCEDURE NAME methodParameters BACK_LINE statement_sequence END endprocedure
+  PROCEDURE NAME method.parameters BACK_LINE statement_sequence END endprocedure
   {
     /* TODO procedure creation logic 1 */
     debugYacc("Procedure declaration : "+ $2, AT);
-    Procedure *proc = new Procedure($5,$2,$3);
+    Procedure *proc = new Procedure($2,$3,$5);
 		$$ = proc;
 		// symbolTable.decScope();
   }
@@ -852,13 +848,23 @@ expression:
 // | argument  { $$ = $1; }
 // ;
 
+parameter:
+  var.decl type affect
+  {
+    debugYacc("Parameter : "+ $1, AT);
+    // VariableHashed v($1,$2); //@see if variable hashed for method declaration parameters
+    // symbolTable.addElement(v);
+    // TODO handle default value for parameters (affect)
+    $$ = new Parameter($2,$1);
+  }
+
 simpleVariable:
   var.decl type affect
   {
     debugYacc("Variable : "+ $1, AT);
     VariableHashed v($1,$2); // @see if same thing if function parameters
     symbolTable.addElement(v);
-    $$ = new Variable(nullptr, $1,$2,"local ",$3,false);
+    $$ = new Variable($1,$2,"local ",$3,false);
   }
 // | NAME names ARE type affect BACK_LINE
 // 	{

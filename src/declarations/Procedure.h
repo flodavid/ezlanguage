@@ -1,10 +1,8 @@
 #ifndef DECLARATION_PROCEDURE_H
 #define DECLARATION_PROCEDURE_H
 
-#include "../modules/Node.h"
-#include "Variable.h"
-#include <vector>
-
+#include "CommonDeclaration.h"
+#include "Parameter.h"
 
 /**
  * @brief Allows the declaration of procedures
@@ -14,11 +12,10 @@
  *              instruction(s);
  *         end procedure
  */
-class Procedure : public Node {
+class Procedure : public CommonDeclaration {
 
 protected:
-    std::string procedure_name;
-    std::vector<Variable*> arguments; // TODO delete in destructor
+    Node* mParameters;
 
 public:
 
@@ -30,15 +27,8 @@ public:
      * 
      * Right son is set to null
      */
-    Procedure(Node * left, const std::string & name, const std::vector<Variable*> & args);
+    Procedure(const std::string & name, Node * parameters, Node * left);
     
-
-protected:
-    /**
-     * @brief Get some details about the node
-     * @return the name of the node. Defined at class creation
-     */
-    virtual inline const std::string details() const { return "'"+ procedure_name +"'"; }
 
 public:
     /**
@@ -51,19 +41,20 @@ public:
      * @brief Getter for the procedure's name
      * @return name of the procedure
      */
-    const std::string & getProcedureName() const { return procedure_name; }
+    const std::string & getProcedureName() const { return getDeclarationName(); }
+
 
     /**
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    std::vector<Variable*> getArguments() const {return arguments;}
+    const Node& getParameters() const { return *mParameters; }
 
     /**
      * @brief Setter of the list of arguments
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(std::vector<Variable*> args){arguments= args;}
+    void setArguments(Parameter* params){ mParameters= params; }
     
     /**
      * @brief Translate the begining part of the Procedure

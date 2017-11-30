@@ -9,12 +9,10 @@ Repeat::Repeat(Node * left, Node* right , Node * cond):
 
 string Repeat::preTranslate() const
 {
-    return "do {";
+    return "do {\n";
 }
 
 string Repeat::postTranslate() const
-{   
-	string res = "} while(" + condition->translate() + ");";
-    return res;
+{
+    return "} while(" + condition->translate() + ");\n";
 }
-
