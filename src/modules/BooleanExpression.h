@@ -53,6 +53,13 @@ public:
      */
     BooleanExpression(const std::string & relational_operator, const TranslatedNode* first_expression,
                         const TranslatedNode* second_expression);
+    
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Boolean expression"; }
 
     /**
      * @brief Translate the begining part

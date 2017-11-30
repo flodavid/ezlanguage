@@ -27,15 +27,17 @@ MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNod
 # Conditional expression
 MOD_CPP += src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp src/modules/ConditionalExpression.cpp
 # Divers
-MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Else.cpp src/modules/Operator.cpp
+MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Else.cpp src/modules/Operation.cpp
 # Boucles
 MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
 
 ADDONS_CPP += src/addons/String_addon.cpp src/addons/log.cpp
 
 # declarations
-DEC_CPP = src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
+DEC_CPP = src/declarations/CommonDeclaration.cpp
+DEC_CPP += src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
 DEC_CPP += src/declarations/Class.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
+DEC_CPP += src/declarations/Parameter.cpp
 
 # hash table sources
 HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp
@@ -126,7 +128,7 @@ obj/%.o: src/addons/%.cpp
 #clean  
 clean:
 	@echo -e "\033[1;33mSuppression des fichiers générés et des fichiers objets\033[0m"
-	rm -rf obj/lex.yy.c 
+	rm -rf obj/lex.yy.c
 	rm -rf obj/*.tab.*
 	rm -rf obj/*.d
 	rm -rf obj/*.o

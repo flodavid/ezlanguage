@@ -10,7 +10,10 @@
  * @author Florian DAVID
  */
 class Program : public Node {
-	
+
+private:
+    std::string mName;
+
 public:
     
     /**
@@ -19,11 +22,20 @@ public:
      * @param prg_name : name of the program
      * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
      */
-    Program(Node* right, std::string prg_name);
+    Program(std::string name, Node* right);
+    
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Program"; }
     
     /**
      * @brief Translate the begining part of the Repeat
      * @return a string containing the C++ code of the instruction
+     * 
+     * Defines program imports and functions definitions
      */
     virtual std::string preTranslate() const;
 

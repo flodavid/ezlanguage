@@ -30,7 +30,7 @@ ID ([a-z]|[A-Z])([a-z]|[A-Z]|[0-9]|_)*
 
 phrase (\\.|[^"])*
 
-commentaire		(\/\*((.*)|(\n*))*\*\/)|(\/\/(.*))
+comment		(\/\*((.*)|(\n*))*\*\/)|(\/\/(.*))
 
 backLine 	\n
 minus     [-]
@@ -38,7 +38,7 @@ minus     [-]
 %%
 
 {separators}   	{ /* On ignore */ }
-{commentaire}   { /* On ignore */ cout << "Commentaire"<<endl; }
+{comment}   	{ /* Ignore it */ cout << "Comment"<<endl; }
 {integer}	{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
 {reel}      	{ yylval.texte= yytext; return(NUM_REAL);}	// real
 
@@ -47,9 +47,9 @@ minus     [-]
 
 ","		return(COMMA);
 
-"°"		return(DEGRE);
-"%"		return(POURCENT);
-"#"		return(DIESE);
+"°"		return(DEGREE);
+"%"		return(PERCENT);
+"#"		return(SHARP);
 "="		return(EQUALS);
 "!="    return NE; 
 "<"     return LT; 
@@ -74,7 +74,8 @@ minus     [-]
 
 "["		return (LEFT_BRACKET);
 "]"		return (RIGHT_BRACKET);
-"."	        return (POINT);
+".."		return (DOUBLE_DOT);
+"."	        return (SIMPLE_DOT);
 
 {quote}		return (QUOTE);
 
@@ -120,43 +121,44 @@ minus     [-]
 (in|IN)          return(IN);
 (step|STEP)      return(STEP);
 
-(function|FUNCTION)         return(FUNCTION);
-(procedure|PROCEDURE)       return(PROCEDURE);
+(function|FUNCTION)             return(FUNCTION);
+(procedure|PROCEDURE)           return(PROCEDURE);
 (returns|RETURNS)	        return(RETURNS);
-(return|RETURN)             return(RETURN);
-(true|TRUE)			        return (TRUE);
-(false|FALSE)			    return (FALSE);
+(return|RETURN)                 return(RETURN);
+(true|TRUE)			return (TRUE);
+(false|FALSE)			return (FALSE);
 
-(operator|OPERATOR)         return(OPERATOR);
+(operator|OPERATOR)             return(OPERATOR);
 
-(class|CLASS)              return(CLASS);
-(program|PROGRAM)          return(PROGRAM);
-(destruct|DESTRUCT)        return(DESTRUCT);
+(class|CLASS)                   return(CLASS);
+(program|PROGRAM)               return(PROGRAM);
+(destruct|DESTRUCT)             return(DESTRUCT);
 
 
 (print|PRINT)     	        return(PRINT);
+(input|INPUT)		        return(INPUT);
 
-(arguments|ARGUMENTS)       return(ARGUMENTS);
+(parameters|PARAMETERS)         return(PARAMETERS);
 (as|AS)     		        return(AS);
 
-(length|LENGTH)     			{ return(LENGTH);}
+(length|LENGTH)     	        { return(LENGTH);}
 (toUpperCase|TOUPPERCASE)     	{ return(TOUPPERCASE);}
 (toLowerCase|TOLOWERCASE)     	{ return(TOLOWERCASE);}
-(substring|SUBSTRING)     		{ return(SUBSTRING);}
-(split|SPLIT)     				{ return(SPLIT);}
-(strip|STRIP)     				{ return(STRIP);}
-(replace|REPLACE)     			{ return(REPLACE);}
-(contains|CONTAINS)     		{ return(CONTAINS);}
-(find|FIND)     				{ return(FIND);}
+(substring|SUBSTRING)     	{ return(SUBSTRING);}
+(split|SPLIT)     		{ return(SPLIT);}
+(strip|STRIP)     		{ return(STRIP);}
+(replace|REPLACE)     		{ return(REPLACE);}
+(contains|CONTAINS)     	{ return(CONTAINS);}
+(find|FIND)     		{ return(FIND);}
 (findFirstOf|FINDFIRSTOF)     	{ return(FINDFIRSTOF);}
-(findLastOf|FINDLASTOF)  		{ return(FINDLASTOF);}
+(findLastOf|FINDLASTOF)  	{ return(FINDLASTOF);}
 
 
 (array|ARRAY)        	return(ARRAY);
 (vector|VECTOR)        	return(VECTOR);
-(list|LIST)        		return(LIST);
-(set|SET)        		return(SET);
-(map|MAP)        		return(MAP);
+(list|LIST)        	return(LIST);
+(set|SET)        	return(SET);
+(map|MAP)        	return(MAP);
 (of|OF)             	return(OF);
 
 (regex|REGEX)        	return(REGEX);

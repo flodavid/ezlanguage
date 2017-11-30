@@ -1,4 +1,4 @@
 program P
 
-procedure P
-end procedure
+P
+end

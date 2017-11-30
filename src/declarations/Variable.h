@@ -1,7 +1,7 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
 
-#include "../modules/Node.h"
+#include "CommonDeclaration.h"
 #include "../hash_table/VariableHashed.h"
 
 /** 
@@ -10,12 +10,11 @@
  * 
  * exemple : my_great_variable is integer -> int my_great_variable;
  */
-class Variable : public Node {
+class Variable : public CommonDeclaration {
 	
 protected:
-    std::string varName;
-    std::string type;
-    std::string scope;
+    std::string mType;
+    std::string mScope;
     const Node* affect;
     VariableHashed* hashed;
     bool isConst;
@@ -34,13 +33,28 @@ public:
 	 * @param co : if the variable is const
 	 * @param st : if the variable is static
 	 */
-    Variable(Node * right, const std::string & _name, const std::string & _type,
-            const std::string & _scope, const Node* content, bool co = false, bool st = false);
-    
+    Variable(const std::string & name, const std::string & type,
+            const std::string & scope, const Node* content, bool co = false, bool st = false);
+
+
+public:
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Variable declaration"; }
+
+    /**
+     * @brief Getter for the procedure's name
+     * @return name of the procedure
+     */
+    const std::string & getVariableName() const { return getDeclarationName(); }
+
+
     /**
      * @brief Set variable scope and constancy
      */
-    void setScope(std::string & _scope) { scope= _scope; }
+    void setScope(std::string & scope) { mScope= scope; }
 
     /**
      * @brief Translate the begining part of the Variable

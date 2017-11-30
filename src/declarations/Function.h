@@ -1,9 +1,7 @@
 #ifndef DECLARATION_FUNCTION_H
 #define DECLARATION_FUNCTION_H
 
-#include "../modules/Node.h"
-#include "Variable.h"
-#include <vector>
+#include "Procedure.h"
 
 /**
  * @brief Allows the declaration of functions
@@ -15,16 +13,12 @@
  *              return variable;
  *          end function
  */
-class Function : public Node {
+class Function : public Procedure {
 
 protected:
-    std::string function_name;
-    std::vector<Variable*> arguments; // TODO delete in destructor
     std::string return_type;
-    Node* funReturn;
 
 public:
-
     /**
      * @brief Constructor with parameters
      * @param left : left son
@@ -34,26 +28,28 @@ public:
      * 
      * Right son is set to null
      */
-    Function(Node * left, const std::string & name,
-        const std::vector< Variable* > & arguments, const std::string & type);
+    Function(Node * arguments, const std::string & name, Node * left,
+        const std::string & type);
+
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Function declaration"; }
 
     /**
      * @brief Getter for the function's name
      * @return name of the function
      */
-    const std::string & getFunctionName() const {return function_name;}
+    const std::string & getFunctionName() const { return getDeclarationName(); }
+
 
     /**
      * @brief Getter for the return's type
      * @return return's type
      */
     const std::string & getReturnType() const {return return_type;}
-
-    /**
-     * @brief Getter for the argument's list
-     * @return List of arguments
-     */
-    std::vector<Variable*> getArguments() const {return arguments;}
     
     /**
      * @brief Translate the begining part of the Function

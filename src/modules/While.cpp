@@ -4,7 +4,7 @@
 using namespace std;
 
 While::While(Node * left, Node * cond):
-    Node(left, nullptr, "While"), condition(cond)
+    Node(left, nullptr), condition(cond)
 {}
 
 string While::preTranslate() const {
@@ -15,5 +15,5 @@ string While::preTranslate() const {
 string While::postTranslate() const
 {
     //    The instructions have been translated, the loop closes
-    return "}";
+    return "}\n";
 }

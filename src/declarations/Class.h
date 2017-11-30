@@ -1,22 +1,21 @@
 #ifndef CLASS_H
 #define CLASS_H
 
-#include <string>
-#include <vector>
-#include <algorithm>
-#include "../modules/Node.h"
+#include "CommonDeclaration.h"
 #include "../hash_table/ClassHashed.h"
 #include "Function.h"
 #include "Variable.h"
+#include <string>
+#include <vector>
 
 /**
  * @brief 
  * @author : Ismail ELFAQIR
  * 
  */
-class Class : public Node {
-protected:
+class Class : public CommonDeclaration {
 
+protected:
     ClassHashed *m_class;
     // as the validate document of Houssam BENHOUD (les classes.pdf) all variables and functions of classes are public
     std::vector<Function *> public_functions;
@@ -25,19 +24,9 @@ protected:
     std::vector<Variable *> public_variables;
 
 public:
-
     /* * * * * * * * *
     * CONSTRUCTORS  *
     * * * * * * * * */
-
-
-    /**
-    * Default constructor
-    * Set public_fuctions and variables to null
-    * @author Ismail ELFAQIR
-    */
-    Class();
-
     /**
     * Default constructor
     * Set the name of the class
@@ -55,11 +44,10 @@ public:
     * @param variables : vector of attributes
     * @author Ismail ELFAQIR
     */
-    Class(ClassHashed *c,
-                         const std::vector<Function *> &functions,
-                         const std::vector<Function *> &s_functions,
-                         const std::vector<Variable *> &variables );
-
+    Class(ClassHashed *c, 
+        const std::vector<Function *> &functions,
+        const std::vector<Function *> &s_functions,
+        const std::vector<Variable *> &variables );
 
     /**
     * Constructor with parameters
@@ -70,8 +58,8 @@ public:
     * @author Ismail ELFAQIR
     */
     Class(ClassHashed *c,
-                         const std::vector<Function *> &functions,
-                         const std::vector<Variable *> &variables );
+        const std::vector<Function *> &functions, 
+        const std::vector<Variable *> &variables );
 
     /**
     * Constructor with parameters
@@ -81,7 +69,6 @@ public:
     * @author Ismail ELFAQIR
     */
     Class(ClassHashed *c, const std::vector<Function *> &functions);
-
 
     /**
     * Constructor with parameters
@@ -108,6 +95,21 @@ public:
     /* * * * * * * * * * * * * *
     * ACCESSORS  AND MUTATORS *
     * * * * * * * * * * * * * */
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Class declaration"; }
+
+
+public:
+    /**
+     * @brief Getter for the procedure's name
+     * @return name of the procedure
+     */
+    const std::string & getClassName() const { return getDeclarationName(); }
+
 
     /**
     * getter of the class declaration

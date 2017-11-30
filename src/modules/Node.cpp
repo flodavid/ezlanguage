@@ -4,20 +4,18 @@
 
 using namespace std;
 
-Node::Node(): name(""), left_son(nullptr), right_son(nullptr)
+Node::Node():
+    left_son(nullptr), right_son(nullptr)
 {}
 
-Node::Node(const string &_name) : name(_name), left_son(nullptr), right_son(nullptr)
-{}
-
-Node::Node(Node* left, Node* right, const std::string & _name):
-    name(_name), left_son(left), right_son(right)
+Node::Node(Node* left, Node* right):
+    left_son(left), right_son(right)
 {}
 
 Node::~Node()
 {
-    delete right_son;
-    delete left_son;
+    if (right_son != nullptr) delete right_son;
+    if (left_son != nullptr) delete left_son;
 }
 
 void Node::setLeftSon(Node *left) {
@@ -29,7 +27,7 @@ void Node::setRightSon(Node* son) {
 }
 
 void Node::addRightChild(Node* child) {
-    debug("addRightChildCall:"+ getName(), AT);
+    // debug("addRightChildCall:"+ getName(), AT);
     // Right son recursive definition
     if (right_son == nullptr) {
         right_son= child;

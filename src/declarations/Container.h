@@ -1,7 +1,7 @@
-#ifndef DECLARATIONCONTAINER_H
-#define DECLARATIONCONTAINER_H
+#ifndef CONTAINER_H
+#define CONTAINER_H
 
-#include "../modules/Node.h"
+#include "CommonDeclaration.h"
 
 /**
  * @class Container
@@ -9,35 +9,20 @@
  * 
  * @author LAHYANI Zakaria - Ismail ELFAQIR
  */
-class Container : public Node {
+class Container : public CommonDeclaration {
 	
-  protected:
+protected:
 	std::string nameContainer;
 	std::string typeContainer; // Vector, Array, Set, Map or List
 	std::string typeElement; // int, double, string etc ...
 	std::string listInit;
-    int size; 
+    unsigned mSize; 
     
-  public:
+public:
 
     /* * * * * * * * *
      * CONSTRUCTORS  *
      * * * * * * * * */
-		
-
-   /**
-    * Constructor with parameters
-    * @param left: left son 
-    * @param right : right son
-    * @param nameC : name of the container
-    * @param typeC : type of the container
-    * @param typeE : type of the element in the container
-    * @param s : size
-    * @author LAHYANI Zakaria
-    */
-    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, int s = 0);
-
-
 
    /**
     * Constructor with parameters
@@ -49,8 +34,15 @@ class Container : public Node {
     * @param listI : list of initialisation (only available for the "array")
     * @author Johan Defaye
     */
-    Container(Node * left, Node * right, const std::string & nameC, const std::string & typeC, const std::string & typeE, const std::string & listI);
+    Container(Node * left, const std::string & nameC, const std::string & typeC,
+            const std::string & typeE, const std::string & listI, unsigned size = 0);
 
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Container declaration"; }
 
 	/**
 	 * @brief Translate the node after the translation of the left son

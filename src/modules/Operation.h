@@ -1,5 +1,5 @@
-#ifndef OPERATOR_H
-#define OPERATOR_H
+#ifndef OPERATION_H
+#define OPERATION_H
 
 #define UNARY 1
 #define BINARY 2
@@ -17,7 +17,7 @@ enum operatorType { ARITHMETIC, BITWISE, RELATIONAL, LOGICAL, ALLOCATION, INCREM
  * Operators that need the value which they affect (abs for example),
  * pass it by addind a left son
  */
-class Operator : public Node{
+class Operation : public Node{
 
 protected:
     //in the yacc file, "Operator(LOGICAL, "and")" could be called, given the appropriate token
@@ -27,8 +27,15 @@ protected:
 
 public:
     //constructors
-    Operator(const std::string & ope);
+    Operation(const std::string & ope);
     
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Operation"; }
+
     /**
      * @brief Translate the begining part of the Operator
      * @return a string containing the C++ code of the node

@@ -4,7 +4,7 @@ using namespace std;
 
 
 MultipleVariable::MultipleVariable(const vector<string> & n, const string & t):
-	Node(nullptr, nullptr), names(n), type(t)
+	names(n), type(t)
 {}
 
 void MultipleVariable::addVar(const std::string& var)

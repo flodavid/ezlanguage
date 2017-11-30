@@ -1,33 +1,49 @@
 //@author : GINISTY Valentin
 #include "For.h"
 
+#include <sstream>
 
 using namespace std;
 
-For::For(Node * left, Node * right, const string & name, const string & begin, const string & end, const string & s, const string & t): Node(left, right), ind_name(name),  ind_begin(begin), ind_end(end), step(s), type(t), container_name("")
+For::For(const string & iterator, const TranslatedNode* start, const TranslatedNode* end,
+        const TranslatedNode* step, Node * left, const string & type):
+    Node(left, nullptr), mIteratorName(iterator), mIndStart(start), mIndEnd(end), mStep(step),
+	mType(type), mContainerName("")
 {}
 
-
-For::For (Node * left, Node * right, const string & name, const string & container) : Node(left, right), ind_name(name), ind_begin(""), ind_end(""), step(""), type(""), container_name(container)
+For::For (Node * left, const string & iterator, const string & container):
+    Node(left, nullptr), mIteratorName(iterator), mIndStart(nullptr), mIndEnd(nullptr),
+	mStep(nullptr), mType(""), mContainerName(container)
 {}
 
 
 //forall i in 1..10 (step X)
 string For::preTranslate() const
 {
+	ostringstream oss;
+	const string& start= mIndStart->translate();
+	const string& end= mIndEnd->translate();
+	const string& step= mStep->translate();
+
 	string res = "for (";
-	if (container_name.empty()) {
-		if (!type.empty()) res += type + " ";
-		res += ind_name + " = " + ind_begin + "; " + ind_name + " <= " + ind_end + "; " + ind_name + " += " + step + ") {";
+	if (mContainerName.empty()) {
+		// Type definition
+		if (!mType.empty()) oss << mType;
+		else oss << "auto";
+
+	    oss << " " << mIteratorName << " = " << start << "; " << mIteratorName << " <= " << end << "; "
+            << mIteratorName << " += "<< step;
 	}
 	else {
-		res += "auto " + ind_name + " : " + container_name + ") {";
+		oss << "auto " << mIteratorName << " : " << mContainerName;
 	}
+
+    res+= oss.str() + ") {\n";
 	return res;
 }
 
 string For::postTranslate() const
 {
-    return "}";
+    return "}\n";
 }
 

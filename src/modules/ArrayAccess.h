@@ -13,7 +13,7 @@
 class ArrayAccess : public Node {
 	
 protected:	
-	std::string arrayName;
+	std::string mArrayName;
     int index;
 
 public:
@@ -32,7 +32,7 @@ public:
     * @param ind : index to access
     * @author Ismail ELFAQIR
     */
-    ArrayAccess(Node * left, Node * right, const std::string & arrayN, int ind);
+    ArrayAccess(Node * left, Node * right, const std::string & arrayName, int ind);
 
 
     /**
@@ -44,6 +44,12 @@ public:
     /* * * * * * * * * * * * * *
     * ACCESSORS  AND MUTATORS *
     * * * * * * * * * * * * * */
+
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getName() const { return "Array access"; }
 
     /**
     * getter of array

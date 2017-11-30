@@ -13,9 +13,6 @@
  */
 class Node {
 
-protected:
-    std::string name;
-
 private:
     Node* left_son;
     Node* right_son;
@@ -27,17 +24,11 @@ public:
     Node();
 
     /**
-     * @brief Constructor with a name
-     * @param name : Name of the node
-     */
-    Node(const std::string& _name);
-
-    /**
      * @brief Constructor with nodes
      * @param left : pointer to the left son
      * @param right : pointer to the right son
      */
-    Node(Node* left, Node* right, const std::string & _name = "");
+    Node(Node* left, Node* right);
 
     /**
      * @author ROUINEB Hamza
@@ -46,12 +37,7 @@ public:
      */
     virtual ~Node();
 
-    /**
-     * @brief getter on name
-     * @return the name of the node. May be an empty string
-     */
-    inline const std::string & getName() const { return name; }
-    
+private:
     /**
      * @brief setter on left son
      * @param node : New left son
@@ -61,12 +47,33 @@ public:
     /**
      * @brief setter on right son
      * @param node : New right son
+     * @note should only be could right after the node construction
      */
     void setRightSon(Node* son);
+
+protected:
+    /**
+     * @brief Get some details about the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string details() const { return ""; }
+
+public:
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual const std::string getName() const =0;
+    
+    /**
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
+     */
+    virtual inline const std::string getDetails() const { return getName() +": "+ details(); }
     
     /**
      * @brief Add a right son to the last of the right sons
-     * @param node : New right son
+     * @param child : New right son
      * 
      * If there is already a right son, the right son of the group formed by the current
      * son and all its right sons (the right of its right son, of its ... etc) is the

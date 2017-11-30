@@ -3,7 +3,7 @@
 using namespace std;
 
 If::If(Node * left, Node * elseNode, Node * condition):
-	Node(left, elseNode, "If"), cond(condition)
+	Node(left, elseNode), cond(condition)
 { }
 
 string If::preTranslate() const
@@ -20,5 +20,5 @@ string If::preTranslate() const
 
 string If::postTranslate() const
 {
-    return "}";
+    return "}\n";
 }

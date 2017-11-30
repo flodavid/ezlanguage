@@ -2,8 +2,9 @@
 
 using namespace std;
 
-
-Container::Container(Node * left, Node * right, const string & nameC, const string & typeC, const string & typeE, const string & listI): Node(left, right), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI)
+Container::Container(Node * left, const string & nameC, const string & typeC,
+                    const string & typeE, const string & listI, unsigned size):
+	CommonDeclaration(left, nameC), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI), mSize(size)
 {}
 
 
@@ -12,19 +13,20 @@ string Container::preTranslate() const
 	string res;
 
 	if (typeContainer == "array") {
+        res= typeElement + " " + nameContainer + "[";
 		if (!listInit.empty()) {
-			res = typeElement + " " + nameContainer + "[] = {" + listInit + "}";
+			res+= "] = {" + listInit + "}";
 		}
 		else {
-			res = typeElement + " " + nameContainer + "[" + to_string(size) + "]";
+			res+= to_string(mSize) + "]";
 		}
-		res += ";";
+		res+= ";";
 	}
 	else {
-		res = typeContainer + "<" + typeElement + "> " + nameContainer;
+		res= "std::"+ typeContainer + "<" + typeElement + "> " + nameContainer;
 		
-		if ((size != 0) && ((typeContainer == "list") || (typeContainer == "vector"))) {
-			res += "(" + to_string(size) + ")";
+		if ((mSize != 0) && (typeContainer == "list" || typeContainer == "vector")) {
+			res += "(" + to_string(mSize) + ")";
 		}
 		res += ";";
 	}
