@@ -2,6 +2,8 @@ program main_simple_vide
 //author: Valentin GINISTY
 //+ test commentaires
 
+include "sstream"
+
 procedure hello_world()
 print "Hello World !"
 end

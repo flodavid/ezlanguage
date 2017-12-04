@@ -4,9 +4,9 @@ std::string INPUT_FUNC_NAME = "getUserInput";
 
 using namespace std;
 
-Program::Program(std::string name, Node* right) : Node(nullptr, right)
+Program::Program(std::string name, Node* left, Node* right):
+    Node(left, right), mName(name)
 {
-    mName= name; // TODO
     debugNode("Program : " + mName, AT);
 }
 
@@ -15,7 +15,11 @@ string Program::preTranslate() const
     return 
 "#include <string>\n"
 "#include <iostream>\n"
-"#include <cstdlib>\n"
+"#include <cstdlib>";
+}
+
+string Program::postTranslate() const {
+    return 
 "\n"
 "void "+ INPUT_FUNC_NAME +"(bool* input) {\n"
 "    std::string user_input;\n"

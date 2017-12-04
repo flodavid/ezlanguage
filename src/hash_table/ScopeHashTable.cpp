@@ -37,9 +37,8 @@ void ScopeHashTable::decScope()
   if (_currentScope == 0) throw string("Can not have a scope less than zero");
   else {
     list<list<VariableHashed>::iterator>::iterator it;
-    int index;
     for (it = _scopeStack.top().begin(); it != _scopeStack.top().end(); ++it) {
-      index = hash( (*it)->get_id() );
+      int index = hash( (*it)->get_id() );
       this->at(index).erase(*it);
     }
     _scopeStack.pop();

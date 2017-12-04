@@ -11,7 +11,6 @@ class If : public Node {
 
 protected:
 	Node * cond;
-    int block_type;
 	
 public:
     /* * * * * * * * *

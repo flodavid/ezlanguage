@@ -15,9 +15,9 @@
 */
 
 //Add some help to add number inside a string
-std::string operator+ (std::string s, int i);
-std::string operator+ (std::string s, double i);
-std::string operator+ (std::string s, float i);
+std::string operator+ (std::string &s, int i);
+std::string operator+ (std::string &s, double i);
+std::string operator+ (std::string &s, float i);
 
 //as the document of Morgan (Fonctions string.pdf) i added this functions 
 

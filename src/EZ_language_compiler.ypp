@@ -131,7 +131,7 @@ int yycolumn = 1;
 %type<transNode> expression basicExpression integerExpression
 
 // Non basic elements
-%type<tree> function_string statement_sequence forBody affect streamedExpressions argumentsSeparated
+%type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
 %type<tree> objectFunctionCall
 %type<texte> names nbrOrName // param_type
 %type<texte> for.decl for.type returnstype facultativeAssignment var.decl array.decl vect.decl
@@ -155,29 +155,30 @@ program:
   // baseROOT
   program.methods NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 	{
-		Node* p_imports = $4;
-    // Node* p_decl_parameters = $5; TODO parameters declaration implementation
-		Node* p_decl_classes = $6;
-		Node* p_decl_vars = $7;
-		Node* p_decl_methods = $8;
-		Program *racine = new Program($2, p_imports);
-    /* TODO add program arguments logic */
-    
     if ($9 != $2) {
         cerr<< "Program and main procedure should have same names"<< endl;
         exit(EXIT_FAILURE);
     }
-    
-		Node* p_prog = $11;
-    // $5 : parameters (vector<Variable*>)
-    // @see main : procedure or function with int return ?
-    Procedure* main= new Procedure("main", $5, p_prog);
 
-    p_imports->addRightChild(p_decl_classes);
-		p_decl_classes->addRightChild(p_decl_vars);
+    // Symbols naming
+		Node* p_imports = $4;
+    Node* p_decl_parameters = $5;
+		Node* p_decl_classes = $6;
+		Node* p_decl_vars = $7;
+		Node* p_decl_methods = $8;
+    Node* p_prog = $11;
+    /* TODO add program arguments logic */
+    // @see main : procedure or function with int return ?
+    Procedure* main= new Procedure("main", p_decl_parameters, p_prog);
+
+    // Progam declaration and nodes relations
+		Program *racine = new Program($2, p_imports, p_decl_classes);
+    
+    p_decl_classes->addRightChild(p_decl_vars);
     p_decl_vars->addRightChild(p_decl_methods);
     p_decl_methods->addRightChild(main);
 
+    // Translation
 		const std::string & translation= racine->translate();
     delete racine;
 
@@ -204,8 +205,8 @@ emptyOrJump:
 
 // import modules or libraries
 program.imports:
-  /* empty */
-  { $$= new TranslatedNode(""); }
+  emptyOrJump
+  { $$= new TranslatedNode("\n"); }
 | program.imports import {
     /* TODO import logic */
     debugYacc("import", AT);
@@ -215,8 +216,8 @@ program.imports:
 ;
 
 program.parameters:
-  /* empty */
-  { $$ = new TranslatedNode(""); }
+  emptyOrJump
+  { $$ = new TranslatedNode("\n"); }
 // | PARAMETERS BACK_LINE param_args END endargument next_line {
 //     /* TODO arguements declaration logic */
 //     debugYacc("arguments declaration", AT);
@@ -226,8 +227,8 @@ program.parameters:
 ;
 
 program.classes:
-  /* empty */
-  { $$= new TranslatedNode(""); }
+  emptyOrJump
+  { $$= new TranslatedNode("\n"); }
 | program.classes class
 	{
     debugYacc("class declared: "+ $1->getDetails(), AT);
@@ -260,21 +261,16 @@ program.classes:
 /* imports */
 import:
   IMPORT NAME BACK_LINE {
-    /* TODO import logic (name of module) */
+    /* TODO import logic: check file existance and compile it (with its cpp) */
     debugYacc("importation du module "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"\n");
+    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +".h\"\n");
     $$= trans_node;
   }
+  // For C++ system file include
 | INCLUDE string BACK_LINE {
-    /* TODO include import logic */
     debugYacc(" inclusion de la bibliothèque "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include "+ $2+ "\n");
-    $$= trans_node;
-  }
-| LIBRARY string BACK_LINE {
-    /* TODO library import logic */
-    debugYacc(" inclusion de la LIBRARY "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include "+ $2+ "\n");
+    std::string import_name= replace($2, "\"", "");
+    TranslatedNode* trans_node= new TranslatedNode("#include <"+ import_name+ ">\n");
     $$= trans_node;
   }
 ;
@@ -624,28 +620,28 @@ for.step: // @see do step should be text or numeric_value ?
   STEP expression { $$= $2; }
 ;
 
-forBody:
+for.body:
   DO BACK_LINE statement_sequence END endfor { $$ = $3; }
 ;
 
 // TODO Add 'for' logics that handle going through containers
 for:
-  for.decl for.rangeStart for.rangeEnd forBody {
+  for.decl for.rangeStart for.rangeEnd for.body {
     debugYacc("FOR  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     $$ = new For($1,$2,$3,simpleStep,$4);
   }
-| for.decl for.rangeStart for.rangeEnd for.step forBody {
+| for.decl for.rangeStart for.rangeEnd for.step for.body {
     debugYacc("FOR  IN .. STEP ...", AT);
     $$ = new For($1,$2,$3,$4,$5);
   }
-| for.decl for.type for.rangeStart for.rangeEnd forBody {
+| for.decl for.type for.rangeStart for.rangeEnd for.body {
     /* TODO 'for a is TYPE in b .. c' logic */
     debugYacc("FOR type  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     $$ = new For($1,$3,$4,simpleStep,$5,$2);
   }
-| for.decl for.type for.rangeStart for.rangeEnd for.step forBody {
+| for.decl for.type for.rangeStart for.rangeEnd for.step for.body {
     /* TODO 'for a is TYPE in b .. c step x' logic */
     debugYacc("FOR type  IN .. STEP ...", AT);
     $$ = new For($1,$3,$4,$5,$6,$2);
@@ -1241,48 +1237,9 @@ void yyerror(const std::string& mess){
     existing_parsing_error= true;
 }
 
-// int
-// yylex (void)
-// {
-//   int c;
-
-//   /* Skip white space.  */
-//   while ((c = getchar ()) == ' ' || c == '\t')
-//     ++yylloc.last_column;
-
-//   /* Step.  */
-//   yylloc.first_line = yylloc.last_line;
-//   yylloc.first_column = yylloc.last_column;
-
-//   /* Process numbers.  */
-//   if (isdigit (c))
-//     {
-//       yylval = c - '0';
-//       ++yylloc.last_column;
-//       while (isdigit (c = getchar ()))
-//         {
-//           ++yylloc.last_column;
-//           yylval = yylval * 10 + c - '0';
-//         }
-//       ungetc (c, stdin);
-//       return NUM;
-//     }
-
-//   /* Return end-of-input.  */
-//   if (c == EOF)
-//     return 0;
-
-//   /* Return a single char, and update location.  */
-//   if (c == '\n')
-//     {
-//       ++yylloc.last_line;
-//       yylloc.last_column = 0;
-//     }
-//   else
-//     ++yylloc.last_column;
-//   return c;
-// }
-
+void yyprint(const std::string& msg){
+    std::cout << "[l" << yylineno << "] "<< msg<< std::endl;
+}
 
 // void yyerror(const char *s, ...){
 //   va_list ap;
@@ -1294,7 +1251,3 @@ void yyerror(const std::string& mess){
 //   vfprintf(stderr, s, ap);
 //   fprintf(stderr, "\n");
 // }
-
-void yyprint(const std::string& msg){
-    std::cout << "[l" << yylineno << "] "<< msg<< std::endl;
-}
