@@ -118,7 +118,7 @@ void display(vector<char*> fic_ezl){
  * @param gpp_command commande gpp execute
  * @param output_name nom de l'output
  */
-int exec_cpp(std::string & gpp_command, std::string output_name){
+int exec_cpp(std::string & gpp_command, std::string & output_name){
     //cout << "commande cpp: " << gpp_command << endl;
     int system_return= EXIT_SUCCESS;
 	if(help != 1){

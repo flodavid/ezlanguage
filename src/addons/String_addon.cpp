@@ -3,15 +3,15 @@
 
 using namespace std;
 
-string operator+ (string s, int i)
+string operator+ (string & s, int i)
 {
     return s+to_string(i);
 }
-string operator+ (string s, double i)
+string operator+ (string & s, double i)
 {
     return s+to_string(i);
 }
-string operator+ (string s, float i)
+string operator+ (string & s, float i)
 {
     return s+to_string(i);
 }

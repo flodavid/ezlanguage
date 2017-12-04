@@ -22,7 +22,7 @@ public:
      * @param prg_name : name of the program
      * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
      */
-    Program(std::string name, Node* imports, Node* right);
+    Program(std::string & name, Node* imports, Node* right);
     
 
     /**

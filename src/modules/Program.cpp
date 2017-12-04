@@ -4,7 +4,7 @@ std::string INPUT_FUNC_NAME = "getUserInput";
 
 using namespace std;
 
-Program::Program(std::string name, Node* left, Node* right):
+Program::Program(std::string & name, Node* left, Node* right):
     Node(left, right), mName(name)
 {
     debugNode("Program : " + mName, AT);
