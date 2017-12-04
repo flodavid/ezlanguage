@@ -1,5 +1,4 @@
-program main_simple_vide
-//author: Valentin GINISTY
+program main_simple
 //+ test commentaires
 
 include "sstream"
@@ -8,7 +7,7 @@ procedure hello_world()
 print "Hello World !"
 end
 
-main_simple_vide
+main_simple
 /*
 this is
 
@@ -26,22 +25,9 @@ a multiple lines comment
     b is boolean
     name is string
 
-    print "What's your name ?"
-    input in name
-    print "Hello " name ", are you happy ?"
-    input in b
-
-    if b
-    then print "Cool !"
-    else print "So sad :'("
-    end if
-
     for i is integer in 1..7 step 2 do
         print "for looping, i : " i
     end
-    print "how many loops ?"
-    input in a
-    print "a: " a
 
     while a - 1 * 2 > 0 do
         a = a -1

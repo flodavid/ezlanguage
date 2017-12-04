@@ -1,0 +1,29 @@
+program main_inputs
+
+main_inputs
+    a is integer
+    happiness is boolean
+    name is string
+
+    print "What's your name ?"
+    input in name
+    print "Hello " name ", are you happy ?"
+    input in happiness
+
+    if happiness
+    then print "Cool !"
+    else print "So sad :'("
+    end if
+
+    for i is integer in 1..7 step 2 do
+        print "for looping, i : " i
+    end
+    print "how many loops ?"
+    input in a
+    print "a: " a
+
+    while a > 0 do
+        a = a -1
+        print "a : " a
+    end while
+end
