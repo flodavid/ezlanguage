@@ -39,8 +39,6 @@ script:
   - bash basic_tests.sh && echo -e "\nResults tests\n =======\n" && ./*.run ; rm -f *.run ; echo -e "\n =======\n"
 
 after_success:
-# Run exectuables
-  - ../1_main_example.run
 # Launch other tests
   - bash full_tests.sh && echo -e "\nResults\n =======\n" && ./*.run ; rm -f *.run ; echo -e "\n =======\n"
   - cd ../examples

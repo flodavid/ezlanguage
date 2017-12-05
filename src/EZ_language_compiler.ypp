@@ -13,6 +13,7 @@
 #include "../src/hash_table/VariableHashed.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
 #include "../src/declarations/Class.h"
+#include "../src/declarations/Container.h"
 #include "../src/declarations/Function.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
@@ -71,7 +72,7 @@ int yycolumn = 1;
 
 
 // Tokens
-%token<texte>	NUM_INTEGER     // Integer
+%token<texte> NUM_INTEGER     // Integer
 %token<texte>	NUM_REAL			  // Real
 %token<texte> NAME RETOUR STRING STRING_PARAM
 %token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
@@ -119,7 +120,7 @@ int yycolumn = 1;
 // %type<vectString> 
 %type<tree> arguments argumentsList argumentElement
 %type<tree> method affectation containerDeclaration
-%type<tree> map_declaration array_declaration vector_declaration list_declaration set_declaration
+%type<tree> map_declaration arrayDeclaration vector_declaration list_declaration set_declaration
 %type<tree> destruct printing input // TODO overloading
 %type<tree> if when while repeat for else
 %type<tree> function procedure class import
@@ -133,8 +134,9 @@ int yycolumn = 1;
 // Non basic elements
 %type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
 %type<tree> objectFunctionCall
-%type<texte> names nbrOrName // param_type
-%type<texte> for.decl for.type returnstype facultativeAssignment var.decl array.decl vect.decl
+%type<texte> names intOrName // nbrOrName
+%type<texte> for.decl for.type var.decl vect.decl array.decl array.type
+%type<texte> returnstype facultativeAssignment
 %type<transNode> for.step for.rangeStart for.rangeEnd
 
 // Parameters
@@ -517,7 +519,7 @@ statement:
 
 containerDeclaration:
   map_declaration     { $$ = $1; }
-| array_declaration   { $$ = $1; }
+| arrayDeclaration   { $$ = $1; }
 | vector_declaration  { $$ = $1; }
 | list_declaration    { $$ = $1; }
 | set_declaration     { $$ = $1; }
@@ -994,10 +996,15 @@ facultativeAssignment:
 | NAME EQUALS   { $$ = $1; }
 ;
 
-nbrOrName:
-  NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
-| NUM_REAL    { /* $$ = Real($1); */ }
-| NAME        { /* $$ = String($1); */ }
+// nbrOrName:
+//   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
+// | NUM_REAL    { /* $$ = Real($1); */ }
+// | NAME        { /* $$ = String($1); */ }
+// ;
+
+intOrName:
+  NUM_INTEGER { $$ = $1; }
+| NAME        { $$ = $1; }
 ;
 
 /* ******************
@@ -1141,14 +1148,26 @@ array.decl:
   var.decl ARRAY LEFT_BRACKET { $$ = $1; }
 ;
 
-array_declaration:
-  scope array.decl NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope array.decl NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope array.decl NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
-| scope array.decl NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope array.decl NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope array.decl NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| scope array.decl NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
+array.type:
+  RIGHT_BRACKET OF type { $$ = $3; }
+;
+
+// TODO handle scope for array
+arrayDeclaration:
+/* scope */ array.decl NUM_INTEGER array.type
+  {
+    debugYacc("array declaration with size"+ $2, AT);
+    // TODO check that size as a correct format (>0)
+    $$ = new Container($1, "array", $3, atoi($2.c_str()));
+  }
+  // @see if names should be replaced by 'arguments'
+  // TODO array declaration with init list
+// | /* scope */ array.decl array.type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE
+//   {
+//     debugYacc("array declaration with initializer list", AT);
+//     $$ = new Container($1, "array", $2, $5);
+//   }
+// | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type { printf("array declaration with lower and upper bound\n"); }
 ;
 
 //    -----------------------------vector declaration----------------------------------------

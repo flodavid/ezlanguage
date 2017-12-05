@@ -7,7 +7,7 @@
  * @class Container
  * @brief Node of the tree whhich represent the declaration of a container
  * 
- * @author LAHYANI Zakaria - Ismail ELFAQIR
+ * @author LAHYANI Zakaria - Ismail ELFAQIR - Johan Defaye
  */
 class Container : public CommonDeclaration {
 	
@@ -25,7 +25,20 @@ public:
      * * * * * * * * */
 
    /**
-    * Constructor with parameters
+    * Constructor with size
+    * @param left: left son 
+    * @param right : right son
+    * @param nameC : name of the container
+    * @param typeC : type of the container
+    * @param typeE : type of the element in the container
+    * @param size : size the container
+    * @author Johan Defaye
+    */
+    Container(const std::string & nameC, const std::string & typeC,
+            const std::string & typeE, unsigned size);
+    
+   /**
+    * Constructor with initialisation list
     * @param left: left son 
     * @param right : right son
     * @param nameC : name of the container
@@ -34,8 +47,8 @@ public:
     * @param listI : list of initialisation (only available for the "array")
     * @author Johan Defaye
     */
-    Container(Node * left, const std::string & nameC, const std::string & typeC,
-            const std::string & typeE, const std::string & listI, unsigned size = 0);
+    Container(const std::string & nameC, const std::string & typeC,
+            const std::string & typeE, const std::string & listI);
 
 
     /**

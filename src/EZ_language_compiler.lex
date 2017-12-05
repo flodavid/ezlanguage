@@ -39,7 +39,7 @@ minus     [-]
 
 {separators}   	{ /* On ignore */ }
 {comment}   	{ /* Ignore it */ cout << "Comment"<<endl; }
-{integer}	{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
+{integer}		{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
 {reel}      	{ yylval.texte= yytext; return(NUM_REAL);}	// real
 
 {backLine}	return(BACK_LINE);
