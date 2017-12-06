@@ -18,6 +18,7 @@
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
 #include "../src/declarations/Variable.h"
+#include "../src/modules/ArrayAccess.h"
 #include "../src/modules/Node.h"
 #include "../src/modules/TranslatedNode.h"
 #include "../src/modules/BooleanExpression.h"
@@ -25,6 +26,7 @@
 #include "../src/modules/If.h"
 #include "../src/modules/Else.h"
 #include "../src/modules/For.h"
+#include "../src/modules/Repeat.h"
 #include "../src/modules/While.h"
 #include "../src/modules/Program.h" // Empty Node
 
@@ -122,22 +124,22 @@ int yycolumn = 1;
 %type<tree> method affectation containerDeclaration
 %type<tree> map_declaration arrayDeclaration vector_declaration list_declaration set_declaration
 %type<tree> destruct printing input // TODO overloading
-%type<tree> if when while repeat for else
-%type<tree> function procedure class import
+%type<tree> if while repeat for else // when
+%type<tree> function procedure class import 
 %type<tree> statement return functionCall simpleFunction
 %type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
 %type<texte> type string scope // TODO constancy
 %type<var>  simpleVariable variable // TODO variable_construct
 %type<condExpr> conditionalExpression boolean
-%type<transNode> expression basicExpression integerExpression
+%type<expr> expression basicExpression integerExpression
 
 // Non basic elements
 %type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
 %type<tree> objectFunctionCall
-%type<texte> names intOrName // nbrOrName
+%type<texte> names
 %type<texte> for.decl for.type var.decl vect.decl array.decl array.type
 %type<texte> returnstype facultativeAssignment
-%type<transNode> for.step for.rangeStart for.rangeEnd
+%type<expr> for.step for.rangeStart for.rangeEnd
 
 // Parameters
 // %define parse.trace
@@ -500,7 +502,7 @@ statement:
     $1->addRightChild(semicolon);
     $$ = $1;
   }
-| containerDeclaration  { $$ = $1; }
+| containerDeclaration { $$ = $1; }
 | functionCall {
     TranslatedNode* semicolon= new TranslatedNode(";\n");
     $1->addRightChild(semicolon);
@@ -511,18 +513,21 @@ statement:
 | input     { $$ = $1; }
 // | overloading { $$ = $1; }
 | if        { $$ = $1; }
-| when      { $$ = $1; }
+
 | while     { $$ = $1; }
 | repeat    { $$ = $1; }
 | for       { $$ = $1; }
+// TODO add when implementation ?
+// | when      { $$ = $1; }
 ;
 
+// TODO Add other container declarations
 containerDeclaration:
-  map_declaration     { $$ = $1; }
-| arrayDeclaration   { $$ = $1; }
-| vector_declaration  { $$ = $1; }
-| list_declaration    { $$ = $1; }
-| set_declaration     { $$ = $1; }
+  arrayDeclaration   { $$ = $1; }
+// | map_declaration     { $$ = $1; }
+// | vector_declaration  { $$ = $1; }
+// | list_declaration    { $$ = $1; }
+// | set_declaration     { $$ = $1; }
 ;
 
 // TODO Avoid shift/reduce by factorising shared/not shared
@@ -561,42 +566,42 @@ if:
   }
 ;
 
-when:
-  WHEN conditionalExpression IS BACK_LINE whenbody whendefault END endwhen {
-    /* TODO when logic */
-    debugYacc("when .. case ..", AT);
-  }
-;
+// when:
+//   WHEN conditionalExpression IS BACK_LINE whenbody whendefault END endwhen {
+//     /* TODO when logic */
+//     debugYacc("when .. case ..", AT);
+//   }
+// ;
 
-whenbody: /* whenbody can't be empty */
-  CASE expression BACK_LINE statement_sequence END endcase {
-    /* TODO whenbody logic 1 */
-    cout << "case body" << endl;
-  }
-| CASE expression BACK_LINE statement_sequence END endcase whenbody {
-    /* TODO whenbody logic 2 */
-    cout << "case body" << endl;
-  }
-;
+// when.body: /* whenbody can't be empty */
+//   CASE expression BACK_LINE statement_sequence END endcase {
+//     /* TODO whenbody logic 1 */
+//     cout << "case body" << endl;
+//   }
+// | CASE expression BACK_LINE statement_sequence END endcase whenbody {
+//     /* TODO whenbody logic 2 */
+//     cout << "case body" << endl;
+//   }
+// ;
 
-whendefault: /* May not be specified */
-  /* empty */
-| DEFAULT BACK_LINE statement_sequence END endcase {
-    /* TODO whendefault logic 1 */
-  }
-;
+// when.default: /* May not be specified */
+//   /* empty */
+// | DEFAULT BACK_LINE statement_sequence END endcase {
+//     /* TODO whendefault logic 1 */
+//   }
+// ;
 
 while:
   WHILE conditionalExpression DO BACK_LINE statement_sequence END endwhile {
     debugYacc("WHILE .. DO ..", AT);
-    $$ = new While($5, $2);
+    $$ = new While($2, $5);
   }
 ;
 
 repeat:
-  REPEAT statement_sequence UNTIL BACK_LINE expression BACK_LINE END endrepeat {
-    /* TODO repeat-until logic */
+  REPEAT BACK_LINE statement_sequence UNTIL conditionalExpression lineend {
     debugYacc("REPEAT .. UNTIL ..", AT);
+    $$ = new Repeat($3, $5);
   }
 ;
 
@@ -806,6 +811,33 @@ next_line:
 | next_line BACK_LINE /* Nothing to do */
 ;
 
+// @see tranform TranslatedNode by Expression or subclass use ?
+expression:
+  /* TODO check that there is no other operators*/
+  expression arithmeticOperator expression {
+    debugYacc("Operation between two expressions", AT);
+    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ", $3);
+
+    $1->addRightChild(arithOperator);
+    $$ = $1;
+  }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
+    TranslatedNode* parenthExpr= new TranslatedNode("("+ $2->translate() +")");
+    delete $2;
+    $$ = parenthExpr;
+  }
+| basicExpression {
+    debugYacc("expression from basicExpression", AT);
+    $$ = $1;
+  }
+  // Container access
+| NAME LEFT_BRACKET integerExpression RIGHT_BRACKET {
+    debugYacc("expression from container access", AT);
+    
+    $$ = new ArrayAccess($1, $3);
+  }
+;
+
 // TODO handle parenthesis logic. Rework needs to be done on BooleanExpression class
 conditionalExpression:
   boolean { $$ = $1; }
@@ -833,26 +865,6 @@ conditionalExpression:
     BooleanExpression* comparison= new BooleanExpression($2,$1,$3);
 
     $$ = comparison;
-  }
-;
-
-expression:
-  /* TODO check that there is no other operators*/
-  expression arithmeticOperator expression {
-    debugYacc("Operation between two expressions", AT);
-    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ", $3);
-
-    $1->addRightChild(arithOperator);
-    $$ = $1;
-  }
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
-    TranslatedNode* parenthExpr= new TranslatedNode("("+ $2->translate() +")");
-    delete $2;
-    $$ = parenthExpr;
-  }
-| basicExpression {
-    debugYacc("expression from basicExpression", AT);
-    $$ = $1;
   }
 ;
 
@@ -996,16 +1008,11 @@ facultativeAssignment:
 | NAME EQUALS   { $$ = $1; }
 ;
 
-// nbrOrName:
+// numberExpression:
 //   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
 // | NUM_REAL    { /* $$ = Real($1); */ }
 // | NAME        { /* $$ = String($1); */ }
 // ;
-
-intOrName:
-  NUM_INTEGER { $$ = $1; }
-| NAME        { $$ = $1; }
-;
 
 /* ******************
  *    OPERATORS     *
@@ -1088,11 +1095,6 @@ endwhile:
 endfor:
   lineend
 | FOR lineend {}
-;
-
-endrepeat:
-  lineend
-| REPEAT lineend {}
 ;
 
 enddestruct:

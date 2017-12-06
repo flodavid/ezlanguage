@@ -3,13 +3,18 @@
 
 using namespace std;
 
-While::While(Node * left, Node * cond):
-    Node(left, nullptr), condition(cond)
+While::While(ConditionalExpression * cond, Node * left):
+    Node(left, nullptr), mCondition(cond)
 {}
 
+While::~While()
+{
+    delete mCondition;
+}
+
+
 string While::preTranslate() const {
-    string res = "while (" + condition->translate() + ") {\n";
-    return res;
+    return "while (" + mCondition->translate() + ") {\n";
 }
 
 string While::postTranslate() const

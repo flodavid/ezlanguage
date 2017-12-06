@@ -2,6 +2,7 @@
 #define IF_H
 
 #include "Node.h"
+#include "ConditionalExpression.h"
 
 /**
  * @brief Node of the tree which represent a condition else
@@ -10,7 +11,7 @@
 class If : public Node {
 
 protected:
-	Node * cond;
+	ConditionalExpression * mCondition;
 	
 public:
     /* * * * * * * * *
@@ -26,8 +27,13 @@ public:
     * @param bt : block if, else or elseif
     * @author Ismail ELFAQIR
     */
-    If(Node * left, Node * elseNode, Node * condition);
-    
+    If(Node * left, Node * elseNode, ConditionalExpression * condition);
+        
+    /**
+     * @brief destructor
+     */
+    virtual ~If();
+
 
     /**
      * @brief Get the name of the node

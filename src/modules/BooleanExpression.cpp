@@ -17,8 +17,8 @@ BooleanExpression::BooleanExpression(const string & binary_operator, const Condi
     right_part(second_operande)
 { }
 
-BooleanExpression::BooleanExpression(const string & relational_operator, const TranslatedNode* first_expression,
-        const TranslatedNode* second_expression):
+BooleanExpression::BooleanExpression(const string & relational_operator, const Expression* first_expression,
+        const Expression* second_expression):
     strOperator(relational_operator), value(""), left_part(first_expression),
     right_part(second_expression)
 { }

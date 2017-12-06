@@ -2,6 +2,7 @@
 #define WHILE_H
 
 #include "Node.h"
+#include "ConditionalExpression.h"
 
 /**
  * @brief Represent a node of the tree which will traduct the loop while
@@ -18,7 +19,7 @@
 class While : public Node {
 	
 protected:
-	Node * condition;
+	ConditionalExpression * mCondition;
 	
 public:
     
@@ -28,7 +29,12 @@ public:
      * @param right : right son
      * @param cond : condition of the loop
      */
-    While(Node * left, Node * cond);
+    While(ConditionalExpression * cond, Node * left);
+
+    /**
+     * @brief destructor
+     */
+    virtual ~While();
         
 
     /**

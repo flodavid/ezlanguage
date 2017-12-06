@@ -2,13 +2,19 @@
 
 using namespace std;
 
-If::If(Node * left, Node * elseNode, Node * condition):
-	Node(left, elseNode), cond(condition)
+If::If(Node * left, Node * elseNode, ConditionalExpression * condition):
+	Node(left, elseNode), mCondition(condition)
 { }
+
+If::~If()
+{	
+    delete mCondition;
+}
+
 
 string If::preTranslate() const
 {
-    string res="if(" + cond->translate() + ") ";
+    string res="if(" + mCondition->translate() + ") ";
 
     res+= "{\n";
     

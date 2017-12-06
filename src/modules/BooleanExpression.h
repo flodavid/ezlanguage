@@ -5,7 +5,7 @@
 
 #include "../addons/String_addon.h"
 #include "ConditionalExpression.h"
-#include "TranslatedNode.h"
+#include "Expression.h"
 
 /**
  * @brief Represent a node of the tree which will traduct a expression such as:
@@ -51,8 +51,8 @@ public:
      * @param first_expression : the first expression
      * @param second_expression : the second expression
      */
-    BooleanExpression(const std::string & relational_operator, const TranslatedNode* first_expression,
-                        const TranslatedNode* second_expression);
+    BooleanExpression(const std::string & relational_operator, const Expression* first_expression,
+                        const Expression* second_expression);
     
 
     /**

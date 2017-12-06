@@ -27,6 +27,7 @@ typedef struct s_mon_type {
     std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
     Variable* var;
+    Expression* expr;
     ConditionalExpression* condExpr;
     TranslatedNode* transNode;
 //    MaClasse	une_maclasse;

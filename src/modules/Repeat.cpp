@@ -3,9 +3,14 @@
 
 using namespace std;
 
-Repeat::Repeat(Node * left, Node* right , Node * cond):
-    Node(left, right), condition(cond)
+Repeat::Repeat(Node * left, ConditionalExpression * cond):
+    Node(left, nullptr), mCondition(cond)
 {}
+
+Repeat::~Repeat()
+{
+    delete mCondition;
+}
 
 string Repeat::preTranslate() const
 {
@@ -14,5 +19,5 @@ string Repeat::preTranslate() const
 
 string Repeat::postTranslate() const
 {
-    return "} while(" + condition->translate() + ");\n";
+    return "} while(" + mCondition->translate() + ");\n";
 }
