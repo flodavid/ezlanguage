@@ -1,8 +1,8 @@
 #ifndef IF_H
 #define IF_H
 
-#include "Node.h"
-#include "ConditionalExpression.h"
+#include "../modules/Node.h"
+#include "../modules/ConditionalExpression.h"
 
 /**
  * @brief Node of the tree which represent a condition else

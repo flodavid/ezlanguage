@@ -8,7 +8,7 @@ enum operatorType { ARITHMETIC, BITWISE, RELATIONAL, LOGICAL, ALLOCATION, INCREM
 // @see Create subclasses for each operator type ?
 // TODO for the moment, only the arithmetic and relational (comparison) operators will be implemented
 
-#include "Node.h"
+#include "../modules/Node.h"
 
 /**
  * @brief 

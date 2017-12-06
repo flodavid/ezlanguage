@@ -1,8 +1,8 @@
 #ifndef WHILE_H
 #define WHILE_H
 
-#include "Node.h"
-#include "ConditionalExpression.h"
+#include "../modules/Node.h"
+#include "../modules/ConditionalExpression.h"
 
 /**
  * @brief Represent a node of the tree which will traduct the loop while

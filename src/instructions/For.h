@@ -1,8 +1,8 @@
 #ifndef FOR_H
 #define FOR_H
 
-#include "Node.h"
-#include "Expression.h"
+#include "../modules/Node.h"
+#include "../modules/Expression.h"
 
 /**
  * @brief Represent a node of the tree which will traduct a "for" loop

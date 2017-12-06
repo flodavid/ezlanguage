@@ -23,11 +23,11 @@
 #include "../src/modules/TranslatedNode.h"
 #include "../src/modules/BooleanExpression.h"
 #include "../src/modules/BooleanValue.h"
-#include "../src/modules/If.h"
-#include "../src/modules/Else.h"
-#include "../src/modules/For.h"
-#include "../src/modules/Repeat.h"
-#include "../src/modules/While.h"
+#include "../src/instructions/If.h"
+#include "../src/instructions/Else.h"
+#include "../src/instructions/For.h"
+#include "../src/instructions/Repeat.h"
+#include "../src/instructions/While.h"
 #include "../src/modules/Program.h" // Empty Node
 
 #include "../src/global.h"

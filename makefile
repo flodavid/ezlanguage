@@ -27,11 +27,13 @@ MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNod
 # Conditional expression
 MOD_CPP += src/modules/Expression.cpp src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp src/modules/ConditionalExpression.cpp
 # Divers
-MOD_CPP += src/modules/ArrayAccess.cpp src/modules/Operation.cpp
-# Instructions
-MOD_CPP += src/modules/If.cpp src/modules/Else.cpp src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
+MOD_CPP += src/modules/ArrayAccess.cpp
 
-ADDONS_CPP += src/addons/String_addon.cpp src/addons/log.cpp
+# Instructions
+INSTR_CPP = src/instructions/If.cpp src/instructions/Else.cpp src/instructions/Operation.cpp
+INSTR_CPP += src/instructions/For.cpp src/instructions/Repeat.cpp src/instructions/While.cpp
+
+ADDONS_CPP = src/addons/String_addon.cpp src/addons/log.cpp
 
 # declarations
 DEC_CPP = src/declarations/CommonDeclaration.cpp
@@ -44,15 +46,16 @@ HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_ta
 # declarations
 HT_CPP += src/hash_table/ClassHashed.cpp src/hash_table/FunctionHashed.cpp src/hash_table/VariableHashed.cpp
 
-ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${ADDONS_CPP} ${HT_CPP}
+ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${ADDONS_CPP} ${HT_CPP}
 
 #object files
 MOD_OBJ = $(MOD_CPP:src/modules/%.cpp=obj/%.o)
 DEC_OBJ = $(DEC_CPP:src/declarations/%.cpp=obj/%.o)
+INSTR_OBJ = $(INSTR_CPP:src/instructions/%.cpp=obj/%.o)
 ADDONS_OBJ = $(ADDONS_CPP:src/addons/%.cpp=obj/%.o)
 HT_OBJ = $(HT_CPP:src/hash_table/%.cpp=obj/%.o)
 
-ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
+ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${INSTR_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
 
 #dependency files
 ALL_DPDCY = $(ALL_OBJ:%.o=%.d)
@@ -86,6 +89,11 @@ obj/%.d: src/declarations/%.cpp
 	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
 	@echo ""
 
+obj/%.d: src/instructions/%.cpp
+	@echo -e "\033[1;33mDépendance pour le fichier $< créée : \033[0m"
+	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
+	@echo ""
+
 obj/%.d: src/modules/%.cpp
 	@echo -e "\033[1;33mDépendance pour le fichier $< créée : \033[0m" 
 	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
@@ -106,6 +114,11 @@ obj/%.d: src/addons/%.cpp
 
 #objects
 obj/%.o: src/declarations/%.cpp
+	@echo -e "\033[1;33mFichier objet pour le fichier $< créé : \033[0m"
+	$(CC) -c $< -o $@ $(CC_FLAGS)
+	@echo ""
+
+obj/%.o: src/instructions/%.cpp
 	@echo -e "\033[1;33mFichier objet pour le fichier $< créé : \033[0m"
 	$(CC) -c $< -o $@ $(CC_FLAGS)
 	@echo ""
