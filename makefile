@@ -32,6 +32,7 @@ MOD_CPP += src/modules/ArrayAccess.cpp
 # Instructions
 INSTR_CPP = src/instructions/If.cpp src/instructions/Else.cpp src/instructions/Operation.cpp
 INSTR_CPP += src/instructions/For.cpp src/instructions/Repeat.cpp src/instructions/While.cpp
+INSTR_CPP += src/instructions/Return.cpp
 
 ADDONS_CPP = src/addons/String_addon.cpp src/addons/log.cpp
 

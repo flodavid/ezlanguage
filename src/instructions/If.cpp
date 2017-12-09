@@ -6,6 +6,10 @@ If::If(Node * left, Node * elseNode, ConditionalExpression * condition):
 	Node(left, elseNode), mCondition(condition)
 { }
 
+If::If(Node * left, ConditionalExpression * condition):
+	Node(left, nullptr), mCondition(condition)
+{ }
+
 If::~If()
 {	
     delete mCondition;

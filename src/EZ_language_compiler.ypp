@@ -124,9 +124,11 @@ int yycolumn = 1;
 %type<tree> method affectation containerDeclaration
 %type<tree> map_declaration arrayDeclaration vector_declaration list_declaration set_declaration
 %type<tree> destruct printing input // TODO overloading
-%type<tree> if while repeat for else // when
+%type<tree> if while repeat for // when
+%type<elseNode> else
+%type<returnNode> return
 %type<tree> function procedure class import 
-%type<tree> statement return functionCall simpleFunction
+%type<tree> statement functionCall simpleFunction
 %type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
 %type<texte> type string scope // TODO constancy
 %type<var>  simpleVariable variable // TODO variable_construct
@@ -396,7 +398,7 @@ returnstype:
 return:
   RETURN expression
   {
-    TranslatedNode* returnWord= new TranslatedNode("return ", $2);
+    Return* returnWord= new Return($2);
     $$ = returnWord;
   }
 ;
@@ -553,7 +555,7 @@ variable:
 // If and loops
 else:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = nullptr; }
 | ELSE statement_sequence {
     $$ = new Else($2);
   }
@@ -766,18 +768,6 @@ destruct:
   }
 ;
 
-streamedExpressions:
-  /* empty */
-  { $$ = new TranslatedNode(""); }
-| streamedExpressions basicExpression {
-    TranslatedNode* streamOperator= new TranslatedNode("<< ");
-
-    $1->addRightChild(streamOperator);
-    $1->addRightChild($2);
-    $$ = $1;
-  }
-;
-
 // TODO create a function call cpp class, for input, string funcs and generics (and printing)
 input:
   INPUT IN NAME BACK_LINE {
@@ -789,8 +779,12 @@ input:
 printing:
   PRINT streamedExpressions BACK_LINE {
     debugYacc("print "+ $2->translate(), AT);
-    $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
-    delete $2;
+    if ($2 != nullptr) {
+      $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
+      delete $2;
+    } else {
+      $$ = new TranslatedNode("std::cout<< std::endl;\n", "Print (stdout)");
+    }
   }
 ;
 
@@ -800,6 +794,19 @@ printing:
 //     cout << "operateur " <<  $2 << endl;
 //   }
 // ;
+
+streamedExpressions:
+  /* empty */
+  { $$ = nullptr; }
+| streamedExpressions expression {
+    TranslatedNode* streamOperator= new TranslatedNode("<< ", $2);
+
+    if ($1 != nullptr) {
+      $1->addRightChild(streamOperator);
+      $$ = $1;
+    } else $$ = streamOperator;
+  }
+;
 
 /* *******************
  *  GENERIC COMPLEX  *

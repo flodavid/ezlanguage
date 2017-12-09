@@ -7,6 +7,8 @@
 #include "./modules/ConditionalExpression.h"
 #include "./declarations/Variable.h"
 #include "./declarations/Parameter.h"
+#include "./instructions/Else.h"
+#include "./instructions/Return.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
 #include <vector>
@@ -30,6 +32,8 @@ typedef struct s_mon_type {
     Expression* expr;
     ConditionalExpression* condExpr;
     TranslatedNode* transNode;
+    Else* elseNode;
+    Return* returnNode;
 //    MaClasse	une_maclasse;
 } mon_type;
 

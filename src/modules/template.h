@@ -1,5 +1,4 @@
-#ifndef IF_H
-#define IF_H
+#pragma once
 
 #include "../modules/Node.h"
 #include "../modules/ConditionalExpression.h"
@@ -8,7 +7,7 @@
  * @brief Node of the tree which represent a condition else
  */
 
-class If : public Node {
+class Template : public Node {
 
 protected:
 	ConditionalExpression * mCondition;
@@ -19,30 +18,22 @@ public:
     * * * * * * * * */
 
     /**
-     * Constructor of if with an else
+     * Constructor with parameters
      * @param left : left son
-     * @param condition : the condition of the if
      */
-    If(Node * left, Node * elseNode, ConditionalExpression * condition);
-
-    /**
-     * Constructor of if without else
-     * @param left : left son
-     * @param condition : the condition of the if
-     */
-    If(Node * left, ConditionalExpression * condition);
+    Template(Node * left);
         
     /**
      * @brief destructor
      */
-    virtual ~If();
+    virtual ~Template();
 
 
     /**
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "If"; }
+    virtual inline const std::string getName() const { return "Template"; }
 
     /* * * * * * * *
      * Translation *
@@ -67,4 +58,3 @@ public:
     virtual std::string postTranslate() const;
 
 };
-#endif

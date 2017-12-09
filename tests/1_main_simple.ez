@@ -26,8 +26,9 @@ a multiple lines comment
     c is array[3] of integer
     name is string
 
-    for i is integer in 1..7 step 2 do
+    for i is integer in 0..2 step 1 do
         print "for looping, i : " i
+        print "value of c[" i "]: " c[i]
     end
 
     while a - 1 * 2 > 0 do
