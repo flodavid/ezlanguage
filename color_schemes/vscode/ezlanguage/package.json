@@ -1,0 +1,26 @@
+{
+    "name": "ezlanguage",
+    "displayName": "ezlanguage highlighting",
+    "description": "Ezlanguage syntax highlighting",
+    "version": "0.0.1",
+    "publisher": "flodavid",
+    "engines": {
+        "vscode": "^1.18.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "ezlanguage",
+            "aliases": ["EZLanguage", "ezlanguage"],
+            "extensions": [".ez",".ezl",".ezlanguage"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "ezlanguage",
+            "scopeName": "source.ezlanguage",
+            "path": "./syntaxes/EZLanguage.tmLanguage"
+        }]
+    }
+}
