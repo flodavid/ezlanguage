@@ -92,13 +92,13 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\+\=|-\=|\*\=|/\=|//\=|%\=|&amp;\=|\|\=|\^\=|&gt;&gt;\=|&lt;&lt;\=|\*\*\=|@\=</string>
+			<string>\+\=|-\=|\*\=|/\=|%\=|&amp;\=|\|\=|\^\=|&gt;&gt;\=|&lt;&lt;\=|\*\*\=|@\=</string>
 			<key>name</key>
 			<string>keyword.operator.assignment.augmented.ezlanguage</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\+|\-|\*|\*\*|/|//|%|&lt;&lt;|&gt;&gt;|&amp;|\||\^|~|(?!^)@</string>
+			<string>\+|\-|\*|\*\*|/|%|&lt;&lt;|&gt;&gt;|&amp;|\||\^|~|(?!^)@</string>
 			<key>name</key>
 			<string>keyword.operator.arithmetic.ezlanguage</string>
 		</dict>
@@ -471,7 +471,7 @@
 			<key>match</key>
 			<string>(?x) \b(
 						elif | else | then | for | if | return | while | when | begin | end | do | step |
-						program |
+						program | is | in | of | or |
 						(yield(?:\s+from)?)
 					)\b
 					</string>
@@ -1301,7 +1301,7 @@
 		<key>builtin_types</key>
 		<dict>
 			<key>comment</key>
-			<string>These are from https://docs.ezlanguage.org/X/library/stdtypes.html
+			<string>These are from https://docs.python.org/X/library/stdtypes.html
       	  				where X is 2.7 or 3.5.</string>
 			<key>match</key>
 			<string>(?x)

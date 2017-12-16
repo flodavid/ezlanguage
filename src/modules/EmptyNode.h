@@ -6,7 +6,7 @@
  * @brief Node of the tree which represent a condition else
  */
 
-class Template : public Node {
+class EmptyNode : public Node {
 
 protected:
 	
@@ -16,22 +16,21 @@ public:
     * * * * * * * * */
 
     /**
-     * Constructor with parameters
-     * @param left : left son
+     * Constructor
      */
-    Template(Node * left);
+    EmptyNode();
         
     /**
      * @brief destructor
      */
-    virtual ~Template();
+    virtual ~EmptyNode();
 
 
     /**
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Template"; }
+    virtual inline const std::string getName() const { return "EmptyNode"; }
 
     /* * * * * * * *
      * Translation *
@@ -45,14 +44,5 @@ public:
      * to their specifications, specificities and own values
      */
     virtual std::string preTranslate() const;
-    
-    /**
-     * @brief Translate the end part of the If
-     * @return a string containing the C++ code of the If
-     *
-     * All subclasses, should reimplement this method so that the translation corresponds
-     * to their specifications, specificities and own values
-     */
-    virtual std::string postTranslate() const;
 
 };

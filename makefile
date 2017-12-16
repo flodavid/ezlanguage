@@ -1,46 +1,45 @@
-#compiler used
+# Compiler used
 CC = g++-5
-# compilation flags
+# Compilation flags
 CC_FLAGS = -Wall -std=c++11 -ggdb
 EXT_SRC = 
 CC_MOD_FLAGS = -MM #-MP 
 
-# lex file extensions (.XXX)
+# Lex file extensions (.XXX)
 LEX_EXT = lex
-# lex file interpreter : lexical analysis
+# Lex file interpreter : lexical analysis
 LEX = flex
 LEX_FlAGS =
 
-
-# extension des fichiers yacc (.XXX)
+# Yacc files extension (.XXX)
 YACC_EXT = ypp
 # interpréteur des fichiers Yacc : analyse syntaxique et sémantique
 YACC = bison -t
 YACC_FLAGS =
+
 
 # cpp sources
 # --- RAJOUTER CHAQUE FICHIER CPP DE MODULES ICI ! ---
 # --- FAIRE UN FICHIER CPP POUR CHAQUE FICHIER H S'IL Y A UNE CLASSE DEDANS ---
 
 # Core
-MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNode.cpp
+MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp
 # Conditional expression
-MOD_CPP += src/modules/Expression.cpp src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp src/modules/ConditionalExpression.cpp
+MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpression.cpp
 # Divers
-MOD_CPP += src/modules/ArrayAccess.cpp
+MOD_CPP += ArrayAccess.cpp Affectation.cpp Operator.cpp
 
 # Instructions
-INSTR_CPP = src/instructions/If.cpp src/instructions/Else.cpp src/instructions/Operation.cpp
-INSTR_CPP += src/instructions/For.cpp src/instructions/Repeat.cpp src/instructions/While.cpp
-INSTR_CPP += src/instructions/Return.cpp
+INSTR_CPP = If.cpp Else.cpp
+INSTR_CPP += For.cpp Repeat.cpp While.cpp
+INSTR_CPP += Return.cpp
 
+# Declarations
+DEC_CPP = CommonDeclaration.cpp
+DEC_CPP += Container.cpp Function.cpp Procedure.cpp Class.cpp Variable.cpp MultipleVariable.cpp Parameter.cpp
+
+# Addons
 ADDONS_CPP = src/addons/String_addon.cpp src/addons/log.cpp
-
-# declarations
-DEC_CPP = src/declarations/CommonDeclaration.cpp
-DEC_CPP += src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
-DEC_CPP += src/declarations/Class.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
-DEC_CPP += src/declarations/Parameter.cpp
 
 # hash table sources
 HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp
@@ -49,19 +48,19 @@ HT_CPP += src/hash_table/ClassHashed.cpp src/hash_table/FunctionHashed.cpp src/h
 
 ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${ADDONS_CPP} ${HT_CPP}
 
-#object files
-MOD_OBJ = $(MOD_CPP:src/modules/%.cpp=obj/%.o)
-DEC_OBJ = $(DEC_CPP:src/declarations/%.cpp=obj/%.o)
-INSTR_OBJ = $(INSTR_CPP:src/instructions/%.cpp=obj/%.o)
+# Object files
+MOD_OBJ = $(MOD_CPP:%.cpp=obj/%.o)
+DEC_OBJ = $(DEC_CPP:%.cpp=obj/%.o)
+INSTR_OBJ = $(INSTR_CPP:%.cpp=obj/%.o)
 ADDONS_OBJ = $(ADDONS_CPP:src/addons/%.cpp=obj/%.o)
 HT_OBJ = $(HT_CPP:src/hash_table/%.cpp=obj/%.o)
 
 ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${INSTR_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
 
-#dependency files
+# Dependency files
 ALL_DPDCY = $(ALL_OBJ:%.o=%.d)
 
-#executables
+# Executables
 # exe name, must have the same name as lex file
 EXEC = EZ_language_compiler
 

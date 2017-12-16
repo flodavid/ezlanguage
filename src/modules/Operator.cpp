@@ -1,13 +1,16 @@
 //@author : GARNIER Antoine
-#include "Operation.h"
+#include "Operator.h"
 
 using namespace std;
 
-Operation::Operation(const string & ope):
-    Node(nullptr, nullptr), opeChars(ope)
+Operator::Operator(const string & ope):
+    Node(nullptr, nullptr), mOpeChars(ope)
 { }
 
-string Operation::preTranslate() const {
+
+string Operator::preTranslate() const {
+    return mOpeChars + " ";
+
 //    TODO refactor Operator class
 //    string res= "";
 
@@ -97,11 +100,4 @@ string Operation::preTranslate() const {
 //    }
 
 //    return res;
-}
-
-std::string Operation::postTranslate() const
-{
-    if(opeChars == "abs") {
-        return ")";
-    }
 }

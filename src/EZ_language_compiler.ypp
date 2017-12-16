@@ -12,23 +12,28 @@
 #include "../src/hash_table/ScopeHashTable.h"
 #include "../src/hash_table/VariableHashed.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
+#include "../src/modules/Node.h"
+#include "../src/modules/EmptyNode.h"
+
+// Modules
 #include "../src/declarations/Class.h"
 #include "../src/declarations/Container.h"
 #include "../src/declarations/Function.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
 #include "../src/declarations/Variable.h"
+#include "../src/modules/Affectation.h"
 #include "../src/modules/ArrayAccess.h"
-#include "../src/modules/Node.h"
-#include "../src/modules/TranslatedNode.h"
 #include "../src/modules/BooleanExpression.h"
 #include "../src/modules/BooleanValue.h"
+#include "../src/modules/Operator.h"
+#include "../src/modules/Program.h"
+#include "../src/modules/TranslatedNode.h"
 #include "../src/instructions/If.h"
 #include "../src/instructions/Else.h"
 #include "../src/instructions/For.h"
 #include "../src/instructions/Repeat.h"
 #include "../src/instructions/While.h"
-#include "../src/modules/Program.h" // Empty Node
 
 #include "../src/global.h"
 
@@ -74,14 +79,14 @@ int yycolumn = 1;
 
 
 // Tokens
-%token<texte> NUM_INTEGER     // Integer
-%token<texte>	NUM_REAL			  // Real
-%token<texte> NAME RETOUR STRING STRING_PARAM
+%token<text> NUM_INTEGER     // Integer
+%token<text>	NUM_REAL			  // Real
+%token<text> NAME RETOUR STRING STRING_PARAM
 %token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
-%token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
+%token<text> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
 %token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
-%token<texte> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
+%token<text> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
 %token IMPORT INCLUDE LIBRARY EXTERN						                  // module import - c++ code
 %token IF THEN ELSE   						  // if else 
 %token WHEN CASE DEFAULT ENDWHEN	  // switch case ...
@@ -121,16 +126,18 @@ int yycolumn = 1;
 %type<tree> program.parameters method.parameters parameters parameter
 // %type<vectString> 
 %type<tree> arguments argumentsList argumentElement
-%type<tree> method affectation containerDeclaration
+%type<tree> method  containerDeclaration
 %type<tree> map_declaration arrayDeclaration vector_declaration list_declaration set_declaration
 %type<tree> destruct printing input // TODO overloading
 %type<tree> if while repeat for // when
+%type<affectation> affectation
 %type<elseNode> else
 %type<returnNode> return
+%type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
+%type<text> objectDotOperator
 %type<tree> function procedure class import 
 %type<tree> statement functionCall simpleFunction
-%type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
-%type<texte> type string scope // TODO constancy
+%type<text> type string scope // TODO constancy
 %type<var>  simpleVariable variable // TODO variable_construct
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression basicExpression integerExpression
@@ -138,9 +145,9 @@ int yycolumn = 1;
 // Non basic elements
 %type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
 %type<tree> objectFunctionCall
-%type<texte> names
-%type<texte> for.decl for.type var.decl vect.decl array.decl array.type
-%type<texte> returnstype facultativeAssignment
+%type<text> names
+%type<text> for.decl for.type var.decl vect.decl array.decl array.type
+%type<text> returnstype facultativeAssignment
 %type<expr> for.step for.rangeStart for.rangeEnd
 
 // Parameters
@@ -245,7 +252,7 @@ program.classes:
 
 // declarations_list:
 //   // /* empty */
-//   // { $$ = new TranslatedNode(""); }
+//   // { $$ = new EmptyNOde; }
 // program.variables program.methods
 //   {
 //     $1->addRightChild($2);
@@ -304,7 +311,7 @@ import:
 /* declarations_list */
 program.variables:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | program.variables BACK_LINE variable
 	{
     $1->addRightChild($3);
@@ -315,7 +322,7 @@ program.variables:
 /* declarations_list */
 program.methods:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | program.methods emptyOrJump method emptyOrJump
 	{
 		$1->addRightChild($3);
@@ -359,7 +366,7 @@ statement_sequence:
   /* empty */
   {
     debugYacc("last statement", AT);
-    $$ = new TranslatedNode("");
+    $$ = new EmptyNode;
   }
 | statement_sequence statement {
     debugYacc("statement: "+ $2->getName(), AT);
@@ -413,7 +420,7 @@ method.parameters:
 // that are passed as arguments at function call
 parameters: 
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | parameter
  	{ $$ = $1; }
 | parameter COMMA parameters
@@ -497,7 +504,7 @@ procedure:
  * ******************/
 
 statement:
-  BACK_LINE               { $$ = new TranslatedNode(""); }
+  BACK_LINE               { $$ = new EmptyNode; }
 | variable                { $$ = $1; }
 | affectation             {
     TranslatedNode* semicolon= new TranslatedNode(";\n");
@@ -551,8 +558,10 @@ variable:
 
 /* ****************************
  *  Conditional Instructions  *
+ *        If and loops        *
  * ****************************/
-// If and loops
+
+
 else:
   /* empty */
   { $$ = nullptr; }
@@ -717,7 +726,7 @@ arguments:
 // arguments are separated by commas : they have a comma before, except the first one
 argumentsList:
   /* empty */ // No argument
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | argumentElement argumentsSeparated {// One or more arguments
     $1->addRightChild($2);
     $$ = $1;
@@ -726,7 +735,7 @@ argumentsList:
 
 argumentsSeparated:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | argumentsSeparated COMMA argumentElement
   {
     TranslatedNode* comma= new TranslatedNode(", ", $3);
@@ -750,7 +759,7 @@ argumentElement:
 affectation:
   NAME assignmentOperator expression {
     debugYacc("Affectation on "+ $1, AT);
-    TranslatedNode* affect= new TranslatedNode($1 + $2 +" ", $3);
+    Affectation* affect= new Affectation($1, $2, $3);
     $$ = affect;
   }
 // | NAME SIMPLE_DOT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
@@ -779,12 +788,8 @@ input:
 printing:
   PRINT streamedExpressions BACK_LINE {
     debugYacc("print "+ $2->translate(), AT);
-    if ($2 != nullptr) {
-      $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
-      delete $2;
-    } else {
-      $$ = new TranslatedNode("std::cout<< std::endl;\n", "Print (stdout)");
-    }
+    $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
+    delete $2;
   }
 ;
 
@@ -797,14 +802,12 @@ printing:
 
 streamedExpressions:
   /* empty */
-  { $$ = nullptr; }
+  { $$ = new EmptyNode; }
 | streamedExpressions expression {
     TranslatedNode* streamOperator= new TranslatedNode("<< ", $2);
 
-    if ($1 != nullptr) {
-      $1->addRightChild(streamOperator);
-      $$ = $1;
-    } else $$ = streamOperator;
+    $1->addRightChild(streamOperator);
+    $$ = $1;
   }
 ;
 
@@ -823,9 +826,9 @@ expression:
   /* TODO check that there is no other operators*/
   expression arithmeticOperator expression {
     debugYacc("Operation between two expressions", AT);
-    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ", $3);
 
-    $1->addRightChild(arithOperator);
+    $1->addRightChild($2);
+    $2->addRightChild($3);
     $$ = $1;
   }
 | LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
@@ -864,7 +867,7 @@ conditionalExpression:
   }
 | NOT conditionalExpression {
     debugYacc("Negation", AT);
-    BooleanExpression* negation= new BooleanExpression("!", $2);
+    BooleanExpression* negation= new BooleanExpression(new Operator("!"), $2);
     $$ = negation;
   }
 | expression relationalOperator expression {
@@ -967,7 +970,7 @@ begin:
 // TODO affect logic
 affect:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | EQUALS basicExpression {
     debugYacc("Affectation value: "+ $2->translate(), AT);
     $$ = $2;
@@ -1026,32 +1029,37 @@ facultativeAssignment:
  * ******************/
 
 assignmentOperator:
-  EQUALS { $$ = "="; }
-| arithmeticOperator EQUALS { $$ = $1 + "="; }
+  EQUALS { $$ = new Operator("="); }
+| arithmeticOperator EQUALS {
+    Operator* equals= new Operator("=");
+    
+    $1->addRightChild(equals);
+    $$ = $1;
+  }
 ;
 
 arithmeticOperator:
-  PLUS    { $$ = "+"; }
-| MINUS   { $$ = "-"; }
-| MULT    { $$ = "*"; }
-| DIVISE  { $$ = "/"; }
-| MOD     { $$ = "%"; }
+  PLUS    { $$ = new Operator("+"); }
+| MINUS   { $$ = new Operator("-"); }
+| MULT    { $$ = new Operator("*"); }
+| DIVISE  { $$ = new Operator("/"); }
+| MOD     { $$ = new Operator("%"); }
 ;
 
 // NOT is a logical operator, but it is unary, not binary. Must be handle separatly
 // @see if we use operator or TranslatedNode
 logicalOperator:
-  AND { $$ = "&&"; }
-| OR { $$ = "||"; }
+  AND { $$ = new Operator("&&"); }
+| OR { $$ = new Operator("||"); }
 ;
 
 relationalOperator:
-  EQUALS EQUALS { $$ = "=="; }
-| NE  { $$ = "!="; }
-| LT  { $$ = "<"; }
-| LE  { $$ = "<="; }
-| GT  { $$ = ">"; }
-| GE  { $$ = ">="; }
+  EQUALS EQUALS { $$ = new Operator("=="); }
+| NE  { $$ = new Operator("!=") }
+| LT  { $$ = new Operator("<"); }
+| LE  { $$ = new Operator("<="); }
+| GT  { $$ = new Operator(">"); }
+| GE  { $$ = new Operator(">="); }
 ;
 
 objectDotOperator:

@@ -3,8 +3,10 @@
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
-#include "./modules/TranslatedNode.h"
+#include "./modules/Affectation.h"
 #include "./modules/ConditionalExpression.h"
+#include "./modules/Operator.h"
+#include "./modules/TranslatedNode.h"
 #include "./declarations/Variable.h"
 #include "./declarations/Parameter.h"
 #include "./instructions/Else.h"
@@ -24,13 +26,15 @@ typedef struct s_mon_type {
     int numerical_value;
     double real_value;
     bool boolean;
-    std::string texte;
+    std::string text;
     Node* tree;
     std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
     Variable* var;
     Expression* expr;
+    Affectation* affectation;
     ConditionalExpression* condExpr;
+    Operator* opeNode;
     TranslatedNode* transNode;
     Else* elseNode;
     Return* returnNode;

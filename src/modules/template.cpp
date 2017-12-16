@@ -2,8 +2,8 @@
 
 using namespace std;
 
-Template::Template(Node * left, Node * elseNode, ConditionalExpression * condition):
-	Node(left, elseNode), mCondition(condition)
+Template::Template(Node * left):
+	Node(left, nullptr)
 { }
 
 Template::~Template()
