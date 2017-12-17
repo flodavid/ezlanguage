@@ -137,17 +137,17 @@ int yycolumn = 1;
 %type<returnNode> return
 %type<var>  simpleVariable variable // TODO variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
-%type<functionCall> simpleFunction
+%type<functionCall> simpleFunction functionCall
 %type<text> objectDotOperator
 %type<tree> function procedure class import 
-%type<tree> statement functionCall
+%type<tree> statement
 %type<text> type string scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression basicExpression integerExpression
 
 // Non basic elements
 %type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
-%type<tree> objectFunctionCall simpleFunction.arguments
+%type<tree> simpleFunction.arguments
 %type<text> names
 %type<text> for.decl for.type var.decl vect.decl array.decl array.type
 %type<text> returnstype
@@ -503,12 +503,12 @@ statement:
 | affectation           { $$ = $1; }
 | containerDeclaration  { $$ = $1; }
 | functionCall          { $$ = $1; }
+| function_string       { $$ = $1;}
 | destruct  { $$ = $1; }
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
 // | overloading { $$ = $1; }
 | if        { $$ = $1; }
-
 | while     { $$ = $1; }
 | repeat    { $$ = $1; }
 | for       { $$ = $1; }
@@ -658,15 +658,18 @@ for:
 // TODO function call
 functionCall:
   // objectDotOperator simpleFunction {}
-  functionCall objectFunctionCall {
-    $1->addRightChild($2);
+  functionCall SIMPLE_DOT simpleFunction {
+    $1->addRightChild($3);
     $$ = $1;
+  }
+| objectDotOperator simpleFunction {
+    $2->addObject($1);
+    $$ = $2;
   }
 | simpleFunction {
     $$ = $1;
   }
-// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?) 
-| function_string { $$ = $1;}
+// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?
 // | containers_methods { } // TODO implement containers methods
 // | function_regex { }
 ;
@@ -684,14 +687,6 @@ simpleFunction:
     $$ = new FunctionCall($1, $2);
   }
 // @see Should it be "object" instead of NAME ?
-;
-
-objectFunctionCall:
-  SIMPLE_DOT arguments {
-    TranslatedNode* dot= new TranslatedNode(".");
-    dot->addRightChild($2);
-    $$ = dot;
-  }
 ;
 
 arguments:

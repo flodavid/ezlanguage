@@ -4,13 +4,16 @@
 
 /**
  * @brief Node of the tree which represent a condition else
+ * The call is done without object, on another function call, or an object given its name
  */
 
 class FunctionCall : public Node {
 
 protected:
+    std::string mObjectName;
     std::string mFunctionName;
     Node* mArguments; // TODO create an Argument class
+    bool mHasAnOtherFunctionCall;
 	
 public:
     /* * * * * * * * *
@@ -18,10 +21,16 @@ public:
     * * * * * * * * */
 
     /**
-     * Constructor with parameters
+     * Constructor with object name
      */
     FunctionCall(const std::string & functionName, Node * arguments);
-        
+
+    /**
+     * Constructor with an object
+     */
+    FunctionCall(const std::string & objectName, const std::string & functionName, 
+                Node * arguments);
+    
     /**
      * @brief destructor
      */
@@ -33,6 +42,17 @@ public:
      * @return the name of the node. Defined at class creation
      */
     virtual inline const std::string getName() const { return "Function call"; }
+
+    /**
+     * @brief Add the object on which the function is called
+     */
+    inline void addObject(const std::string & objectName) { mObjectName= objectName; }
+
+    /**
+     * @brief Juxtapose another function call after the current
+     * The function call added should not be called on an object
+     */
+    void addFunctionCall(FunctionCall* otherFunctionCall);
 
     /* * * * * * * *
      * Translation *
