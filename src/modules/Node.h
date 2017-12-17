@@ -80,7 +80,7 @@ public:
      * right son of the last current right son (that has no right son)
      * TL;DR : The right son of a groupd is the right son of the last one of the group
      */
-    void addRightChild(Node* child);
+    virtual void addRightChild(Node* child);
 
     /**
      * @brief Translate the begining part of the Node

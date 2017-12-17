@@ -3,11 +3,11 @@
 using namespace std;
 
 If::If(Node * left, Node * elseNode, ConditionalExpression * condition):
-	Node(left, elseNode), mCondition(condition)
+	Node(left, elseNode), mCondition(condition), mHasElse(true)
 { }
 
 If::If(Node * left, ConditionalExpression * condition):
-	Node(left, nullptr), mCondition(condition)
+	Node(left, nullptr), mCondition(condition), mHasElse(false)
 { }
 
 If::~If()
@@ -30,5 +30,8 @@ string If::preTranslate() const
 
 string If::postTranslate() const
 {
-    return "}\n";
+    string res="}";
+    if (!mHasElse) res+= "\n";
+
+    return res;
 }

@@ -15,5 +15,5 @@ Affectation::~Affectation()
 
 string Affectation::preTranslate() const
 {
-    return mTarget + mOperator->translate() + mAffectedValue->translate();
+    return mTarget + mOperator->translate() + mAffectedValue->translate() + ";\n";
 }

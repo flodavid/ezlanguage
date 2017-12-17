@@ -15,7 +15,7 @@ string Program::preTranslate() const
     return 
 "#include <string>\n"
 "#include <iostream>\n"
-"#include <cstdlib>";
+"#include <cstdlib>\n";
 }
 
 string Program::postTranslate() const {

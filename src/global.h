@@ -3,13 +3,14 @@
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
-#include "./modules/Affectation.h"
 #include "./modules/ConditionalExpression.h"
 #include "./modules/Operator.h"
 #include "./modules/TranslatedNode.h"
 #include "./declarations/Variable.h"
 #include "./declarations/Parameter.h"
+#include "./instructions/Affectation.h"
 #include "./instructions/Else.h"
+#include "./instructions/FunctionCall.h"
 #include "./instructions/Return.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
@@ -34,6 +35,7 @@ typedef struct s_mon_type {
     Expression* expr;
     Affectation* affectation;
     ConditionalExpression* condExpr;
+    FunctionCall* functionCall;
     Operator* opeNode;
     TranslatedNode* transNode;
     Else* elseNode;

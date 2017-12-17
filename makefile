@@ -27,24 +27,25 @@ MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp
 # Conditional expression
 MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpression.cpp
 # Divers
-MOD_CPP += ArrayAccess.cpp Affectation.cpp Operator.cpp
+MOD_CPP += ArrayAccess.cpp Operator.cpp
 
 # Instructions
 INSTR_CPP = If.cpp Else.cpp
 INSTR_CPP += For.cpp Repeat.cpp While.cpp
-INSTR_CPP += Return.cpp
+INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp
 
 # Declarations
 DEC_CPP = CommonDeclaration.cpp
-DEC_CPP += Container.cpp Function.cpp Procedure.cpp Class.cpp Variable.cpp MultipleVariable.cpp Parameter.cpp
+DEC_CPP += Container.cpp Function.cpp Procedure.cpp Class.cpp Variable.cpp
+DEC_CPP += Parameter.cpp Import.cpp
 
 # Addons
-ADDONS_CPP = src/addons/String_addon.cpp src/addons/log.cpp
+ADDONS_CPP = String_addon.cpp log.cpp
 
 # hash table sources
-HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp
-# declarations
-HT_CPP += src/hash_table/ClassHashed.cpp src/hash_table/FunctionHashed.cpp src/hash_table/VariableHashed.cpp
+HT_CPP = HashElement.cpp HashTable.cpp ScopeHashTable.cpp ClassHashTable.cpp
+# Hash elements corresponding to declarations
+HT_CPP += ClassHashed.cpp FunctionHashed.cpp VariableHashed.cpp
 
 ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${ADDONS_CPP} ${HT_CPP}
 
@@ -52,8 +53,8 @@ ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${ADDONS_CPP} ${HT_CPP}
 MOD_OBJ = $(MOD_CPP:%.cpp=obj/%.o)
 DEC_OBJ = $(DEC_CPP:%.cpp=obj/%.o)
 INSTR_OBJ = $(INSTR_CPP:%.cpp=obj/%.o)
-ADDONS_OBJ = $(ADDONS_CPP:src/addons/%.cpp=obj/%.o)
-HT_OBJ = $(HT_CPP:src/hash_table/%.cpp=obj/%.o)
+ADDONS_OBJ = $(ADDONS_CPP:%.cpp=obj/%.o)
+HT_OBJ = $(HT_CPP:%.cpp=obj/%.o)
 
 ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${INSTR_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
 

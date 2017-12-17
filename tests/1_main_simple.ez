@@ -7,6 +7,13 @@ procedure hello_world()
 print "Hello World !"
 end
 
+procedure checkTrueness(b is boolean)
+    if b
+    then print "value is true"
+    else print "value is false"
+    end if
+end
+
 main_simple
 /*
 this is
@@ -36,6 +43,8 @@ a multiple lines comment
         b = true
         print "a : " a
     end while
+
+    checkTrueness(b)
 
     if b or true
     then print "'or' operator working"

@@ -12,6 +12,7 @@ class If : public Node {
 
 protected:
 	ConditionalExpression * mCondition;
+    bool mHasElse;
 	
 public:
     /* * * * * * * * *

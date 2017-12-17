@@ -15,8 +15,6 @@ Template::~Template()
 string Template::preTranslate() const
 {
     string res="";
-    
-    // the instructions are in the left_son (the first one IS the left son)
 
     return res;
 }

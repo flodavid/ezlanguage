@@ -19,19 +19,21 @@
 #include "../src/declarations/Class.h"
 #include "../src/declarations/Container.h"
 #include "../src/declarations/Function.h"
+#include "../src/declarations/Import.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
 #include "../src/declarations/Variable.h"
-#include "../src/modules/Affectation.h"
 #include "../src/modules/ArrayAccess.h"
 #include "../src/modules/BooleanExpression.h"
 #include "../src/modules/BooleanValue.h"
 #include "../src/modules/Operator.h"
 #include "../src/modules/Program.h"
 #include "../src/modules/TranslatedNode.h"
+#include "../src/instructions/Affectation.h"
 #include "../src/instructions/If.h"
 #include "../src/instructions/Else.h"
 #include "../src/instructions/For.h"
+#include "../src/instructions/FunctionCall.h"
 #include "../src/instructions/Repeat.h"
 #include "../src/instructions/While.h"
 
@@ -133,21 +135,22 @@ int yycolumn = 1;
 %type<affectation> affectation
 %type<elseNode> else
 %type<returnNode> return
+%type<var>  simpleVariable variable // TODO variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
+%type<functionCall> simpleFunction
 %type<text> objectDotOperator
 %type<tree> function procedure class import 
-%type<tree> statement functionCall simpleFunction
+%type<tree> statement functionCall
 %type<text> type string scope // TODO constancy
-%type<var>  simpleVariable variable // TODO variable_construct
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression basicExpression integerExpression
 
 // Non basic elements
 %type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
-%type<tree> objectFunctionCall
+%type<tree> objectFunctionCall simpleFunction.arguments
 %type<text> names
 %type<text> for.decl for.type var.decl vect.decl array.decl array.type
-%type<text> returnstype facultativeAssignment
+%type<text> returnstype
 %type<expr> for.step for.rangeStart for.rangeEnd
 
 // Parameters
@@ -180,7 +183,7 @@ program:
 		Node* p_decl_vars = $7;
 		Node* p_decl_methods = $8;
     Node* p_prog = $11;
-    /* TODO add program arguments logic */
+    /* TODO add program parameters logic */
     // @see main : procedure or function with int return ?
     Procedure* main= new Procedure("main", p_decl_parameters, p_prog);
 
@@ -219,7 +222,7 @@ emptyOrJump:
 // import modules or libraries
 program.imports:
   emptyOrJump
-  { $$= new TranslatedNode("\n"); }
+  { $$= new EmptyNode; }
 | program.imports import {
     /* TODO import logic */
     debugYacc("import", AT);
@@ -233,7 +236,7 @@ program.parameters:
   { $$ = new TranslatedNode("\n"); }
 // | PARAMETERS BACK_LINE param_args END endargument next_line {
 //     /* TODO arguements declaration logic */
-//     debugYacc("arguments declaration", AT);
+//     debugYacc("parameters declaration", AT);
 //     vector<Variable*> vars($3);
 //     $$ = vars;
 //   }
@@ -252,7 +255,7 @@ program.classes:
 
 // declarations_list:
 //   // /* empty */
-//   // { $$ = new EmptyNOde; }
+//   // { $$ = new EmptyNode; }
 // program.variables program.methods
 //   {
 //     $1->addRightChild($2);
@@ -276,14 +279,14 @@ import:
   IMPORT NAME BACK_LINE {
     /* TODO import logic: check file existance and compile it (with its cpp) */
     debugYacc("importation du module "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +".h\"\n");
+    Import* trans_node= new Import($2, LOCAL_FILE);
     $$= trans_node;
   }
   // For C++ system file include
 | INCLUDE string BACK_LINE {
     debugYacc(" inclusion de la bibliothèque "+ $2, AT);
     std::string import_name= replace($2, "\"", "");
-    TranslatedNode* trans_node= new TranslatedNode("#include <"+ import_name+ ">\n");
+    Import* trans_node= new Import(import_name, EXTERNAL_LIBRARY);
     $$= trans_node;
   }
 ;
@@ -341,13 +344,6 @@ method:
 	}
 ;
 
-// Past arguments should be of only one of the following types: 
-// param_type:
-//   TYPE_INTEGER  { $$ = $1; }
-// | TYPE_REAL     { $$ = $1; } 
-// | TYPE_STRING   { $$ = $1; } 
-// ;
-
 /* program.classes */
 class:
   CLASS NAME BACK_LINE begin statement_sequence END endclass
@@ -370,8 +366,7 @@ statement_sequence:
   }
 | statement_sequence statement {
     debugYacc("statement: "+ $2->getName(), AT);
-    // Add line jump at end of statement
-    // $1->addRightChild(new TranslatedNode("\n"));
+    
     $1->addRightChild($2);
     $$ = $1;
   }
@@ -416,7 +411,7 @@ method.parameters:
   }
 ;
 
-// Parameters are variables that will used in a method, initiliazed with arguments
+// Parameters are variables that will used in a method, initialiazed with values
 // that are passed as arguments at function call
 parameters: 
   /* empty */
@@ -425,8 +420,7 @@ parameters:
  	{ $$ = $1; }
 | parameter COMMA parameters
  	{
-    TranslatedNode* varComma= new TranslatedNode(", ", $3);
-    $1->addRightChild(varComma);
+    $1->addRightChild($3);
     $$ = $1;
  	}
 // | NAME names ARE type { /* TODO parameters logic */ }
@@ -504,19 +498,11 @@ procedure:
  * ******************/
 
 statement:
-  BACK_LINE               { $$ = new EmptyNode; }
-| variable                { $$ = $1; }
-| affectation             {
-    TranslatedNode* semicolon= new TranslatedNode(";\n");
-    $1->addRightChild(semicolon);
-    $$ = $1;
-  }
-| containerDeclaration { $$ = $1; }
-| functionCall {
-    TranslatedNode* semicolon= new TranslatedNode(";\n");
-    $1->addRightChild(semicolon);
-    $$ = $1;
-  }
+  BACK_LINE             { $$ = new EmptyNode; }
+| variable              { $$ = $1; }
+| affectation           { $$ = $1; }
+| containerDeclaration  { $$ = $1; }
+| functionCall          { $$ = $1; }
 | destruct  { $$ = $1; }
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
@@ -685,21 +671,17 @@ functionCall:
 // | function_regex { }
 ;
 
+simpleFunction.arguments:
+  argumentsList { $$ = $1; }
+| arguments { $$ = $1; }
+;
+
 simpleFunction:
   // function call without parenthesis
-  NAME argumentsList {
-    debugYacc("Call of function"+ $1, AT);
+  NAME simpleFunction.arguments {
+    debugYacc("Call of function '"+ $1 +"'", AT);
 
-    TranslatedNode* leftPar= new TranslatedNode("(", $2);
-    TranslatedNode* rightPar= new TranslatedNode(")");
-
-    $2->addRightChild(rightPar);
-    $$ = new TranslatedNode($1, leftPar);
-  }
-  // function call with parenthesis
-| NAME arguments {
-    debugYacc("Call of function (w/ parenthesis) "+ $1, AT);
-    $$ = new TranslatedNode($1 +" ", $2);
+    $$ = new FunctionCall($1, $2);
   }
 // @see Should it be "object" instead of NAME ?
 ;
@@ -713,13 +695,10 @@ objectFunctionCall:
 ;
 
 arguments:
-  LEFT_PARENTHESIS argumentsList LEFT_PARENTHESIS
+  LEFT_PARENTHESIS argumentsList RIGHT_PARENTHESIS
   {
-    TranslatedNode* leftPar= new TranslatedNode("(", $2);
-    TranslatedNode* rightPar= new TranslatedNode(")");
-
-    $2->addRightChild(rightPar);
-    $$ = leftPar;
+    debugYacc("Arguments (w/ parenthesis)", AT);
+    $$ = $2;
   }
 ;
 
@@ -746,9 +725,8 @@ argumentsSeparated:
 ;
 
 argumentElement:
-  facultativeAssignment expression {
-    // TODO Take assignment ($1) into account when passing argument (facultativeAssignment)
-    $$ = $2;
+  expression {
+    $$ = $1;
   }
 ;
 
@@ -1009,15 +987,6 @@ integerExpression:
 // @see if variable must be retrieved from name for type checking
 | NAME        { $$ = new TranslatedNode($1); }
 
-
-// TODO facultativeAssignment logic
-facultativeAssignment:
-  /* empty */ // ex: c is myClass("name")
-  { $$ = ""; } 
-  // ex: p is Person(name="name")
-| NAME EQUALS   { $$ = $1; }
-;
-
 // numberExpression:
 //   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
 // | NUM_REAL    { /* $$ = Real($1); */ }
@@ -1055,7 +1024,7 @@ logicalOperator:
 
 relationalOperator:
   EQUALS EQUALS { $$ = new Operator("=="); }
-| NE  { $$ = new Operator("!=") }
+| NE  { $$ = new Operator("!="); }
 | LT  { $$ = new Operator("<"); }
 | LE  { $$ = new Operator("<="); }
 | GT  { $$ = new Operator(">"); }

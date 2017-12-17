@@ -19,7 +19,7 @@ enum operatorType { ARITHMETIC, BITWISE, RELATIONAL, LOGICAL, ALLOCATION, INCREM
  * @see old code may need to be removed
  * 
  * @note We could create RelationalOperator and LogicalOperator classes in order to
- * have more precise type checking
+ * have more precise type checking. Or use the operatorType enum
  */
 class Operator : public Node{
 
