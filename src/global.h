@@ -8,6 +8,7 @@
 #include "./modules/TranslatedNode.h"
 #include "./declarations/Variable.h"
 #include "./declarations/Parameter.h"
+#include "./declarations/Vector.h"
 #include "./instructions/Affectation.h"
 #include "./instructions/Else.h"
 #include "./instructions/FunctionCall.h"
@@ -32,6 +33,7 @@ typedef struct s_mon_type {
     std::vector<VariableHashed> vectString;
     // TODO change as pointer or reference
     Variable* var;
+    Vector* vect;
     Expression* expr;
     Affectation* affectation;
     ConditionalExpression* condExpr;

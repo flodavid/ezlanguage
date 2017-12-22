@@ -3,14 +3,14 @@
 using namespace std;
 
 FunctionCall::FunctionCall(const string & functionName, Node * arguments):
-	Node(nullptr, nullptr), mObjectName(""), mFunctionName(functionName),
-    mArguments(arguments), mHasAnOtherFunctionCall(false)
+	Expression(nullptr, nullptr), mObjectName(""), mFunctionName(functionName),
+    mArguments(arguments), mHasAnOtherFunctionCall(false), mIsInstruction(true)
 { }
 
 FunctionCall::FunctionCall(const string & objectName, const string & functionName,
                         Node * arguments):
-	Node(nullptr, nullptr), mObjectName(objectName), mFunctionName(functionName),
-    mArguments(arguments), mHasAnOtherFunctionCall(false)
+	Expression(nullptr, nullptr), mObjectName(objectName), mFunctionName(functionName),
+    mArguments(arguments), mHasAnOtherFunctionCall(false), mIsInstruction(true)
 { }
 
 FunctionCall::~FunctionCall()
@@ -29,10 +29,13 @@ string FunctionCall::preTranslate() const
     string res= "";
     if (mObjectName != "") res+= mObjectName +".";
     res+= mFunctionName +"(";
-    if (mArguments != nullptr) res+= mArguments->translate();
-    debugNode("mArguments translation: "+ mArguments->translate(), AT);
-    res+= ");\n";
+    if (mArguments != nullptr) {
+        res+= mArguments->translate();
+        debugNode("mArguments translation: "+ mArguments->translate(), AT);
+    } 
+    res+= ")";
     if (mHasAnOtherFunctionCall) res+= ".";
+    else if (mIsInstruction) res+= ";\n";
     
     return res;
 }

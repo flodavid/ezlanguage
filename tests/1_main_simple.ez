@@ -1,6 +1,7 @@
 program main_simple
 //+ test commentaires
 
+include "vector"
 include "sstream"
 
 procedure hello_world()
@@ -50,5 +51,14 @@ a multiple lines comment
     then print "'or' operator working"
     else print "'or' operator not working"
     end if
+
+    vect is vector of integer
+    vect.push_back(3)
+
+    
+    print "value of vect[" 0 "]: " vect[0]
+    print "value of vect.at(" 0 "): " vect.at(0)
+
+    vect2 is vector of integer = { 1, 2 }
 
 end

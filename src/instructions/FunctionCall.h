@@ -1,19 +1,20 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include "../modules/Expression.h"
 
 /**
  * @brief Node of the tree which represent a condition else
  * The call is done without object, on another function call, or an object given its name
  */
 
-class FunctionCall : public Node {
+class FunctionCall : public Expression {
 
 protected:
     std::string mObjectName;
     std::string mFunctionName;
     Node* mArguments; // TODO create an Argument class
     bool mHasAnOtherFunctionCall;
+    bool mIsInstruction;
 	
 public:
     /* * * * * * * * *
@@ -53,6 +54,11 @@ public:
      * The function call added should not be called on an object
      */
     void addFunctionCall(FunctionCall* otherFunctionCall);
+
+    /**
+     * @brief Define the instruction as not an instruction, but simple expression
+     */
+    inline void setAsNotInstruction() { mIsInstruction= false; }
 
     /* * * * * * * *
      * Translation *

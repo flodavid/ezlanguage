@@ -19,7 +19,6 @@ string Template::preTranslate() const
     return res;
 }
 
-
 string Template::postTranslate() const
 {
     return "}\n";

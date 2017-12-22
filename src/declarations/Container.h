@@ -2,6 +2,7 @@
 #define CONTAINER_H
 
 #include "CommonDeclaration.h"
+#include "../modules/Expression.h"
 
 /**
  * @class Container
@@ -12,55 +13,60 @@
 class Container : public CommonDeclaration {
 	
 protected:
-	std::string nameContainer;
-	std::string typeContainer; // Vector, Array, Set, Map or List
-	std::string typeElement; // int, double, string etc ...
-	std::string listInit;
-    unsigned mSize; 
+	std::string mTypeContainer; // Vector, Array, Set, Map or List
+	std::string mTypeElement; // int, double, string etc ...
+	Expression* mSize;
     
 public:
 
     /* * * * * * * * *
      * CONSTRUCTORS  *
      * * * * * * * * */
-
+                
    /**
     * Constructor with size
-    * @param left: left son 
-    * @param right : right son
     * @param nameC : name of the container
     * @param typeC : type of the container
-    * @param typeE : type of the element in the container
-    * @param size : size the container
-    * @author Johan Defaye
+    * @param size: left son, expression defining the size of the container
     */
-    Container(const std::string & nameC, const std::string & typeC,
-            const std::string & typeE, unsigned size);
+    Container(const std::string & nameC, const std::string & typeE, Expression* size);
     
    /**
     * Constructor with initialisation list
-    * @param left: left son 
-    * @param right : right son
+    * @param left: left son
     * @param nameC : name of the container
     * @param typeC : type of the container
     * @param typeE : type of the element in the container
     * @param listI : list of initialisation (only available for the "array")
     * @author Johan Defaye
     */
-    Container(const std::string & nameC, const std::string & typeC,
-            const std::string & typeE, const std::string & listI);
+    Container(const std::string & nameC, Expression* listI, const std::string & typeE);
+
+    /**
+     * @brief destructor
+     */
+    virtual ~Container();
 
 
     /**
-     * @brief Get the name of the node
-     * @return the name of the node. Defined at class creation
+     * @brief Get the type of container (name in C++)
+     * @return the type of the container. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Container declaration"; }
+    virtual inline const std::string getType() const =0;
 
-	/**
-	 * @brief Translate the node after the translation of the left son
-	 */
-	virtual std::string preTranslate() const;
+    /**
+     * @brief Translate the node after the translation of the left son
+     */
+    virtual std::string preTranslate() const;
+
+    /**
+     * @brief Translate the end part of the If
+     * @return a string containing the C++ code of the If
+     *
+     * All subclasses, should reimplement this method so that the translation corresponds
+     * to their specifications, specificities and own values
+     */
+    virtual std::string postTranslate() const;
 };
 
 #endif // DECLARATIONCONTAINER_H

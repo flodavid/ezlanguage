@@ -16,8 +16,10 @@
 #include "../src/modules/EmptyNode.h"
 
 // Modules
+#include "../src/declarations/Array.h"
 #include "../src/declarations/Class.h"
 #include "../src/declarations/Container.h"
+#include "../src/declarations/Vector.h"
 #include "../src/declarations/Function.h"
 #include "../src/declarations/Import.h"
 #include "../src/declarations/Parameter.h"
@@ -129,7 +131,7 @@ int yycolumn = 1;
 // %type<vectString> 
 %type<tree> arguments argumentsList argumentElement
 %type<tree> method  containerDeclaration
-%type<tree> map_declaration arrayDeclaration vector_declaration list_declaration set_declaration
+%type<tree> map_declaration arrayDeclaration vectorDeclaration list_declaration set_declaration
 %type<tree> destruct printing input // TODO overloading
 %type<tree> if while repeat for // when
 %type<affectation> affectation
@@ -137,19 +139,20 @@ int yycolumn = 1;
 %type<returnNode> return
 %type<var>  simpleVariable variable // TODO variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
-%type<functionCall> simpleFunction functionCall
+%type<functionCall> simpleFunction functionCall functionCallNoParenthesis
 %type<text> objectDotOperator
 %type<tree> function procedure class import 
 %type<tree> statement
 %type<text> type string scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
-%type<expr> expression basicExpression integerExpression
+%type<expr> expression basicExpression integerExpression basicExpressions
 
 // Non basic elements
 %type<tree> function_string statement_sequence for.body affect streamedExpressions argumentsSeparated
 %type<tree> simpleFunction.arguments
 %type<text> names
-%type<text> for.decl for.type var.decl vect.decl array.decl array.type
+%type<text> for.decl for.type var.decl array.decl array.type
+%type<vect> vect.decl
 %type<text> returnstype
 %type<expr> for.step for.rangeStart for.rangeEnd
 
@@ -386,6 +389,17 @@ names:
 | names COMMA NAME  { $$ = $1 + ", " + $3; }
 ;
 
+basicExpressions:
+  basicExpression
+| basicExpressions COMMA basicExpression {
+    TranslatedNode* comma= new TranslatedNode(", ", $3);
+
+    $1->addRightChild(comma);
+    $$ = $1;
+  }
+;
+
+
 /* **********************
  *  METHODS DECLARATION *
  * **********************/
@@ -503,6 +517,7 @@ statement:
 | affectation           { $$ = $1; }
 | containerDeclaration  { $$ = $1; }
 | functionCall          { $$ = $1; }
+| functionCallNoParenthesis { $$ = $1; }
 | function_string       { $$ = $1;}
 | destruct  { $$ = $1; }
 | printing  { $$ = $1; }
@@ -518,9 +533,9 @@ statement:
 
 // TODO Add other container declarations
 containerDeclaration:
-  arrayDeclaration   { $$ = $1; }
+  arrayDeclaration    { $$ = $1; }
+| vectorDeclaration   { $$ = $1; }
 // | map_declaration     { $$ = $1; }
-// | vector_declaration  { $$ = $1; }
 // | list_declaration    { $$ = $1; }
 // | set_declaration     { $$ = $1; }
 ;
@@ -655,6 +670,7 @@ for:
 /* ************************
  *  Complex Instructions  *
  * ************************/
+
 // TODO function call
 functionCall:
   // objectDotOperator simpleFunction {}
@@ -674,9 +690,17 @@ functionCall:
 // | function_regex { }
 ;
 
+  // At least one argument when no parenthesis
+functionCallNoParenthesis:
+  NAME argumentsList {
+    debugYacc("Call of function (no parenthesis) '"+ $1 +"'", AT);
+
+    $$ = new FunctionCall($1, $2);
+  }
+;
+
 simpleFunction.arguments:
-  argumentsList { $$ = $1; }
-| arguments { $$ = $1; }
+  arguments { $$ = $1; }
 ;
 
 simpleFunction:
@@ -811,6 +835,10 @@ expression:
   }
 | basicExpression {
     debugYacc("expression from basicExpression", AT);
+    $$ = $1;
+  }
+| functionCall {
+    $1->setAsNotInstruction();
     $$ = $1;
   }
   // Container access
@@ -1139,7 +1167,7 @@ arrayDeclaration:
   {
     debugYacc("array declaration with size"+ $2, AT);
     // TODO check that size as a correct format (>0)
-    $$ = new Container($1, "array", $3, atoi($2.c_str()));
+    $$ = new Array($1, $3, atoi($2.c_str()));
   }
   // @see if names should be replaced by 'arguments'
   // TODO array declaration with init list
@@ -1153,18 +1181,26 @@ arrayDeclaration:
 
 //    -----------------------------vector declaration----------------------------------------
 vect.decl:
-  scope NAME IS VECTOR OF type {
+  /* scope */ NAME IS VECTOR OF type {
     // TODO create an instance of Container (add a methor in Container to add init list after construction)
     // TranslatedNode* vectorDecl= new TranslatedNode("std::vector< "+ $6 +" >", $);
+    debugYacc("vector declaration", AT);
+    Vector* vector= new Vector($1, $5);
 
-    // $$ = $1;
+    $$ = vector;
   }
 ;
 
 // We assume vector does not has a size defined at initialization
-vector_declaration: 
-   vect.decl  { printf("vector declaration  \n"); }
-| scope vect.decl type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+vectorDeclaration: 
+  vect.decl {
+    $$ = $1;
+  }
+| vect.decl EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE {
+    debugYacc("initialization list to vector", AT);
+    $1->setInitList($4);
+    $$ = $1;
+  }
 ;
 
 //    -----------------------------list declaration----------------------------------------

@@ -38,11 +38,6 @@ public:
     virtual ~Node();
 
 private:
-    /**
-     * @brief setter on left son
-     * @param node : New left son
-     */
-    void setLeftSon(Node* son);
     
     /**
      * @brief setter on right son
@@ -52,6 +47,12 @@ private:
     void setRightSon(Node* son);
 
 protected:
+    /**
+     * @brief setter on left son
+     * @param node : New left son
+     */
+    void setLeftSon(Node* son);
+
     /**
      * @brief Get some details about the node
      * @return the name of the node. Defined at class creation
