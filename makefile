@@ -36,7 +36,7 @@ INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp
 
 # Declarations
 DEC_CPP = CommonDeclaration.cpp
-DEC_CPP += Container.cpp Variable.cpp Array.cpp Vector.cpp
+DEC_CPP += Container.cpp Variable.cpp Array.cpp Vector.cpp List.cpp
 DEC_CPP += Parameter.cpp Import.cpp Function.cpp Procedure.cpp Class.cpp
 
 # Addons

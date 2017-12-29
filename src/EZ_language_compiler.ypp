@@ -19,12 +19,13 @@
 #include "../src/declarations/Array.h"
 #include "../src/declarations/Class.h"
 #include "../src/declarations/Container.h"
-#include "../src/declarations/Vector.h"
 #include "../src/declarations/Function.h"
 #include "../src/declarations/Import.h"
+#include "../src/declarations/List.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
 #include "../src/declarations/Variable.h"
+#include "../src/declarations/Vector.h"
 #include "../src/modules/ArrayAccess.h"
 #include "../src/modules/BooleanExpression.h"
 #include "../src/modules/BooleanValue.h"
@@ -131,7 +132,8 @@ int yycolumn = 1;
 // %type<vectString> 
 %type<tree> arguments argumentsList argumentElement
 %type<tree> method  containerDeclaration
-%type<tree> map_declaration arrayDeclaration vectorDeclaration list_declaration set_declaration
+%type<tree> map_declaration arrayDeclaration set_declaration
+%type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
 %type<tree> if while repeat for // when
 %type<affectation> affectation
@@ -152,9 +154,9 @@ int yycolumn = 1;
 %type<tree> simpleFunction.arguments
 %type<text> names
 %type<text> for.decl for.type var.decl array.decl array.type
-%type<vect> vect.decl
+%type<cont> container.decl
 %type<text> returnstype
-%type<expr> for.step for.rangeStart for.rangeEnd
+%type<expr> for.step for.rangeStart for.rangeEnd .container.affectation
 
 // Parameters
 // %define parse.trace
@@ -533,8 +535,8 @@ statement:
 
 // TODO Add other container declarations
 containerDeclaration:
-  arrayDeclaration    { $$ = $1; }
-| vectorDeclaration   { $$ = $1; }
+  arrayDeclaration        { $$ = $1; }
+| stdContainerDeclaration { $$ = $1; }
 // | map_declaration     { $$ = $1; }
 // | list_declaration    { $$ = $1; }
 // | set_declaration     { $$ = $1; }
@@ -983,7 +985,7 @@ affect:
 type:
   TYPE_INTEGER  { $$ = "int"; }
 | TYPE_REAL     { $$ = "float"; }
-| TYPE_STRING   { $$ = "string"; }
+| TYPE_STRING   { $$ = "std::string"; }
 | TYPE_BOOLEAN  { $$ = "bool"; }
 ;
 
@@ -1179,34 +1181,33 @@ arrayDeclaration:
 // | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type { printf("array declaration with lower and upper bound\n"); }
 ;
 
-//    -----------------------------vector declaration----------------------------------------
-vect.decl:
+//    -----------------------------containers declaration----------------------------------------
+container.decl:
   /* scope */ NAME IS VECTOR OF type {
-    // TODO create an instance of Container (add a methor in Container to add init list after construction)
-    // TranslatedNode* vectorDecl= new TranslatedNode("std::vector< "+ $6 +" >", $);
     debugYacc("vector declaration", AT);
     Vector* vector= new Vector($1, $5);
 
     $$ = vector;
   }
-;
+| /* scope */ NAME IS LIST OF type {
+    debugYacc("list declaration", AT);
+    List* list= new List($1, $5);
 
-// We assume vector does not has a size defined at initialization
-vectorDeclaration: 
-  vect.decl {
-    $$ = $1;
-  }
-| vect.decl EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE {
-    debugYacc("initialization list to vector", AT);
-    $1->setInitList($4);
-    $$ = $1;
+    $$ = list;
   }
 ;
 
-//    -----------------------------list declaration----------------------------------------
-list_declaration: 
-  scope NAME IS LIST OF type { printf("list declaration  \n"); }
-| scope NAME IS LIST OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
+.container.affectation:
+/* empty */
+| EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE { $$ = $3; }
+;
+
+// We assume containers does not has a size defined at initialization
+stdContainerDeclaration:
+  container.decl .container.affectation {
+    if ($2 != nullptr) $1->setInitList($2);
+    $$ = $1;
+  }
 ;
 
 //    -----------------------------set declaration----------------------------------------

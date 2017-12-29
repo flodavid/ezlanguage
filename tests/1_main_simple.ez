@@ -1,7 +1,6 @@
 program main_simple
 //+ test commentaires
 
-include "vector"
 include "sstream"
 
 procedure hello_world()
@@ -60,5 +59,7 @@ a multiple lines comment
     print "value of vect.at(" 0 "): " vect.at(0)
 
     vect2 is vector of integer = { 1, 2 }
+
+    l is list of string
 
 end

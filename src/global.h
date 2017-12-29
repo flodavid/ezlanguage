@@ -6,16 +6,15 @@
 #include "./modules/ConditionalExpression.h"
 #include "./modules/Operator.h"
 #include "./modules/TranslatedNode.h"
-#include "./declarations/Variable.h"
+#include "./declarations/Container.h"
 #include "./declarations/Parameter.h"
-#include "./declarations/Vector.h"
+#include "./declarations/Variable.h"
 #include "./instructions/Affectation.h"
 #include "./instructions/Else.h"
 #include "./instructions/FunctionCall.h"
 #include "./instructions/Return.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
-#include <vector>
 #include <string>
 
 extern ScopeHashTable symbolTable;
@@ -30,10 +29,8 @@ typedef struct s_mon_type {
     bool boolean;
     std::string text;
     Node* tree;
-    std::vector<VariableHashed> vectString;
-    // TODO change as pointer or reference
+    Container* cont;
     Variable* var;
-    Vector* vect;
     Expression* expr;
     Affectation* affectation;
     ConditionalExpression* condExpr;

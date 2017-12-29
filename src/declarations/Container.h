@@ -26,18 +26,15 @@ public:
    /**
     * Constructor with size
     * @param nameC : name of the container
-    * @param typeC : type of the container
     * @param size: left son, expression defining the size of the container
     */
     Container(const std::string & nameC, const std::string & typeE, Expression* size);
     
    /**
     * Constructor with initialisation list
-    * @param left: left son
     * @param nameC : name of the container
-    * @param typeC : type of the container
-    * @param typeE : type of the element in the container
     * @param listI : list of initialisation (only available for the "array")
+    * @param typeE : type of the element in the container
     * @author Johan Defaye
     */
     Container(const std::string & nameC, Expression* listI, const std::string & typeE);
@@ -53,6 +50,11 @@ public:
      * @return the type of the container. Defined at class creation
      */
     virtual inline const std::string getType() const =0;
+
+    /**
+     * @brief Add an initialization list to the vector
+     */
+    void setInitList(Expression* listInit) { setLeftSon(listInit); }
 
     /**
      * @brief Translate the node after the translation of the left son
