@@ -6,6 +6,7 @@
 #include "./modules/ConditionalExpression.h"
 #include "./modules/Operator.h"
 #include "./modules/TranslatedNode.h"
+#include "./declarations/Array.h"
 #include "./declarations/Container.h"
 #include "./declarations/Parameter.h"
 #include "./declarations/Variable.h"
@@ -30,6 +31,7 @@ typedef struct s_mon_type {
     bool boolean;
     std::string text;
     Node* tree;
+    Array* array;
     Container* cont;
     Variable* var;
     Expression* expr;

@@ -129,11 +129,11 @@ int yycolumn = 1;
 
 // Basic elements
 %type<tree> program
-%type<tree> program.imports program.classes program.variables program.methods // declarations_list
+%type<tree> program.imports program.classes program.variables program.methods
 %type<tree> program.parameters method.parameters parameters parameter
 %type<tree> arguments .argumentsList argumentElement
 %type<tree> method  containerDeclaration
-%type<tree> map_declaration arrayDeclaration set_declaration
+%type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
 %type<tree> while repeat for // when
@@ -158,7 +158,7 @@ int yycolumn = 1;
 %type<text> for.decl for.type var.decl array.decl array.type
 %type<cont> container.decl
 %type<text> returnstype
-%type<expr> for.step for.rangeStart for.rangeEnd .container.affectation .container.initSize
+%type<expr> for.step for.rangeStart for.rangeEnd .container.affectation container.affectation .container.initSize
 
 // Parameters
 // %define parse.trace
@@ -1124,13 +1124,6 @@ enddestruct:
 /* ************
  *    OTHER   *
  * ************/
-// 		---------------------------------------------------------------------
-// 		---------------------------------------------------------------------
-
-/* else_body:
-   ELSE BACK_LINE statement_sequence   { cout << "else " << endl; }
-|  ELSE BACK_LINE statement_sequence  else_body  { cout << "else " << endl;}
-;*/
 
 //    -----------------------------REGEX METHODS-----------------------------------------
 // function_regex:
@@ -1156,8 +1149,11 @@ function_string:
 | objectDotOperator FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
 ;
 
+/* ***************************
+ *  containers declaration   *
+ * ***************************/
 
-//    -----------------------------array declaration----------------------------------------
+//    -----------------------------array declaration-------------------------------------
 array.decl:
   var.decl ARRAY LEFT_BRACKET { $$ = $1; }
 ;
@@ -1168,23 +1164,22 @@ array.type:
 
 // TODO handle scope for array
 arrayDeclaration:
-/* scope */ array.decl NUM_INTEGER array.type
+  /* scope */ array.decl NUM_INTEGER array.type
   {
     debugYacc("array declaration with size"+ $2, AT);
     // TODO check that size as a correct format (>0)
     $$ = new Array($1, $3, atoi($2.c_str()));
   }
-  // @see if names should be replaced by 'arguments'
-  // TODO array declaration with init list
-// | /* scope */ array.decl array.type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE
-//   {
-//     debugYacc("array declaration with initializer list", AT);
-//     $$ = new Container($1, "array", $2, $5);
-//   }
-// | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type { printf("array declaration with lower and upper bound\n"); }
+| /* scope */ array.decl array.type container.affectation
+  {
+    debugYacc("array declaration with initializer list", AT);
+    $$ = new Array($1, $2, $3);
+  }
+// | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type
+//   { printf("array declaration with lower and upper bound\n"); }
 ;
 
-//    -----------------------------containers declaration----------------------------------------
+//    --------------------------standard containers declaration--------------------------
 stdContainerDeclaration:
   /* scope */ container.decl .container.affectation {
     if ($2 != nullptr) $1->setInitList($2);
@@ -1224,9 +1219,13 @@ container.decl:
 | LEFT_BRACKET integerExpression RIGHT_BRACKET { $$ = $2; }
 ;
 
+container.affectation:
+  EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE { $$ = $3; }
+;
+
 .container.affectation:
-/* empty */
-| EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE { $$ = $3; }
+/* empty */ { $$ = nullptr; }
+| container.affectation { $$ = $1; }
 ;
 
 

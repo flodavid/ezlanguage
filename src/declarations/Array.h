@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonDeclaration.h"
+#include "../modules/Expression.h"
 
 /**
  * @brief Node of the tree which represent a condition else
@@ -10,7 +11,7 @@ class Array : public CommonDeclaration {
 
 protected:
 	std::string mTypeElement; // int, double, string etc ...
-	std::string mListInit;
+	Expression* mListInit;
     unsigned mSize; 
 	
 public:
@@ -20,14 +21,21 @@ public:
 
    /**
     * Constructor with size
-    * @param left: left son
     * @param nameC : name of the container
-    * @param typeC : type of the container
     * @param typeE : type of the element in the container
     * @param size : size the container
     * @author Johan Defaye
     */
     Array(const std::string & nameC, const std::string & typeE, unsigned size);
+        
+   /**
+    * Constructor with initialization list
+    * @param nameC : name of the container
+    * @param typeE : type of the element in the container
+    * @param listInit: initialization list for the array, will be its left son
+    * @author Johan Defaye
+    */
+    Array(const std::string & nameC, const std::string & typeE, Expression* listInit);
         
     /**
      * @brief destructor
@@ -53,5 +61,11 @@ public:
      * to their specifications, specificities and own values
      */
     virtual std::string preTranslate() const;
+    
+    /**
+     * @brief Translate the end part of the Array
+     * @return a string containing the C++ code of the Array
+     */
+    virtual std::string postTranslate() const;
 
 };
