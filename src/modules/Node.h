@@ -38,11 +38,6 @@ public:
     virtual ~Node();
 
 private:
-    /**
-     * @brief setter on left son
-     * @param node : New left son
-     */
-    void setLeftSon(Node* son);
     
     /**
      * @brief setter on right son
@@ -52,6 +47,12 @@ private:
     void setRightSon(Node* son);
 
 protected:
+    /**
+     * @brief setter on left son
+     * @param node : New left son
+     */
+    void setLeftSon(Node* son);
+
     /**
      * @brief Get some details about the node
      * @return the name of the node. Defined at class creation
@@ -80,7 +81,7 @@ public:
      * right son of the last current right son (that has no right son)
      * TL;DR : The right son of a groupd is the right son of the last one of the group
      */
-    void addRightChild(Node* child);
+    virtual void addRightChild(Node* child);
 
     /**
      * @brief Translate the begining part of the Node

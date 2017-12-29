@@ -2,7 +2,8 @@
 #define REPEAT_H
 
 //special files no to forget to import
-#include "Node.h"
+#include "../modules/Node.h"
+#include "../modules/ConditionalExpression.h"
 
 /**
  * @brief Represent a node of the tree whcih will traduct the loop repeat (do ... while in c++)
@@ -20,7 +21,7 @@
 class Repeat : public Node {
 	
 protected:
-	Node * condition;
+	ConditionalExpression * mCondition;
 
 public:
     
@@ -30,8 +31,12 @@ public:
      * @param right : right son
      * @param cond : condition of the loop
      */
-    Repeat(Node * left, Node* right , Node * cond);
-        
+    Repeat(Node * left, ConditionalExpression * cond);
+     
+    /**
+     * @brief destructor
+     */
+    virtual ~Repeat();   
 
     /**
      * @brief Get the name of the node

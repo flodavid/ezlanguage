@@ -2,52 +2,70 @@
 #define CONTAINER_H
 
 #include "CommonDeclaration.h"
+#include "../modules/Expression.h"
 
 /**
  * @class Container
  * @brief Node of the tree whhich represent the declaration of a container
  * 
- * @author LAHYANI Zakaria - Ismail ELFAQIR
+ * @author LAHYANI Zakaria - Ismail ELFAQIR - Johan Defaye
  */
 class Container : public CommonDeclaration {
 	
 protected:
-	std::string nameContainer;
-	std::string typeContainer; // Vector, Array, Set, Map or List
-	std::string typeElement; // int, double, string etc ...
-	std::string listInit;
-    unsigned mSize; 
+	std::string mTypeContainer; // Vector, Array, Set, Map or List
+	std::string mTypeElement; // int, double, string etc ...
+	Expression* mSize;
     
 public:
 
     /* * * * * * * * *
      * CONSTRUCTORS  *
      * * * * * * * * */
-
+                
    /**
-    * Constructor with parameters
-    * @param left: left son 
-    * @param right : right son
+    * Constructor with size
     * @param nameC : name of the container
-    * @param typeC : type of the container
-    * @param typeE : type of the element in the container
+    * @param size: left son, expression defining the size of the container
+    */
+    Container(const std::string & nameC, const std::string & typeE, Expression* size);
+    
+   /**
+    * Constructor with initialisation list
+    * @param nameC : name of the container
     * @param listI : list of initialisation (only available for the "array")
+    * @param typeE : type of the element in the container
     * @author Johan Defaye
     */
-    Container(Node * left, const std::string & nameC, const std::string & typeC,
-            const std::string & typeE, const std::string & listI, unsigned size = 0);
+    Container(const std::string & nameC, Expression* listI, const std::string & typeE);
+
+    /**
+     * @brief destructor
+     */
+    virtual ~Container();
 
 
     /**
-     * @brief Get the name of the node
-     * @return the name of the node. Defined at class creation
+     * @brief Get the type of container (name in C++)
+     * @return the type of the container. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Container declaration"; }
+    virtual const std::string getType() const =0;
 
-	/**
-	 * @brief Translate the node after the translation of the left son
-	 */
-	virtual std::string preTranslate() const;
+    /**
+     * @brief Add an initialization list to the vector
+     */
+    void setInitList(Expression* listInit) { setLeftSon(listInit); }
+
+    /**
+     * @brief Translate the node after the translation of the left son
+     */
+    virtual std::string preTranslate() const;
+
+    /**
+     * @brief Translate the end part of the Container
+     * @return a string containing the C++ code of the Container
+     */
+    virtual std::string postTranslate() const;
 };
 
 #endif // DECLARATIONCONTAINER_H

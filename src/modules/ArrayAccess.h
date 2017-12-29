@@ -1,7 +1,6 @@
-#ifndef ARRAYACCESS_H
-#define ARRAYACCESS_H
+#pragma once
 
-#include "Node.h"
+#include "Expression.h"
 
 /**
  * @class AccessArray
@@ -10,18 +9,18 @@
  * example of translation my_array[5] -> here index=5  
  * @author Ismail ELFAQIR
  */
-class ArrayAccess : public Node {
-	
+class ArrayAccess : public Expression {
+
 protected:	
 	std::string mArrayName;
-    int index;
+    int mIndex;
+	Expression * mExpression;
 
 public:
 
     /* * * * * * * * *
     * CONSTRUCTORS  *
     * * * * * * * * */
-
 
     /**
     * Constructor with parameters
@@ -32,13 +31,22 @@ public:
     * @param ind : index to access
     * @author Ismail ELFAQIR
     */
-    ArrayAccess(Node * left, Node * right, const std::string & arrayName, int ind);
-
+    ArrayAccess(const std::string & arrayName, int ind);
 
     /**
-    * Destructor
+    * Constructor with parameters
+    * Set the array and the access index of array by the parameters passed to the constructor
+    * @param left : left son
+    * @param right : right son
+    * @param arrayN : name of the array
+    * @param ind : index to access
     * @author Ismail ELFAQIR
     */
+    ArrayAccess(const std::string & arrayName, Expression * expression);
+
+    /**
+     * @brief destructor
+     */
     virtual ~ArrayAccess();
 
     /* * * * * * * * * * * * * *
@@ -90,5 +98,3 @@ public:
      */
     virtual std::string preTranslate() const;
 };
-
-#endif

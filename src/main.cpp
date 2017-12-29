@@ -118,7 +118,7 @@ void display(vector<char*> fic_ezl){
  * @param gpp_command commande gpp execute
  * @param output_name nom de l'output
  */
-int exec_cpp(std::string gpp_command, std::string output_name){
+int exec_cpp(std::string & gpp_command, std::string & output_name){
     //cout << "commande cpp: " << gpp_command << endl;
     int system_return= EXIT_SUCCESS;
 	if(help != 1){
@@ -151,9 +151,8 @@ int exec_cpp(std::string gpp_command, std::string output_name){
  * @param argv
  * @return
  */
-int main(int argc , char ** argv){
+int main(int argc, char ** argv){
 	bool no_options = true;
-    int opt;
     string output_name = "";
 
     // Ligne de commande g++
@@ -184,7 +183,7 @@ int main(int argc , char ** argv){
 		//getopt_long recupere l'option ici
 		int option_index = 0;
 		
-		opt = getopt_long(argc, argv, "ho:f:O:w:v", long_options, &option_index);
+		int opt = getopt_long(argc, argv, "ho:f:O:w:v", long_options, &option_index);
 		
 		//fin des options
 		if(opt == -1){

@@ -22,7 +22,7 @@ public:
      * @param prg_name : name of the program
      * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
      */
-    Program(std::string name, Node* right);
+    Program(std::string & name, Node* imports, Node* right);
     
 
     /**
@@ -38,6 +38,14 @@ public:
      * Defines program imports and functions definitions
      */
     virtual std::string preTranslate() const;
+
+    /**
+     * @brief Translate the begining part of the Repeat
+     * @return a string containing the C++ code of the instruction
+     * 
+     * Defines program imports and functions definitions
+     */
+    virtual std::string postTranslate() const;
 
 };
 #endif

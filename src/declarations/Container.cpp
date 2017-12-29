@@ -2,33 +2,43 @@
 
 using namespace std;
 
-Container::Container(Node * left, const string & nameC, const string & typeC,
-                    const string & typeE, const string & listI, unsigned size):
-	CommonDeclaration(left, nameC), nameContainer(nameC), typeContainer(typeC), typeElement(typeE), listInit(listI), mSize(size)
-{}
+Container::Container(const string & nameC, const string & typeE, Expression* size):
+	CommonDeclaration(nullptr, nameC), mTypeElement(typeE), mSize(size)
+{
+	debugNode("Container with expression as size", AT);
+}
+
+Container::Container(const string & nameC, Expression* listI, const string & typeE):
+	CommonDeclaration(listI, nameC), mTypeElement(typeE), mSize(nullptr)
+{
+	debugNode("Container with initialisation list", AT);
+}
+
+Container::~Container()
+{
+	if (mSize) delete mSize;
+}
 
 
 string Container::preTranslate() const
 {
+	string res= "std::"+ getType() + "<" + mTypeElement + "> " + getDeclarationName();
+	
+	if (mSize != nullptr) {
+		res+= "["+ mSize->translate() + "]";
+	} else res+= "= { ";
+
+	return res;
+}
+
+string Container::postTranslate() const
+{
 	string res;
 
-	if (typeContainer == "array") {
-        res= typeElement + " " + nameContainer + "[";
-		if (!listInit.empty()) {
-			res+= "] = {" + listInit + "}";
-		}
-		else {
-			res+= to_string(mSize) + "]";
-		}
-		res+= ";";
+	if (!mSize) {
+		res+= " }";
 	}
-	else {
-		res= "std::"+ typeContainer + "<" + typeElement + "> " + nameContainer;
-		
-		if ((mSize != 0) && (typeContainer == "list" || typeContainer == "vector")) {
-			res += "(" + to_string(mSize) + ")";
-		}
-		res += ";";
-	}
-	return res;
+	res+= ";\n";
+
+    return res;
 }

@@ -11,6 +11,8 @@ class Parameter : public CommonDeclaration {
 
 private:
     std::string mType;
+    // At construction, we suppose that 
+    bool mIsLastOneOfList;
 
 public:
     /**
@@ -35,4 +37,6 @@ public:
      * Defines program imports and functions definitions
      */
     virtual std::string preTranslate() const;
+
+    virtual void addRightChild(Node* child);
 };

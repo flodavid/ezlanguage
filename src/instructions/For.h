@@ -1,8 +1,8 @@
 #ifndef FOR_H
 #define FOR_H
 
-#include "Node.h"
-#include "TranslatedNode.h"
+#include "../modules/Node.h"
+#include "../modules/Expression.h"
 
 /**
  * @brief Represent a node of the tree which will traduct a "for" loop
@@ -17,7 +17,7 @@ protected:
 	std::string mIteratorName;
     const Node* mIndStart;
     const Node* mIndEnd;
-    const TranslatedNode* mStep;
+    const Expression* mStep;
     std::string mType;
     std::string mContainerName;
     
@@ -32,8 +32,8 @@ public:
 	* @param left : left son
 	* @param type : type of the indice
 	*/	
-    For(const std::string & iterator, const TranslatedNode* start, const TranslatedNode* end,
-        const TranslatedNode* step, Node * left, const std::string & type = "");
+    For(const std::string & iterator, const Expression* start, const Expression* end,
+        const Expression* step, Node * left, const std::string & type = "");
     
     /**
      * @brief constructor with parameters
@@ -42,7 +42,12 @@ public:
      * @param container : name of the container to browse
      */
      For (Node * left, const std::string & iterator, const std::string & container);
-        
+    
+    /**
+     * @brief destructor
+     */
+    virtual ~For();
+
 
     /**
      * @brief Get the name of the node

@@ -39,8 +39,8 @@ minus     [-]
 
 {separators}   	{ /* On ignore */ }
 {comment}   	{ /* Ignore it */ cout << "Comment"<<endl; }
-{integer}	{ yylval.texte= yytext; return(NUM_INTEGER); }  // integer
-{reel}      	{ yylval.texte= yytext; return(NUM_REAL);}	// real
+{integer}		{ yylval.text= yytext; return(NUM_INTEGER); }  // integer
+{reel}      	{ yylval.text= yytext; return(NUM_REAL);}	// real
 
 {backLine}	return(BACK_LINE);
 
@@ -195,12 +195,12 @@ minus     [-]
 (exist|EXIST)      				return(EXIST);
 
 
-{ID}	{	yylval.texte= yytext;
+{ID}	{	yylval.text= yytext;
 	    		return (NAME);
 	}
 
-{quote}{minus}{minus}{ID}{quote}  {yylval.texte = yytext; return(STRING_PARAM);}
-{quote}{phrase}{quote}  {yylval.texte = yytext; return(STRING);}
+{quote}{minus}{minus}{ID}{quote}  {yylval.text = yytext; return(STRING_PARAM);}
+{quote}{phrase}{quote}  {yylval.text = yytext; return(STRING);}
 
 
 <<EOF>>     return END_OF_FILE;

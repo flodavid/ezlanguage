@@ -5,8 +5,8 @@
 
 using namespace std;
 
-For::For(const string & iterator, const TranslatedNode* start, const TranslatedNode* end,
-        const TranslatedNode* step, Node * left, const string & type):
+For::For(const string & iterator, const Expression* start, const Expression* end,
+        const Expression* step, Node * left, const string & type):
     Node(left, nullptr), mIteratorName(iterator), mIndStart(start), mIndEnd(end), mStep(step),
 	mType(type), mContainerName("")
 {}
@@ -16,6 +16,12 @@ For::For (Node * left, const string & iterator, const string & container):
 	mStep(nullptr), mType(""), mContainerName(container)
 {}
 
+For::~For()
+{	
+    delete mIndStart;
+    delete mIndEnd;
+    delete mStep;
+}
 
 //forall i in 1..10 (step X)
 string For::preTranslate() const

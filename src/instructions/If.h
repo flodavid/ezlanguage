@@ -1,30 +1,49 @@
-#ifndef ELSE_H
-#define ELSE_H
+#ifndef IF_H
+#define IF_H
 
-#include "Node.h"
+#include "../modules/Node.h"
+#include "../modules/ConditionalExpression.h"
 
 /**
- * @brief Node of the tree which represent a condition if
- * else is another node, can be passed as right node
+ * @brief Node of the tree which represent a condition else
  */
 
-class Else : public Node {
-		
+class If : public Node {
+
 protected:
+	ConditionalExpression * mCondition;
+    bool mHasElse;
 	
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
     * * * * * * * * */
 
-    Else(Node * left);
-    
+    /**
+     * Constructor of if with an else
+     * @param left : left son
+     * @param condition : the condition of the if
+     */
+    If(Node * left, Node * elseNode, ConditionalExpression * condition);
+
+    /**
+     * Constructor of if without else
+     * @param left : left son
+     * @param condition : the condition of the if
+     */
+    If(Node * left, ConditionalExpression * condition);
+        
+    /**
+     * @brief destructor
+     */
+    virtual ~If();
+
 
     /**
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Else"; }
+    virtual inline const std::string getName() const { return "If"; }
 
     /* * * * * * * *
      * Translation *

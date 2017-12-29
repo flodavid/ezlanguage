@@ -5,7 +5,8 @@
 
 #include "../addons/String_addon.h"
 #include "ConditionalExpression.h"
-#include "TranslatedNode.h"
+#include "Expression.h"
+#include "Operator.h"
 
 /**
  * @brief Represent a node of the tree which will traduct a expression such as:
@@ -16,7 +17,7 @@
 class BooleanExpression : public ConditionalExpression {
 
 private:
-    std::string strOperator;
+    Operator* mOperator;
     std::string value;
     // The nodes should be a ConditionalExpression or expression (as string in TranslatedNode)
     const Node * left_part; 
@@ -34,7 +35,7 @@ public:
      * @param unary_operator : unary operator (with one parameter)
      * @param operande : conditionnal expression
      */
-    BooleanExpression(const std::string & unary_operator, const ConditionalExpression* operande);
+    BooleanExpression(Operator* unary_operator, const ConditionalExpression* operande);
 
     /**
      * @brief Constructor with logical operation between two expression
@@ -42,7 +43,7 @@ public:
      * @param first_operande : conditionnal expression which is the first operand
      * @param second_operande : conditionnal expression which is the second operand
      */
-    BooleanExpression(const std::string & binary_operator, const ConditionalExpression* first_operande,
+    BooleanExpression(Operator* binary_operator, const ConditionalExpression* first_operande,
                         const ConditionalExpression* second_operande);
 
     /**
@@ -51,8 +52,13 @@ public:
      * @param first_expression : the first expression
      * @param second_expression : the second expression
      */
-    BooleanExpression(const std::string & relational_operator, const TranslatedNode* first_expression,
-                        const TranslatedNode* second_expression);
+    BooleanExpression(Operator* relational_operator, const Expression* first_expression,
+                        const Expression* second_expression);
+        
+    /**
+     * @brief destructor
+     */
+    virtual ~BooleanExpression();
     
 
     /**

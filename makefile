@@ -1,63 +1,67 @@
-#compiler used
+# Compiler used
 CC = g++-5
-# compilation flags
+# Compilation flags
 CC_FLAGS = -Wall -std=c++11 -ggdb
 EXT_SRC = 
 CC_MOD_FLAGS = -MM #-MP 
 
-# lex file extensions (.XXX)
+# Lex file extensions (.XXX)
 LEX_EXT = lex
-# lex file interpreter : lexical analysis
+# Lex file interpreter : lexical analysis
 LEX = flex
 LEX_FlAGS =
 
-
-# extension des fichiers yacc (.XXX)
+# Yacc files extension (.XXX)
 YACC_EXT = ypp
 # interpréteur des fichiers Yacc : analyse syntaxique et sémantique
 YACC = bison -t
 YACC_FLAGS =
+
 
 # cpp sources
 # --- RAJOUTER CHAQUE FICHIER CPP DE MODULES ICI ! ---
 # --- FAIRE UN FICHIER CPP POUR CHAQUE FICHIER H S'IL Y A UNE CLASSE DEDANS ---
 
 # Core
-MOD_CPP = src/modules/Node.cpp src/modules/Program.cpp src/modules/TranslatedNode.cpp
+MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp
 # Conditional expression
-MOD_CPP += src/modules/BooleanExpression.cpp src/modules/BooleanValue.cpp src/modules/ConditionalExpression.cpp
+MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpression.cpp
 # Divers
-MOD_CPP += src/modules/ArrayAccess.cpp src/modules/If.cpp src/modules/Else.cpp src/modules/Operation.cpp
-# Boucles
-MOD_CPP += src/modules/For.cpp src/modules/Repeat.cpp src/modules/While.cpp
+MOD_CPP += ArrayAccess.cpp Operator.cpp
 
-ADDONS_CPP += src/addons/String_addon.cpp src/addons/log.cpp
+# Instructions
+INSTR_CPP = If.cpp Else.cpp
+INSTR_CPP += For.cpp Repeat.cpp While.cpp
+INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp
 
-# declarations
-DEC_CPP = src/declarations/CommonDeclaration.cpp
-DEC_CPP += src/declarations/Container.cpp src/declarations/Function.cpp src/declarations/Procedure.cpp
-DEC_CPP += src/declarations/Class.cpp src/declarations/Variable.cpp src/declarations/MultipleVariable.cpp
-DEC_CPP += src/declarations/Parameter.cpp
+# Declarations
+DEC_CPP = CommonDeclaration.cpp
+DEC_CPP += Container.cpp Variable.cpp Array.cpp Vector.cpp List.cpp Map.cpp Set.cpp
+DEC_CPP += Parameter.cpp Import.cpp Function.cpp Procedure.cpp Class.cpp
+
+# Addons
+ADDONS_CPP = String_addon.cpp log.cpp
 
 # hash table sources
-HT_CPP = src/hash_table/HashElement.cpp src/hash_table/HashTable.cpp src/hash_table/ScopeHashTable.cpp src/hash_table/ClassHashTable.cpp
-# declarations
-HT_CPP += src/hash_table/ClassHashed.cpp src/hash_table/FunctionHashed.cpp src/hash_table/VariableHashed.cpp
+HT_CPP = HashElement.cpp HashTable.cpp ScopeHashTable.cpp ClassHashTable.cpp
+# Hash elements corresponding to declarations
+HT_CPP += ClassHashed.cpp FunctionHashed.cpp VariableHashed.cpp
 
-ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${ADDONS_CPP} ${HT_CPP}
+ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${ADDONS_CPP} ${HT_CPP}
 
-#object files
-MOD_OBJ = $(MOD_CPP:src/modules/%.cpp=obj/%.o)
-DEC_OBJ = $(DEC_CPP:src/declarations/%.cpp=obj/%.o)
-ADDONS_OBJ = $(ADDONS_CPP:src/addons/%.cpp=obj/%.o)
-HT_OBJ = $(HT_CPP:src/hash_table/%.cpp=obj/%.o)
+# Object files
+MOD_OBJ = $(MOD_CPP:%.cpp=obj/%.o)
+DEC_OBJ = $(DEC_CPP:%.cpp=obj/%.o)
+INSTR_OBJ = $(INSTR_CPP:%.cpp=obj/%.o)
+ADDONS_OBJ = $(ADDONS_CPP:%.cpp=obj/%.o)
+HT_OBJ = $(HT_CPP:%.cpp=obj/%.o)
 
-ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
+ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${INSTR_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
 
-#dependency files
+# Dependency files
 ALL_DPDCY = $(ALL_OBJ:%.o=%.d)
 
-#executables
+# Executables
 # exe name, must have the same name as lex file
 EXEC = EZ_language_compiler
 
@@ -86,6 +90,11 @@ obj/%.d: src/declarations/%.cpp
 	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
 	@echo ""
 
+obj/%.d: src/instructions/%.cpp
+	@echo -e "\033[1;33mDépendance pour le fichier $< créée : \033[0m"
+	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
+	@echo ""
+
 obj/%.d: src/modules/%.cpp
 	@echo -e "\033[1;33mDépendance pour le fichier $< créée : \033[0m" 
 	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
@@ -106,6 +115,11 @@ obj/%.d: src/addons/%.cpp
 
 #objects
 obj/%.o: src/declarations/%.cpp
+	@echo -e "\033[1;33mFichier objet pour le fichier $< créé : \033[0m"
+	$(CC) -c $< -o $@ $(CC_FLAGS)
+	@echo ""
+
+obj/%.o: src/instructions/%.cpp
 	@echo -e "\033[1;33mFichier objet pour le fichier $< créé : \033[0m"
 	$(CC) -c $< -o $@ $(CC_FLAGS)
 	@echo ""

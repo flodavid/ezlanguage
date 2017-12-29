@@ -1,40 +1,37 @@
-#ifndef IF_H
-#define IF_H
+#pragma once
 
-#include "Node.h"
+#include "../modules/Node.h"
 
 /**
  * @brief Node of the tree which represent a condition else
  */
 
-class If : public Node {
+class Template : public Node {
 
 protected:
-	Node * cond;
-    int block_type;
 	
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
     * * * * * * * * */
 
-
     /**
-    * Constructor with parameters
-    * Set the block_type to the parameter passed to the constructor
-    * @param condition : the condition of the if
-    * @param left : left son
-    * @param bt : block if, else or elseif
-    * @author Ismail ELFAQIR
-    */
-    If(Node * left, Node * elseNode, Node * condition);
-    
+     * Constructor with parameters
+     * @param left : left son
+     */
+    Template(Node * left);
+        
+    /**
+     * @brief destructor
+     */
+    virtual ~Template();
+
 
     /**
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "If"; }
+    virtual inline const std::string getName() const { return "Template"; }
 
     /* * * * * * * *
      * Translation *
@@ -59,4 +56,3 @@ public:
     virtual std::string postTranslate() const;
 
 };
-#endif

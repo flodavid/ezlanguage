@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.h"
+#include "Expression.h"
 
 /**
  * @brief An already translated Node
@@ -8,7 +8,7 @@
  *
  * The content (code) can just be put into the cpp output
  */
-class TranslatedNode : public Node{
+class TranslatedNode : public Expression {
 
 protected:
     std::string content; // already translated code

@@ -12,20 +12,35 @@
 #include "../src/hash_table/ScopeHashTable.h"
 #include "../src/hash_table/VariableHashed.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
+#include "../src/modules/Node.h"
+#include "../src/modules/EmptyNode.h"
+
+// Modules
+#include "../src/declarations/Array.h"
 #include "../src/declarations/Class.h"
+#include "../src/declarations/Container.h"
 #include "../src/declarations/Function.h"
+#include "../src/declarations/Import.h"
+#include "../src/declarations/List.h"
+#include "../src/declarations/Map.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
+#include "../src/declarations/Set.h"
 #include "../src/declarations/Variable.h"
-#include "../src/modules/Node.h"
-#include "../src/modules/TranslatedNode.h"
+#include "../src/declarations/Vector.h"
+#include "../src/modules/ArrayAccess.h"
 #include "../src/modules/BooleanExpression.h"
 #include "../src/modules/BooleanValue.h"
-#include "../src/modules/If.h"
-#include "../src/modules/Else.h"
-#include "../src/modules/For.h"
-#include "../src/modules/While.h"
-#include "../src/modules/Program.h" // Empty Node
+#include "../src/modules/Operator.h"
+#include "../src/modules/Program.h"
+#include "../src/modules/TranslatedNode.h"
+#include "../src/instructions/Affectation.h"
+#include "../src/instructions/If.h"
+#include "../src/instructions/Else.h"
+#include "../src/instructions/For.h"
+#include "../src/instructions/FunctionCall.h"
+#include "../src/instructions/Repeat.h"
+#include "../src/instructions/While.h"
 
 #include "../src/global.h"
 
@@ -71,14 +86,14 @@ int yycolumn = 1;
 
 
 // Tokens
-%token<texte>	NUM_INTEGER     // Integer
-%token<texte>	NUM_REAL			  // Real
-%token<texte> NAME RETOUR STRING STRING_PARAM
+%token<text> NUM_INTEGER     // Integer
+%token<text>	NUM_REAL			  // Real
+%token<text> NAME RETOUR STRING STRING_PARAM
 %token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
-%token<texte> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
+%token<text> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
 %token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
-%token<texte> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
+%token<text> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
 %token IMPORT INCLUDE LIBRARY EXTERN						                  // module import - c++ code
 %token IF THEN ELSE   						  // if else 
 %token WHEN CASE DEFAULT ENDWHEN	  // switch case ...
@@ -114,28 +129,36 @@ int yycolumn = 1;
 
 // Basic elements
 %type<tree> program
-%type<tree> program.imports program.classes program.variables program.methods // declarations_list
+%type<tree> program.imports program.classes program.variables program.methods
 %type<tree> program.parameters method.parameters parameters parameter
-// %type<vectString> 
-%type<tree> arguments argumentsList argumentElement
-%type<tree> method affectation containerDeclaration
-%type<tree> map_declaration array_declaration vector_declaration list_declaration set_declaration
+%type<tree> arguments .argumentsList argumentElement
+%type<tree> method  containerDeclaration
+%type<array> arrayDeclaration
+%type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
-%type<tree> if when while repeat for else
-%type<tree> function procedure class import
-%type<tree> statement return functionCall simpleFunction
-%type<texte> assignmentOperator logicalOperator arithmeticOperator relationalOperator objectDotOperator
-%type<texte> type string scope // TODO constancy
+%type<tree> while repeat for // when
+%type<affectation> affectation
+%type<ifNode> if
+%type<elseNode> .else
+%type<returnNode> return
 %type<var>  simpleVariable variable // TODO variable_construct
+%type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
+%type<functionCall> simpleFunction functionCall functionCallNoParenthesis
+%type<tree> function procedure class import 
+%type<tree> statement
+%type<text> type string .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
-%type<transNode> expression basicExpression integerExpression
+%type<expr> expression basicExpression integerExpression basicExpressions
 
 // Non basic elements
-%type<tree> function_string statement_sequence forBody affect streamedExpressions argumentsSeparated
-%type<tree> objectFunctionCall
-%type<texte> names nbrOrName // param_type
-%type<texte> for.decl for.type returnstype facultativeAssignment var.decl array.decl vect.decl
-%type<transNode> for.step for.rangeStart for.rangeEnd
+%type<text> objectDotOperator
+%type<tree> function_string statement_sequence .affect .streamedExpressions .argumentsSeparated
+%type<tree> for.body simpleFunction.arguments
+%type<text> names
+%type<text> for.decl for.type var.decl array.decl array.type
+%type<cont> container.decl
+%type<text> returnstype
+%type<expr> for.step for.rangeStart for.rangeEnd .container.affectation container.affectation .container.initSize
 
 // Parameters
 // %define parse.trace
@@ -155,29 +178,30 @@ program:
   // baseROOT
   program.methods NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 	{
-		Node* p_imports = $4;
-    // Node* p_decl_parameters = $5; TODO parameters declaration implementation
-		Node* p_decl_classes = $6;
-		Node* p_decl_vars = $7;
-		Node* p_decl_methods = $8;
-		Program *racine = new Program($2, p_imports);
-    /* TODO add program arguments logic */
-    
     if ($9 != $2) {
         cerr<< "Program and main procedure should have same names"<< endl;
         exit(EXIT_FAILURE);
     }
-    
-		Node* p_prog = $11;
-    // $5 : parameters (vector<Variable*>)
-    // @see main : procedure or function with int return ?
-    Procedure* main= new Procedure("main", $5, p_prog);
 
-    p_imports->addRightChild(p_decl_classes);
-		p_decl_classes->addRightChild(p_decl_vars);
+    // Symbols naming
+		Node* p_imports = $4;
+    Node* p_decl_parameters = $5;
+		Node* p_decl_classes = $6;
+		Node* p_decl_vars = $7;
+		Node* p_decl_methods = $8;
+    Node* p_prog = $11;
+    /* TODO add program parameters logic */
+    // @see main : procedure or function with int return ?
+    Procedure* main= new Procedure("main", p_decl_parameters, p_prog);
+
+    // Progam declaration and nodes relations
+		Program *racine = new Program($2, p_imports, p_decl_classes);
+    
+    p_decl_classes->addRightChild(p_decl_vars);
     p_decl_vars->addRightChild(p_decl_methods);
     p_decl_methods->addRightChild(main);
 
+    // Translation
 		const std::string & translation= racine->translate();
     delete racine;
 
@@ -193,9 +217,9 @@ program:
   // | baseROOT NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 ;
 
-emptyOrJump:
+.jump:
   /* empty */
-| emptyOrJump BACK_LINE
+| .jump BACK_LINE
 ;
 
 /* ******************
@@ -204,8 +228,8 @@ emptyOrJump:
 
 // import modules or libraries
 program.imports:
-  /* empty */
-  { $$= new TranslatedNode(""); }
+  .jump
+  { $$= new EmptyNode; }
 | program.imports import {
     /* TODO import logic */
     debugYacc("import", AT);
@@ -215,19 +239,19 @@ program.imports:
 ;
 
 program.parameters:
-  /* empty */
-  { $$ = new TranslatedNode(""); }
+  .jump
+  { $$ = new TranslatedNode("\n"); }
 // | PARAMETERS BACK_LINE param_args END endargument next_line {
 //     /* TODO arguements declaration logic */
-//     debugYacc("arguments declaration", AT);
+//     debugYacc("parameters declaration", AT);
 //     vector<Variable*> vars($3);
 //     $$ = vars;
 //   }
 ;
 
 program.classes:
-  /* empty */
-  { $$= new TranslatedNode(""); }
+  .jump
+  { $$= new TranslatedNode("\n"); }
 | program.classes class
 	{
     debugYacc("class declared: "+ $1->getDetails(), AT);
@@ -238,7 +262,7 @@ program.classes:
 
 // declarations_list:
 //   // /* empty */
-//   // { $$ = new TranslatedNode(""); }
+//   // { $$ = new EmptyNode; }
 // program.variables program.methods
 //   {
 //     $1->addRightChild($2);
@@ -260,21 +284,16 @@ program.classes:
 /* imports */
 import:
   IMPORT NAME BACK_LINE {
-    /* TODO import logic (name of module) */
+    /* TODO import logic: check file existance and compile it (with its cpp) */
     debugYacc("importation du module "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include \""+ $2 +"\"\n");
+    Import* trans_node= new Import($2, LOCAL_FILE);
     $$= trans_node;
   }
+  // For C++ system file include
 | INCLUDE string BACK_LINE {
-    /* TODO include import logic */
     debugYacc(" inclusion de la bibliothèque "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include "+ $2+ "\n");
-    $$= trans_node;
-  }
-| LIBRARY string BACK_LINE {
-    /* TODO library import logic */
-    debugYacc(" inclusion de la LIBRARY "+ $2, AT);
-    TranslatedNode* trans_node= new TranslatedNode("#include "+ $2+ "\n");
+    std::string import_name= replace($2, "\"", "");
+    Import* trans_node= new Import(import_name, EXTERNAL_LIBRARY);
     $$= trans_node;
   }
 ;
@@ -302,7 +321,7 @@ import:
 /* declarations_list */
 program.variables:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | program.variables BACK_LINE variable
 	{
     $1->addRightChild($3);
@@ -313,8 +332,8 @@ program.variables:
 /* declarations_list */
 program.methods:
   /* empty */
-  { $$ = new TranslatedNode(""); }
-| program.methods emptyOrJump method emptyOrJump
+  { $$ = new EmptyNode; }
+| program.methods .jump method .jump
 	{
 		$1->addRightChild($3);
 		$$ = $1;
@@ -331,13 +350,6 @@ method:
     $$ = $1;
 	}
 ;
-
-// Past arguments should be of only one of the following types: 
-// param_type:
-//   TYPE_INTEGER  { $$ = $1; }
-// | TYPE_REAL     { $$ = $1; } 
-// | TYPE_STRING   { $$ = $1; } 
-// ;
 
 /* program.classes */
 class:
@@ -357,12 +369,11 @@ statement_sequence:
   /* empty */
   {
     debugYacc("last statement", AT);
-    $$ = new TranslatedNode("");
+    $$ = new EmptyNode;
   }
 | statement_sequence statement {
     debugYacc("statement: "+ $2->getName(), AT);
-    // Add line jump at end of statement
-    // $1->addRightChild(new TranslatedNode("\n"));
+    
     $1->addRightChild($2);
     $$ = $1;
   }
@@ -382,6 +393,17 @@ names:
 | names COMMA NAME  { $$ = $1 + ", " + $3; }
 ;
 
+basicExpressions:
+  basicExpression
+| basicExpressions COMMA basicExpression {
+    TranslatedNode* comma= new TranslatedNode(", ", $3);
+
+    $1->addRightChild(comma);
+    $$ = $1;
+  }
+;
+
+
 /* **********************
  *  METHODS DECLARATION *
  * **********************/
@@ -396,7 +418,7 @@ returnstype:
 return:
   RETURN expression
   {
-    TranslatedNode* returnWord= new TranslatedNode("return ", $2);
+    Return* returnWord= new Return($2);
     $$ = returnWord;
   }
 ;
@@ -407,17 +429,16 @@ method.parameters:
   }
 ;
 
-// Parameters are variables that will used in a method, initiliazed with arguments
+// Parameters are variables that will used in a method, initialiazed with values
 // that are passed as arguments at function call
 parameters: 
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | parameter
  	{ $$ = $1; }
 | parameter COMMA parameters
  	{
-    TranslatedNode* varComma= new TranslatedNode(", ", $3);
-    $1->addRightChild(varComma);
+    $1->addRightChild($3);
     $$ = $1;
  	}
 // | NAME names ARE type { /* TODO parameters logic */ }
@@ -495,36 +516,32 @@ procedure:
  * ******************/
 
 statement:
-  BACK_LINE               { $$ = new TranslatedNode(""); }
-| variable                { $$ = $1; }
-| affectation             {
-    TranslatedNode* semicolon= new TranslatedNode(";\n");
-    $1->addRightChild(semicolon);
-    $$ = $1;
-  }
+  BACK_LINE             { $$ = new EmptyNode; }
+| variable              { $$ = $1; }
+| affectation           { $$ = $1; }
 | containerDeclaration  { $$ = $1; }
-| functionCall {
-    TranslatedNode* semicolon= new TranslatedNode(";\n");
-    $1->addRightChild(semicolon);
-    $$ = $1;
-  }
+| functionCall          { $$ = $1; }
+| functionCallNoParenthesis { $$ = $1; }
+| function_string       { $$ = $1;}
 | destruct  { $$ = $1; }
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
 // | overloading { $$ = $1; }
 | if        { $$ = $1; }
-| when      { $$ = $1; }
 | while     { $$ = $1; }
 | repeat    { $$ = $1; }
 | for       { $$ = $1; }
+// TODO add when implementation ?
+// | when      { $$ = $1; }
 ;
 
+// TODO Add other container declarations
 containerDeclaration:
-  map_declaration     { $$ = $1; }
-| array_declaration   { $$ = $1; }
-| vector_declaration  { $$ = $1; }
-| list_declaration    { $$ = $1; }
-| set_declaration     { $$ = $1; }
+  arrayDeclaration        { $$ = $1; }
+| stdContainerDeclaration { $$ = $1; }
+// | map_declaration     { $$ = $1; }
+// | list_declaration    { $$ = $1; }
+// | set_declaration     { $$ = $1; }
 ;
 
 // TODO Avoid shift/reduce by factorising shared/not shared
@@ -546,59 +563,61 @@ variable:
 
 /* ****************************
  *  Conditional Instructions  *
+ *        If and loops        *
  * ****************************/
-// If and loops
-else:
+
+
+.else:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = nullptr; }
 | ELSE statement_sequence {
     $$ = new Else($2);
   }
 ;
 
 if:
-  IF conditionalExpression BACK_LINE THEN statement_sequence else END endif {
+  IF conditionalExpression BACK_LINE THEN statement_sequence .else END endif {
     debugYacc("If", AT);
     $$ = new If($5, $6, $2);
   }
 ;
 
-when:
-  WHEN conditionalExpression IS BACK_LINE whenbody whendefault END endwhen {
-    /* TODO when logic */
-    debugYacc("when .. case ..", AT);
-  }
-;
+// when:
+//   WHEN conditionalExpression IS BACK_LINE whenbody whendefault END endwhen {
+//     /* TODO when logic */
+//     debugYacc("when .. case ..", AT);
+//   }
+// ;
 
-whenbody: /* whenbody can't be empty */
-  CASE expression BACK_LINE statement_sequence END endcase {
-    /* TODO whenbody logic 1 */
-    cout << "case body" << endl;
-  }
-| CASE expression BACK_LINE statement_sequence END endcase whenbody {
-    /* TODO whenbody logic 2 */
-    cout << "case body" << endl;
-  }
-;
+// when.body: /* whenbody can't be empty */
+//   CASE expression BACK_LINE statement_sequence END endcase {
+//     /* TODO whenbody logic 1 */
+//     cout << "case body" << endl;
+//   }
+// | CASE expression BACK_LINE statement_sequence END endcase whenbody {
+//     /* TODO whenbody logic 2 */
+//     cout << "case body" << endl;
+//   }
+// ;
 
-whendefault: /* May not be specified */
-  /* empty */
-| DEFAULT BACK_LINE statement_sequence END endcase {
-    /* TODO whendefault logic 1 */
-  }
-;
+// when.default: /* May not be specified */
+//   /* empty */
+// | DEFAULT BACK_LINE statement_sequence END endcase {
+//     /* TODO whendefault logic 1 */
+//   }
+// ;
 
 while:
   WHILE conditionalExpression DO BACK_LINE statement_sequence END endwhile {
     debugYacc("WHILE .. DO ..", AT);
-    $$ = new While($5, $2);
+    $$ = new While($2, $5);
   }
 ;
 
 repeat:
-  REPEAT statement_sequence UNTIL BACK_LINE expression BACK_LINE END endrepeat {
-    /* TODO repeat-until logic */
+  REPEAT BACK_LINE statement_sequence UNTIL conditionalExpression lineend {
     debugYacc("REPEAT .. UNTIL ..", AT);
+    $$ = new Repeat($3, $5);
   }
 ;
 
@@ -624,28 +643,28 @@ for.step: // @see do step should be text or numeric_value ?
   STEP expression { $$= $2; }
 ;
 
-forBody:
+for.body:
   DO BACK_LINE statement_sequence END endfor { $$ = $3; }
 ;
 
 // TODO Add 'for' logics that handle going through containers
 for:
-  for.decl for.rangeStart for.rangeEnd forBody {
+  for.decl for.rangeStart for.rangeEnd for.body {
     debugYacc("FOR  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     $$ = new For($1,$2,$3,simpleStep,$4);
   }
-| for.decl for.rangeStart for.rangeEnd for.step forBody {
+| for.decl for.rangeStart for.rangeEnd for.step for.body {
     debugYacc("FOR  IN .. STEP ...", AT);
     $$ = new For($1,$2,$3,$4,$5);
   }
-| for.decl for.type for.rangeStart for.rangeEnd forBody {
+| for.decl for.type for.rangeStart for.rangeEnd for.body {
     /* TODO 'for a is TYPE in b .. c' logic */
     debugYacc("FOR type  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     $$ = new For($1,$3,$4,simpleStep,$5,$2);
   }
-| for.decl for.type for.rangeStart for.rangeEnd for.step forBody {
+| for.decl for.type for.rangeStart for.rangeEnd for.step for.body {
     /* TODO 'for a is TYPE in b .. c step x' logic */
     debugYacc("FOR type  IN .. STEP ...", AT);
     $$ = new For($1,$3,$4,$5,$6,$2);
@@ -655,74 +674,71 @@ for:
 /* ************************
  *  Complex Instructions  *
  * ************************/
+
 // TODO function call
 functionCall:
   // objectDotOperator simpleFunction {}
-  functionCall objectFunctionCall {
-    $1->addRightChild($2);
+  functionCall SIMPLE_DOT simpleFunction {
+    $1->addRightChild($3);
     $$ = $1;
+  }
+| objectDotOperator simpleFunction {
+    $2->addObject($1);
+    $$ = $2;
   }
 | simpleFunction {
     $$ = $1;
   }
-// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?) 
-| function_string { $$ = $1;}
+// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?
 // | containers_methods { } // TODO implement containers methods
 // | function_regex { }
 ;
 
+  // At least one argument when no parenthesis
+functionCallNoParenthesis:
+  NAME .argumentsList {
+    debugYacc("Call of function (no parenthesis) '"+ $1 +"'", AT);
+
+    $$ = new FunctionCall($1, $2);
+  }
+;
+
+simpleFunction.arguments:
+  arguments { $$ = $1; }
+;
+
 simpleFunction:
   // function call without parenthesis
-  NAME argumentsList {
-    debugYacc("Call of function"+ $1, AT);
+  NAME simpleFunction.arguments {
+    debugYacc("Call of function '"+ $1 +"'", AT);
 
-    TranslatedNode* leftPar= new TranslatedNode("(", $2);
-    TranslatedNode* rightPar= new TranslatedNode(")");
-
-    $2->addRightChild(rightPar);
-    $$ = new TranslatedNode($1, leftPar);
-  }
-  // function call with parenthesis
-| NAME arguments {
-    debugYacc("Call of function (w/ parenthesis) "+ $1, AT);
-    $$ = new TranslatedNode($1 +" ", $2);
+    $$ = new FunctionCall($1, $2);
   }
 // @see Should it be "object" instead of NAME ?
 ;
 
-objectFunctionCall:
-  SIMPLE_DOT arguments {
-    TranslatedNode* dot= new TranslatedNode(".");
-    dot->addRightChild($2);
-    $$ = dot;
-  }
-;
-
 arguments:
-  LEFT_PARENTHESIS argumentsList LEFT_PARENTHESIS
+  LEFT_PARENTHESIS .argumentsList RIGHT_PARENTHESIS
   {
-    TranslatedNode* leftPar= new TranslatedNode("(", $2);
-    TranslatedNode* rightPar= new TranslatedNode(")");
-
-    $2->addRightChild(rightPar);
-    $$ = leftPar;
+    debugYacc("Arguments (w/ parenthesis)", AT);
+    $$ = $2;
   }
 ;
 
 // arguments are separated by commas : they have a comma before, except the first one
-argumentsList:
+.argumentsList:
   /* empty */ // No argument
-  { $$ = new TranslatedNode(""); }
-| argumentElement argumentsSeparated {// One or more arguments
+  { $$ = new EmptyNode; }
+| argumentElement .argumentsSeparated {// One or more arguments
     $1->addRightChild($2);
     $$ = $1;
   }
 ;
 
-argumentsSeparated:
+.argumentsSeparated:
   /* empty */
-  { $$ = new TranslatedNode(""); }
-| argumentsSeparated COMMA argumentElement
+  { $$ = new EmptyNode; }
+| .argumentsSeparated COMMA argumentElement
   {
     TranslatedNode* comma= new TranslatedNode(", ", $3);
 
@@ -732,9 +748,8 @@ argumentsSeparated:
 ;
 
 argumentElement:
-  facultativeAssignment expression {
-    // TODO Take assignment ($1) into account when passing argument (facultativeAssignment)
-    $$ = $2;
+  expression {
+    $$ = $1;
   }
 ;
 
@@ -745,7 +760,7 @@ argumentElement:
 affectation:
   NAME assignmentOperator expression {
     debugYacc("Affectation on "+ $1, AT);
-    TranslatedNode* affect= new TranslatedNode($1 + $2 +" ", $3);
+    Affectation* affect= new Affectation($1, $2, $3);
     $$ = affect;
   }
 // | NAME SIMPLE_DOT NAME EQUALS expression { cout << "Affectation name.name " <<  endl; }
@@ -763,18 +778,6 @@ destruct:
   }
 ;
 
-streamedExpressions:
-  /* empty */
-  { $$ = new TranslatedNode(""); }
-| streamedExpressions basicExpression {
-    TranslatedNode* streamOperator= new TranslatedNode("<< ");
-
-    $1->addRightChild(streamOperator);
-    $1->addRightChild($2);
-    $$ = $1;
-  }
-;
-
 // TODO create a function call cpp class, for input, string funcs and generics (and printing)
 input:
   INPUT IN NAME BACK_LINE {
@@ -784,7 +787,7 @@ input:
 ;
 
 printing:
-  PRINT streamedExpressions BACK_LINE {
+  PRINT .streamedExpressions BACK_LINE {
     debugYacc("print "+ $2->translate(), AT);
     $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
     delete $2;
@@ -798,6 +801,17 @@ printing:
 //   }
 // ;
 
+.streamedExpressions:
+  /* empty */
+  { $$ = new EmptyNode; }
+| .streamedExpressions expression {
+    TranslatedNode* streamOperator= new TranslatedNode("<< ", $2);
+
+    $1->addRightChild(streamOperator);
+    $$ = $1;
+  }
+;
+
 /* *******************
  *  GENERIC COMPLEX  *
  * ******************/
@@ -806,6 +820,37 @@ printing:
 next_line:
   BACK_LINE BACK_LINE /* Nothing to do */
 | next_line BACK_LINE /* Nothing to do */
+;
+
+// @see tranform TranslatedNode by Expression or subclass use ?
+expression:
+  /* TODO check that there is no other operators*/
+  expression arithmeticOperator expression {
+    debugYacc("Operation between two expressions", AT);
+
+    $1->addRightChild($2);
+    $2->addRightChild($3);
+    $$ = $1;
+  }
+| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
+    TranslatedNode* parenthExpr= new TranslatedNode("("+ $2->translate() +")");
+    delete $2;
+    $$ = parenthExpr;
+  }
+| basicExpression {
+    debugYacc("expression from basicExpression", AT);
+    $$ = $1;
+  }
+| functionCall {
+    $1->setAsNotInstruction();
+    $$ = $1;
+  }
+  // Container access
+| NAME LEFT_BRACKET integerExpression RIGHT_BRACKET {
+    debugYacc("expression from container access", AT);
+    
+    $$ = new ArrayAccess($1, $3);
+  }
 ;
 
 // TODO handle parenthesis logic. Rework needs to be done on BooleanExpression class
@@ -827,7 +872,7 @@ conditionalExpression:
   }
 | NOT conditionalExpression {
     debugYacc("Negation", AT);
-    BooleanExpression* negation= new BooleanExpression("!", $2);
+    BooleanExpression* negation= new BooleanExpression(new Operator("!"), $2);
     $$ = negation;
   }
 | expression relationalOperator expression {
@@ -835,26 +880,6 @@ conditionalExpression:
     BooleanExpression* comparison= new BooleanExpression($2,$1,$3);
 
     $$ = comparison;
-  }
-;
-
-expression:
-  /* TODO check that there is no other operators*/
-  expression arithmeticOperator expression {
-    debugYacc("Operation between two expressions", AT);
-    TranslatedNode* arithOperator= new TranslatedNode(" "+ $2 +" ", $3);
-
-    $1->addRightChild(arithOperator);
-    $$ = $1;
-  }
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
-    TranslatedNode* parenthExpr= new TranslatedNode("("+ $2->translate() +")");
-    delete $2;
-    $$ = parenthExpr;
-  }
-| basicExpression {
-    debugYacc("expression from basicExpression", AT);
-    $$ = $1;
   }
 ;
 
@@ -870,7 +895,7 @@ expression:
 // ;
 
 parameter:
-  var.decl type affect
+  var.decl type .affect
   {
     debugYacc("Parameter : "+ $1, AT);
     // VariableHashed v($1,$2); //@see if variable hashed for method declaration parameters
@@ -880,7 +905,7 @@ parameter:
   }
 
 simpleVariable:
-  var.decl type affect
+  var.decl type .affect
   {
     debugYacc("Variable : "+ $1, AT);
     VariableHashed v($1,$2); // @see if same thing if function parameters
@@ -907,7 +932,7 @@ simpleVariable:
 // 	}
 ;
 
-scope:
+.scope:
   /* empty */
   { $$ = "local "; }
 | LOCAL   { $$ = "local ";}
@@ -948,9 +973,9 @@ begin:
 
 // @see can it just be a translated Node (variable name don't change) or a Node (Var or value)
 // TODO affect logic
-affect:
+.affect:
   /* empty */
-  { $$ = new TranslatedNode(""); }
+  { $$ = new EmptyNode; }
 | EQUALS basicExpression {
     debugYacc("Affectation value: "+ $2->translate(), AT);
     $$ = $2;
@@ -962,7 +987,7 @@ affect:
 type:
   TYPE_INTEGER  { $$ = "int"; }
 | TYPE_REAL     { $$ = "float"; }
-| TYPE_STRING   { $$ = "string"; }
+| TYPE_STRING   { $$ = "std::string"; }
 | TYPE_BOOLEAN  { $$ = "bool"; }
 ;
 
@@ -977,7 +1002,7 @@ boolean:
 
 basicExpression:
   string      { $$ = new TranslatedNode($1); }
-| boolean     { $$ = new TranslatedNode($1->translate()); delete $1; }
+| boolean     { $$ = $1; }
 | NUM_INTEGER { $$ = new TranslatedNode($1); }
 | NUM_REAL    { $$ = new TranslatedNode($1); }
 // @see if variable must be retrieved from name for type checking
@@ -988,53 +1013,50 @@ integerExpression:
   NUM_INTEGER { $$ = new TranslatedNode($1); }
 // @see if variable must be retrieved from name for type checking
 | NAME        { $$ = new TranslatedNode($1); }
-
-
-// TODO facultativeAssignment logic
-facultativeAssignment:
-  /* empty */ // ex: c is myClass("name")
-  { $$ = ""; } 
-  // ex: p is Person(name="name")
-| NAME EQUALS   { $$ = $1; }
 ;
 
-nbrOrName:
-  NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
-| NUM_REAL    { /* $$ = Real($1); */ }
-| NAME        { /* $$ = String($1); */ }
-;
+// numberExpression:
+//   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
+// | NUM_REAL    { /* $$ = Real($1); */ }
+// | NAME        { /* $$ = String($1); */ }
+// ;
 
 /* ******************
  *    OPERATORS     *
  * ******************/
 
 assignmentOperator:
-  EQUALS { $$ = "="; }
-| arithmeticOperator EQUALS { $$ = $1 + "="; }
+  EQUALS { $$ = new Operator("="); }
+| arithmeticOperator EQUALS {
+    Operator* equals= new Operator("=");
+    
+    $1->addRightChild(equals);
+    $$ = $1;
+  }
 ;
 
 arithmeticOperator:
-  PLUS    { $$ = "+"; }
-| MINUS   { $$ = "-"; }
-| MULT    { $$ = "*"; }
-| DIVISE  { $$ = "/"; }
-| MOD     { $$ = "%"; }
+  PLUS    { $$ = new Operator("+"); }
+| MINUS   { $$ = new Operator("-"); }
+| MULT    { $$ = new Operator("*"); }
+| DIVISE  { $$ = new Operator("/"); }
+| MOD     { $$ = new Operator("%"); }
 ;
 
 // NOT is a logical operator, but it is unary, not binary. Must be handle separatly
 // @see if we use operator or TranslatedNode
 logicalOperator:
-  AND { $$ = "&&"; }
-| OR { $$ = "||"; }
+  AND { $$ = new Operator("&&"); }
+| OR { $$ = new Operator("||"); }
 ;
 
 relationalOperator:
-  EQUALS EQUALS { $$ = "=="; }
-| NE  { $$ = "!="; }
-| LT  { $$ = "<"; }
-| LE  { $$ = "<="; }
-| GT  { $$ = ">"; }
-| GE  { $$ = ">="; }
+  EQUALS EQUALS { $$ = new Operator("=="); }
+| NE  { $$ = new Operator("!="); }
+| LT  { $$ = new Operator("<"); }
+| LE  { $$ = new Operator("<="); }
+| GT  { $$ = new Operator(">"); }
+| GE  { $$ = new Operator(">="); }
 ;
 
 objectDotOperator:
@@ -1087,11 +1109,6 @@ endfor:
 | FOR lineend {}
 ;
 
-endrepeat:
-  lineend
-| REPEAT lineend {}
-;
-
 enddestruct:
   lineend
 | DESTRUCT lineend {}
@@ -1107,13 +1124,6 @@ enddestruct:
 /* ************
  *    OTHER   *
  * ************/
-// 		---------------------------------------------------------------------
-// 		---------------------------------------------------------------------
-
-/* else_body:
-   ELSE BACK_LINE statement_sequence   { cout << "else " << endl; }
-|  ELSE BACK_LINE statement_sequence  else_body  { cout << "else " << endl;}
-;*/
 
 //    -----------------------------REGEX METHODS-----------------------------------------
 // function_regex:
@@ -1139,99 +1149,84 @@ function_string:
 | objectDotOperator FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
 ;
 
+/* ***************************
+ *  containers declaration   *
+ * ***************************/
 
-//    -----------------------------array Déclaration----------------------------------------
+//    -----------------------------array declaration-------------------------------------
 array.decl:
   var.decl ARRAY LEFT_BRACKET { $$ = $1; }
 ;
 
-array_declaration:
-  scope array.decl NUM_INTEGER DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope array.decl NUM_INTEGER DOUBLE_DOT NAME RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound \n"); }
-| scope array.decl NAME DOUBLE_DOT NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with lower and upper bound\n"); }
-| scope array.decl NUM_INTEGER RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope array.decl NAME RIGHT_BRACKET OF type { printf("array declaration with size \n"); }
-| scope array.decl NUM_INTEGER RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("array declaration  with initializer list \n"); }
-| scope array.decl NAME RIGHT_BRACKET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE {printf("array declaration with size with initializer list \n"); }
+array.type:
+  RIGHT_BRACKET OF type { $$ = $3; }
 ;
 
-//    -----------------------------vector declaration----------------------------------------
-vect.decl:
-  scope NAME IS VECTOR OF type {
-    // TODO create an instance of Container (add a methor in Container to add init list after construction)
-    // TranslatedNode* vectorDecl= new TranslatedNode("std::vector< "+ $6 +" >", $);
+// TODO handle scope for array
+arrayDeclaration:
+  /* scope */ array.decl NUM_INTEGER array.type
+  {
+    debugYacc("array declaration with size"+ $2, AT);
+    // TODO check that size as a correct format (>0)
+    $$ = new Array($1, $3, atoi($2.c_str()));
+  }
+| /* scope */ array.decl array.type container.affectation
+  {
+    debugYacc("array declaration with initializer list", AT);
+    $$ = new Array($1, $2, $3);
+  }
+// | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type
+//   { printf("array declaration with lower and upper bound\n"); }
+;
 
-    // $$ = $1;
+//    --------------------------standard containers declaration--------------------------
+stdContainerDeclaration:
+  /* scope */ container.decl .container.affectation {
+    if ($2 != nullptr) $1->setInitList($2);
+    $$ = $1;
   }
 ;
 
-// We assume vector does not has a size defined at initialization
-vector_declaration: 
-   vect.decl  { printf("vector declaration  \n"); }
-| scope vect.decl type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("vector declaration with initializer list \n"); }
+container.decl:
+  var.decl VECTOR .container.initSize OF type {
+    debugYacc("vector declaration", AT);
+    Vector* vector= new Vector($1, $5, $3);
+
+    $$ = vector;
+  }
+| var.decl LIST .container.initSize OF type {
+    debugYacc("list declaration", AT);
+    List* list= new List($1, $5, $3);
+
+    $$ = list;
+  }
+| var.decl MAP .container.initSize OF LT type COMMA type GT {
+    debugYacc("map declaration", AT);
+    Map* map= new Map($1, $6, $8, $3);
+
+    $$ = map;
+  }
+| var.decl SET .container.initSize OF type {
+    debugYacc("set declaration", AT);
+    Set* set= new Set($1, $5, $3);
+
+    $$ = set;
+  }
 ;
 
-//    -----------------------------list declaration----------------------------------------
-list_declaration: 
-  scope NAME IS LIST OF type { printf("list declaration  \n"); }
-| scope NAME IS LIST OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("list declaration with initializer list \n"); }
+.container.initSize:
+/* empty */ { $$ = nullptr; }
+| LEFT_BRACKET integerExpression RIGHT_BRACKET { $$ = $2; }
 ;
 
-//    -----------------------------set declaration----------------------------------------
-set_declaration: 
-scope NAME IS SET OF type { printf("set declaration  \n"); }
-| scope NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| scope NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| scope NAME IS SET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
+container.affectation:
+  EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE { $$ = $3; }
 ;
 
-//    -----------------------------map declaration----------------------------------------
-map_declaration: 
-  scope var.decl MAP OF LT type COMMA type GT { printf("map declaration  \n"); }
-| map_declaration EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("map declaration with initializer list \n"); }
+.container.affectation:
+/* empty */ { $$ = nullptr; }
+| container.affectation { $$ = $1; }
 ;
-
-//    ---------------------------------------------------------------------------------------
-//    -----------------------------Containers methods---------------------------------------
-//    ---------------------------------------------------------------------------------------
-
-// containers_methods : 
-//   objectDotOperator SIZE LEFT_PARENTHESIS RIGHT_PARENTHESIS      { printf("utilisation de la méthode size  \n"); }
-// | objectDotOperator IS_EMPTY LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("utilisation de la méthode size  \n"); }
-// | objectDotOperator CLEAR LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode size  \n"); }
-// | objectDotOperator PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS     { printf("utilisation de la méthode toString  \n"); }
-// | objectDotOperator FILL LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("fill(value) called \n"); }
-// | objectDotOperator RANDOMIZE LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS { printf("randomize(min,max) called \n"); }
-// | objectDotOperator MAX LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MAX() called \n"); }
-// | objectDotOperator MAX LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MAX(attr) called \n"); }
-// | objectDotOperator MIN LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("MIN() called \n"); }
-// | objectDotOperator MIN LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("MIN(attr) called \n"); }
-// | objectDotOperator SORT LEFT_PARENTHESIS RIGHT_PARENTHESIS            { printf("SORT() called \n"); }
-// | objectDotOperator SORT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("SORT(attr) called \n"); }
-// | objectDotOperator SUM LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("SUM() called \n"); }
-// | objectDotOperator SUM LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS   { printf("SUM(attr) called \n"); }
-// | objectDotOperator COUNT LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS             { printf("COUNT(val) called \n"); }
-// | objectDotOperator COUNT LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS  { printf("COUNT(attr,val) called \n"); }
-// | objectDotOperator REMOVE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("remove(val) called \n"); }
-// | objectDotOperator RANGE LEFT_PARENTHESIS RIGHT_PARENTHESIS             { printf("range() called \n"); }
-// | objectDotOperator FIND LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS            { printf("find(val) called \n"); }
-// | objectDotOperator FIND LEFT_PARENTHESIS NAME COMMA nbrOrName RIGHT_PARENTHESIS { printf("find(attr,val) called \n"); }
-// | objectDotOperator PUT_FIRST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("PUT_FIRST(elem) called \n"); }
-// | objectDotOperator PUT_LAST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS  { printf("PUT_Last(elem) called \n"); }
-// | objectDotOperator REMOVE_LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS   { printf("remove_Last() called \n"); }
-// | objectDotOperator REMOVE_FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("remove_Last() called \n"); }
-// | objectDotOperator AVERAGE LEFT_PARENTHESIS RIGHT_PARENTHESIS           { printf("average() called \n"); }
-// | objectDotOperator AVERAGE LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS { printf("average(attr) called \n"); }
-// | objectDotOperator STORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS    { printf("STORE(val) called \n"); }
-// | objectDotOperator RESTORE LEFT_PARENTHESIS NAME RIGHT_PARENTHESIS  { printf("RESTORE(val) called \n"); }
-// | objectDotOperator FIRST LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("first() called \n"); }
-// | objectDotOperator LAST LEFT_PARENTHESIS RIGHT_PARENTHESIS  { printf("last() called \n"); }
-// | objectDotOperator REMOVE_AT LEFT_PARENTHESIS NUM_INTEGER RIGHT_PARENTHESIS               { printf("REMOVE_AT(pos) called \n"); }
-// | objectDotOperator PUT_AT LEFT_PARENTHESIS NUM_INTEGER COMMA nbrOrName RIGHT_PARENTHESIS  { printf("put_at(pos, val) called \n"); }
-// | objectDotOperator INSERT LEFT_PARENTHESIS RIGHT_PARENTHESIS                              { printf("insert() called \n"); }
-// | objectDotOperator INSERT LEFT_PARENTHESIS nbrOrName COMMA nbrOrName RIGHT_PARENTHESIS    { printf("insert(key,val called \n"); }
-// | objectDotOperator EXIST LEFT_PARENTHESIS nbrOrName RIGHT_PARENTHESIS                     { printf("insert() called \n"); }
-// ;
 
 
 %%
@@ -1240,60 +1235,6 @@ void yyerror(const std::string& mess){
     std::cerr << "Error found at line " << yylineno << " :  "<< mess << std::endl;
     existing_parsing_error= true;
 }
-
-// int
-// yylex (void)
-// {
-//   int c;
-
-//   /* Skip white space.  */
-//   while ((c = getchar ()) == ' ' || c == '\t')
-//     ++yylloc.last_column;
-
-//   /* Step.  */
-//   yylloc.first_line = yylloc.last_line;
-//   yylloc.first_column = yylloc.last_column;
-
-//   /* Process numbers.  */
-//   if (isdigit (c))
-//     {
-//       yylval = c - '0';
-//       ++yylloc.last_column;
-//       while (isdigit (c = getchar ()))
-//         {
-//           ++yylloc.last_column;
-//           yylval = yylval * 10 + c - '0';
-//         }
-//       ungetc (c, stdin);
-//       return NUM;
-//     }
-
-//   /* Return end-of-input.  */
-//   if (c == EOF)
-//     return 0;
-
-//   /* Return a single char, and update location.  */
-//   if (c == '\n')
-//     {
-//       ++yylloc.last_line;
-//       yylloc.last_column = 0;
-//     }
-//   else
-//     ++yylloc.last_column;
-//   return c;
-// }
-
-
-// void yyerror(const char *s, ...){
-//   va_list ap;
-//   va_start(ap, s);
-
-//   if(yylloc.first_line)
-//     fprintf(stderr, "%s:%d.%d-%d.%d: error: ", /*yylloc.filename,*/ yylloc.first_line, 
-//      yylloc.first_column, yylloc.last_line, yylloc.last_column);
-//   vfprintf(stderr, s, ap);
-//   fprintf(stderr, "\n");
-// }
 
 void yyprint(const std::string& msg){
     std::cout << "[l" << yylineno << "] "<< msg<< std::endl;

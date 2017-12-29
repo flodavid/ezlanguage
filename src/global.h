@@ -3,13 +3,20 @@
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
-#include "./modules/TranslatedNode.h"
 #include "./modules/ConditionalExpression.h"
-#include "./declarations/Variable.h"
+#include "./modules/Operator.h"
+#include "./modules/TranslatedNode.h"
+#include "./declarations/Array.h"
+#include "./declarations/Container.h"
 #include "./declarations/Parameter.h"
+#include "./declarations/Variable.h"
+#include "./instructions/Affectation.h"
+#include "./instructions/If.h"
+#include "./instructions/Else.h"
+#include "./instructions/FunctionCall.h"
+#include "./instructions/Return.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
-#include <vector>
 #include <string>
 
 extern ScopeHashTable symbolTable;
@@ -22,13 +29,20 @@ typedef struct s_mon_type {
     int numerical_value;
     double real_value;
     bool boolean;
-    std::string texte;
+    std::string text;
     Node* tree;
-    std::vector<VariableHashed> vectString;
-    // TODO change as pointer or reference
+    Array* array;
+    Container* cont;
     Variable* var;
+    Expression* expr;
+    Affectation* affectation;
     ConditionalExpression* condExpr;
+    FunctionCall* functionCall;
+    Operator* opeNode;
     TranslatedNode* transNode;
+    If* ifNode;
+    Else* elseNode;
+    Return* returnNode;
 //    MaClasse	une_maclasse;
 } mon_type;
 

@@ -1,6 +1,9 @@
 # EzLanguage
 
-[![Build Status](https://travis-ci.org/flodavid/ezlanguage.svg)](https://travis-ci.org/flodavid/ezlanguage)
+
+|  Travis Compilation  |      License      |   Code quality   |    Hit counter   |
+| :----------------------------: | :---------------------------: | :----------------------------: | :----------------------------: |
+[![Build Status](https://travis-ci.org/flodavid/ezlanguage.svg)](https://travis-ci.org/flodavid/ezlanguage) | [![GPLv3 License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/flodavid/Urbanisme/blob/master/COPYING.txt) | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f623f84ff30f43a4b0c3a93f74ca5329)](https://www.codacy.com/app/flodavid/ezlanguage?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=flodavid/ezlanguage&amp;utm_campaign=Badge_Grade) | [![ghit.me](https://ghit.me/badge.svg?repo=flodavid/ezlanguage)](https://ghit.me/repo/flodavid/ezlanguage) |
 
 Repository of a project for the EZ language compiler.
 A simple compiler for EZ-Language 
