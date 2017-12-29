@@ -18,9 +18,7 @@ If::~If()
 
 string If::preTranslate() const
 {
-    string res="if(" + mCondition->translate() + ") ";
-
-    res+= "{\n";
+    string res="if " + mCondition->translate() + " {\n";
     
     // the instructions are in the left_son (the first one IS the left son)
 

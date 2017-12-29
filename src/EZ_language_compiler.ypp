@@ -861,11 +861,7 @@ conditionalExpression:
     debugYacc("BooleanExpression from variable "+ $1, AT);
     $$ = new BooleanExpression($1);
   }
-// | LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS {
-//     TranslatedNode* parenthCond= new TranslatedNode("("+ $2->translate() +")");
-//     delete $2;
-//     $$ = parenthCond;
-//   }
+| LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS { $$ = $2; }
 | conditionalExpression logicalOperator conditionalExpression {
     BooleanExpression* expr= new BooleanExpression($2,$1,$3);
     $$ = expr;
@@ -1014,12 +1010,6 @@ integerExpression:
 // @see if variable must be retrieved from name for type checking
 | NAME        { $$ = new TranslatedNode($1); }
 ;
-
-// numberExpression:
-//   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
-// | NUM_REAL    { /* $$ = Real($1); */ }
-// | NAME        { /* $$ = String($1); */ }
-// ;
 
 /* ******************
  *    OPERATORS     *
