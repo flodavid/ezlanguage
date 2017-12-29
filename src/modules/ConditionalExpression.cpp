@@ -3,9 +3,9 @@
 using namespace std;
 
 ConditionalExpression::ConditionalExpression():
-    Node(nullptr, nullptr)
+    Expression()
 { }
 
 ConditionalExpression::ConditionalExpression(Node* left, Node* right):
-    Node(left, right)
+    Expression(left, right)
 { }

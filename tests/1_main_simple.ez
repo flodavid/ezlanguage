@@ -62,4 +62,6 @@ a multiple lines comment
 
     l is list of string
 
+    m is map of <string, integer>
+
 end

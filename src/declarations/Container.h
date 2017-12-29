@@ -49,7 +49,7 @@ public:
      * @brief Get the type of container (name in C++)
      * @return the type of the container. Defined at class creation
      */
-    virtual inline const std::string getType() const =0;
+    virtual const std::string getType() const =0;
 
     /**
      * @brief Add an initialization list to the vector

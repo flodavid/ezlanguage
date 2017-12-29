@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 COMPILER=$(dirname $0)/../bin/EZ_language_compiler
 

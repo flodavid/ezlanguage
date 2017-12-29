@@ -2,13 +2,13 @@
 #define CONDITIONALEXPRESSION_H
 
 #include <string>
-#include "Node.h"
+#include "Expression.h"
 
 /**
  * @brief Represent a node of the tree which will traduct any type of conditional expression
  * It is an abstract class
  */
-class ConditionalExpression : public Node {
+class ConditionalExpression : public Expression {
 
 public:
     /**

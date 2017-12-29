@@ -10,6 +10,7 @@
 #include "./declarations/Parameter.h"
 #include "./declarations/Variable.h"
 #include "./instructions/Affectation.h"
+#include "./instructions/If.h"
 #include "./instructions/Else.h"
 #include "./instructions/FunctionCall.h"
 #include "./instructions/Return.h"
@@ -37,6 +38,7 @@ typedef struct s_mon_type {
     FunctionCall* functionCall;
     Operator* opeNode;
     TranslatedNode* transNode;
+    If* ifNode;
     Else* elseNode;
     Return* returnNode;
 //    MaClasse	une_maclasse;

@@ -16,6 +16,7 @@ string Program::preTranslate() const
 "#include <string>\n"
 "#include <iostream>\n"
 "#include <cstdlib>\n"
+"#include <map>\n"
 "#include <vector>\n"
 "#include <list>\n";
 }
