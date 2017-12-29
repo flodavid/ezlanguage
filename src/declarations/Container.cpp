@@ -25,7 +25,7 @@ string Container::preTranslate() const
 	string res= "std::"+ getType() + "<" + mTypeElement + "> " + getDeclarationName();
 	
 	if (mSize != nullptr) {
-		res+= "("+ mSize->translate() + ")";
+		res+= "["+ mSize->translate() + "]";
 	} else res+= "= { ";
 
 	return res;
@@ -35,7 +35,10 @@ string Container::postTranslate() const
 {
 	string res;
 
-	res+= " };\n";
+	if (!mSize) {
+		res+= " }";
+	}
+	res+= ";\n";
 
     return res;
 }

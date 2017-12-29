@@ -18,7 +18,8 @@ string Program::preTranslate() const
 "#include <cstdlib>\n"
 "#include <map>\n"
 "#include <vector>\n"
-"#include <list>\n";
+"#include <list>\n"
+"#include <set>\n";
 }
 
 string Program::postTranslate() const {

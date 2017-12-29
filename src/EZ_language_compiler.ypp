@@ -25,6 +25,7 @@
 #include "../src/declarations/Map.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
+#include "../src/declarations/Set.h"
 #include "../src/declarations/Variable.h"
 #include "../src/declarations/Vector.h"
 #include "../src/modules/ArrayAccess.h"
@@ -157,7 +158,7 @@ int yycolumn = 1;
 %type<text> for.decl for.type var.decl array.decl array.type
 %type<cont> container.decl
 %type<text> returnstype
-%type<expr> for.step for.rangeStart for.rangeEnd .container.affectation
+%type<expr> for.step for.rangeStart for.rangeEnd .container.affectation .container.initSize
 
 // Parameters
 // %define parse.trace
@@ -1012,6 +1013,7 @@ integerExpression:
   NUM_INTEGER { $$ = new TranslatedNode($1); }
 // @see if variable must be retrieved from name for type checking
 | NAME        { $$ = new TranslatedNode($1); }
+;
 
 // numberExpression:
 //   NUM_INTEGER { /* $$ = Integer(to_string($1)); */ }
@@ -1183,33 +1185,6 @@ arrayDeclaration:
 ;
 
 //    -----------------------------containers declaration----------------------------------------
-// We assume containers does not has a size defined at initialization
-container.decl:
-  var.decl VECTOR OF type {
-    debugYacc("vector declaration", AT);
-    Vector* vector= new Vector($1, $4);
-
-    $$ = vector;
-  }
-| var.decl LIST OF type {
-    debugYacc("list declaration", AT);
-    List* list= new List($1, $4);
-
-    $$ = list;
-  }
-| var.decl MAP OF LT type COMMA type GT {
-    debugYacc("list declaration", AT);
-    Map* map= new Map($1, $5, $7);
-
-    $$ = map;
-  }
-;
-
-.container.affectation:
-/* empty */
-| EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE { $$ = $3; }
-;
-
 stdContainerDeclaration:
   /* scope */ container.decl .container.affectation {
     if ($2 != nullptr) $1->setInitList($2);
@@ -1217,12 +1192,41 @@ stdContainerDeclaration:
   }
 ;
 
-//    -----------------------------set declaration----------------------------------------
-set_declaration: 
-.scope NAME IS SET OF type { printf("set declaration  \n"); }
-| .scope NAME IS SET LEFT_BRACKET NUM_INTEGER RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| .scope NAME IS SET LEFT_BRACKET NAME RIGHT_BRACKET OF type { printf("set declaration with size \n"); }
-| .scope NAME IS SET OF type EQUALS LEFT_ACCOLADE names RIGHT_ACCOLADE { printf("set declaration with initializer list \n"); }
+container.decl:
+  var.decl VECTOR .container.initSize OF type {
+    debugYacc("vector declaration", AT);
+    Vector* vector= new Vector($1, $5, $3);
+
+    $$ = vector;
+  }
+| var.decl LIST .container.initSize OF type {
+    debugYacc("list declaration", AT);
+    List* list= new List($1, $5, $3);
+
+    $$ = list;
+  }
+| var.decl MAP .container.initSize OF LT type COMMA type GT {
+    debugYacc("map declaration", AT);
+    Map* map= new Map($1, $6, $8, $3);
+
+    $$ = map;
+  }
+| var.decl SET .container.initSize OF type {
+    debugYacc("set declaration", AT);
+    Set* set= new Set($1, $5, $3);
+
+    $$ = set;
+  }
+;
+
+.container.initSize:
+/* empty */ { $$ = nullptr; }
+| LEFT_BRACKET integerExpression RIGHT_BRACKET { $$ = $2; }
+;
+
+.container.affectation:
+/* empty */
+| EQUALS LEFT_ACCOLADE basicExpressions RIGHT_ACCOLADE { $$ = $3; }
 ;
 
 

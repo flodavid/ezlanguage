@@ -60,8 +60,8 @@ a multiple lines comment
 
     vect2 is vector of integer = { 1, 2 }
 
-    l is list of string
-
+    l is list[10] of string
     m is map of <string, integer>
+    s is set of string
 
 end
