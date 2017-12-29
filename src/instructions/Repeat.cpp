@@ -19,5 +19,5 @@ string Repeat::preTranslate() const
 
 string Repeat::postTranslate() const
 {
-    return "} while(" + mCondition->translate() + ");\n";
+    return "} while " + mCondition->translate() + ";\n";
 }

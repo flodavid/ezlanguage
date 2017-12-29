@@ -14,7 +14,7 @@ While::~While()
 
 
 string While::preTranslate() const {
-    return "while (" + mCondition->translate() + ") {\n";
+    return "while " + mCondition->translate() + " {\n";
 }
 
 string While::postTranslate() const

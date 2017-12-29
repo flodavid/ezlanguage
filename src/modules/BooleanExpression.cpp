@@ -29,7 +29,7 @@ BooleanExpression::~BooleanExpression()
 }
 
 string BooleanExpression::preTranslate() const {
-    string res= "";
+    string res= "( ";
 
     if (value != "") {
         debug("Cond. Expr., just value", AT);
@@ -37,13 +37,19 @@ string BooleanExpression::preTranslate() const {
     } else {
         // Two operandes case
         if(left_part != nullptr) {
-            debug("Cond. Expr.: binary operator", AT);
             res+= left_part->translate() +" ";
         }
-        if(right_part != nullptr && mOperator != nullptr) res+= mOperator->translate() + " "+ right_part->translate();
+        if(right_part != nullptr && mOperator != nullptr) {
+            debug("Cond. Expr.: binary operator", AT);
+            res+= mOperator->translate() + " "+ right_part->translate();
+        }
         // There is no right part or operator whereas there is a left part
         else error("BooleanExpression is not correctly initialized (no operator or right part)", AT);
+        
     }
+
+    res+= " )";
+    
     return res;
 
 }
