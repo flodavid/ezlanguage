@@ -16,6 +16,16 @@ void debug(const std::string &msg, const char *location)
 #endif
 }
 
+void debugLex(const std::string &msg, const char *location)
+{
+#if DEBUGLEX == 1
+    std::ostringstream oss;
+    oss << msg;
+    oss << " at : " << location;
+    yyprint(oss.str());
+#endif
+}
+
 void debugYacc(const std::string &msg, const char *location)
 {
 #if DEBUGYACC == 1

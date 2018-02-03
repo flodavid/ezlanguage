@@ -87,8 +87,8 @@ int yycolumn = 1;
 
 // Tokens
 %token<text> NUM_INTEGER     // Integer
-%token<text>	NUM_REAL			  // Real
-%token<text> NAME RETOUR STRING STRING_PARAM
+%token<text> NUM_REAL			  // Real
+%token<text> NAME RETOUR STRING STRING_PARAM ANYTHING CODE_TEXT
 %token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
 %token<text> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
 %token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
@@ -98,16 +98,16 @@ int yycolumn = 1;
 %token IF THEN ELSE   						  // if else 
 %token WHEN CASE DEFAULT ENDWHEN	  // switch case ...
 %token WHILE ENDWHILE							  // while .. do ...
-%token REPEAT UNTIL ENDREPEAT 			// do .. while ...
+%token REPEAT UNTIL ENDREPEAT 			// do .. while ...functions
 %token FOR IN DO STEP 
 %token RETURN FALSE TRUE            // words
 %token FUNCTION PROCEDURE RETURNS	 	// functions
 %token PRINT INPUT                  // Print and get input text 
 %token OPERATOR                     // Overloading
-%token BEGINN END						        // can not use 'BEGIN'
+%token BEGINN END PROGRAM      // can not use 'BEGIN'
 %token END_OF_FILE
-%token CLASS PROGRAM DESTRUCT			  //class
-%token PARAMETERS AS							    // program arguments	
+%token CLASS  DESTRUCT			        //class
+%token PARAMETERS AS							  // program arguments	
 %token REGEX SEARCH MATCH 					// Regular expression
 
 %token LENGTH TOUPPERCASE TOLOWERCASE
@@ -144,6 +144,7 @@ int yycolumn = 1;
 %type<var>  simpleVariable variable // TODO variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
 %type<functionCall> simpleFunction functionCall functionCallNoParenthesis
+%type<transNode> code
 %type<tree> function procedure class import 
 %type<tree> statement
 %type<text> type string .scope // TODO constancy
@@ -516,7 +517,7 @@ procedure:
  * ******************/
 
 statement:
-  BACK_LINE             { $$ = new EmptyNode; }
+  BACK_LINE             { $$ = new EmptyNode; debugYacc("Shouldn't happen on l67", AT); }
 | variable              { $$ = $1; }
 | affectation           { $$ = $1; }
 | containerDeclaration  { $$ = $1; }
@@ -531,6 +532,7 @@ statement:
 | while     { $$ = $1; }
 | repeat    { $$ = $1; }
 | for       { $$ = $1; }
+| code      { $$ = $1; }
 // TODO add when implementation ?
 // | when      { $$ = $1; }
 ;
@@ -809,6 +811,20 @@ printing:
 
     $1->addRightChild(streamOperator);
     $$ = $1;
+  }
+;
+
+// code:
+//   CODE begin ANYTHING endcode {
+//     TranslatedNode* cpp_instructions= new TranslatedNode($3);
+//     $$ = cpp_instructions;
+//   }
+// ;
+
+code:
+  CODE_TEXT END lineend {
+    TranslatedNode* cpp_instructions= new TranslatedNode($1+"\n");
+    $$ = cpp_instructions;
   }
 ;
 
@@ -1098,6 +1114,11 @@ endfor:
   lineend
 | FOR lineend {}
 ;
+
+// endcode:
+//   lineend
+// | CODE lineend {}
+// ;
 
 enddestruct:
   lineend

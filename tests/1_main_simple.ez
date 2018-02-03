@@ -64,6 +64,9 @@ a multiple lines comment
     m is map of <string, integer>
     s is set of string
 
+code
+    std::cout << "C++ code inclusion is working, \"en route\" for coding !" << std::endl;
+end
 
     if true or true and false
     then print "Cond expr with no parenthesis priority working"

@@ -2,6 +2,7 @@
 #define CLASS_H
 
 #include "CommonDeclaration.h"
+#include "../modules/EmptyNode.h"
 #include "../hash_table/ClassHashed.h"
 #include "Function.h"
 #include "Variable.h"
@@ -12,16 +13,16 @@
  * @brief 
  * @author : Ismail ELFAQIR
  * 
+ * According to document of Houssam BENHOUD (les classes.pdf) all variables and functions
+ * of classes are public @see if it changes
  */
 class Class : public CommonDeclaration {
 
 protected:
     ClassHashed *m_class;
-    // as the validate document of Houssam BENHOUD (les classes.pdf) all variables and functions of classes are public
-    std::vector<Function *> public_functions;
-    // here are the static functions
-    std::vector<Function *> static_functions;
-    std::vector<Variable *> public_variables;
+
+    // @see when/how to set to false mSupportsPragmas
+    bool mSupportsPragmas;
 
 public:
     /* * * * * * * * *
@@ -39,15 +40,15 @@ public:
     * Constructor with parameters
     * Set the vectors of fuctions and variables by the parameters passed to the constructor
     * @param c : class declaration
-    * @param functions : vector of functions
-    * @param s_functions : vector of static functions
-    * @param variables : vector of attributes
+    * @param functions : functions
+    * @param s_functions : static functions
+    * @param variables : attributes
     * @author Ismail ELFAQIR
     */
     Class(ClassHashed *c, 
-        const std::vector<Function *> &functions,
-        const std::vector<Function *> &s_functions,
-        const std::vector<Variable *> &variables );
+        Variable * variables,
+        Function * functions,
+        Function * s_functions);
 
     /**
     * Constructor with parameters
@@ -58,8 +59,8 @@ public:
     * @author Ismail ELFAQIR
     */
     Class(ClassHashed *c,
-        const std::vector<Function *> &functions, 
-        const std::vector<Variable *> &variables );
+        Variable * variables,
+        Function * functions);
 
     /**
     * Constructor with parameters
@@ -68,7 +69,7 @@ public:
     * @param functions : vector of functions
     * @author Ismail ELFAQIR
     */
-    Class(ClassHashed *c, const std::vector<Function *> &functions);
+    Class(ClassHashed *c, Function * functions);
 
     /**
     * Constructor with parameters
@@ -77,14 +78,7 @@ public:
     * @param variables : vector of attributes
     * @author Ismail ELFAQIR
     */
-    Class(ClassHashed *c, const std::vector<Variable *> &variables);
-
-    /**
-    * Copy constructor
-    * @param cpy : the class that we want to cpy to the actual class
-    * @author Ismail ELFAQIR
-    */
-    Class(const Class & cpy);
+    Class(ClassHashed *c, Variable * variables);
 
     /**
     * Destructor
@@ -102,66 +96,17 @@ public:
      */
     virtual inline const std::string getName() const { return "Class declaration"; }
 
-
-public:
     /**
      * @brief Getter for the procedure's name
      * @return name of the procedure
      */
     const std::string & getClassName() const { return getDeclarationName(); }
 
-
     /**
     * getter of the class declaration
     * @author Ismail ELFAQIR
     */
     ClassHashed * get_class() const;
-
-    /**
-    * getter of variables
-    * @author Ismail ELFAQIR
-    */
-    const std::vector<Variable *>&  get_variables() const;
-
-    /**
-    * getter of functions
-    * @author Ismail ELFAQIR
-    */
-    const std::vector<Function *>&  get_functions() const;
-
-    /**
-    * getter of static functions
-    * @author Ismail ELFAQIR
-    */
-    const std::vector<Function *>&  get_static_functions() const;
-
-    /**
-    * setter of class declaration
-    * @param name : the pointer of this class declaration
-    * @author Ismail ELFAQIR
-    */
-    void set_class(ClassHashed *c);
-
-    /**
-    * setter of variables
-    * @param variables : vector of attributes
-    * @author Ismail ELFAQIR
-    */
-    void set_variable(const std::vector<Variable *>&variables);
-
-    /**
-    * setter of variables
-    * @param functions : vector of functions
-    * @author Ismail ELFAQIR
-    */
-    void set_functions(const std::vector<Function *>&functions);
-
-    /**
-    * setter of variables
-    * @param s_functions : vector of static functions
-    * @author Ismail ELFAQIR
-    */
-    void set_static_functions(const std::vector<Function *>&s_functions);
 
     /* * * * * *
      * METHOD  *
@@ -170,35 +115,31 @@ public:
     /**
      * @brief add an function to this class
      * @param function : pointer to the function
-     * @author Ismail ELFAQIR
      */
-
-    void add_function(Function *function);
+    void addFunction(Function *function);
 
     /**
      * @brief add an static function to this class
      * @param function : pointer to the function
-     * @author Ismail ELFAQIR
+     * TODO static functions implementation
      */
-
-    void add_static_function(Function *function);
+    // void add_static_function(Function *function);
 
     /**
      * @brief add an attribute to this class
      * @param variable : pointer to the variable
-     * @author Ismail ELFAQIR
      */
-
-    void add_variable(Variable * variable);
+    void addVariable(Variable * variable);
 
     /**
      * @brief check if an function is in class
      * @param function : pointer to the function
      * @return boolean
      * @author Ismail ELFAQIR
+     * @see if useful
      */
 
-    bool is_in_class(Function * function);
+    // bool is_in_class(Function * function);
 
 
     /**
@@ -206,11 +147,9 @@ public:
      * @param variable : pointer to the variable
      * @return boolean
      * @author Ismail ELFAQIR
+     * @see if useful
      */
-
-    bool is_in_class(Variable * variable);
-
-
+    // bool is_in_class(Variable * variable);
 
     /* * * * * * * *
     * Translation  *

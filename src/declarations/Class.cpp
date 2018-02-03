@@ -5,38 +5,33 @@
 using namespace std;
 
 Class::Class(ClassHashed *c):
-	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(),static_functions(),public_variables()
+	CommonDeclaration(nullptr, c->get_id()), m_class(c), mSupportsPragmas(true)
 { }
 
 Class::Class(ClassHashed *c,
-	     		const vector<Function *> &functions, 
-	     		const vector<Function *> &s_functions,  
-	     		const vector<Variable *> &variables ):
-	CommonDeclaration(nullptr, c->get_id()), m_class(c),
-	public_functions(functions),
-	static_functions(s_functions),
-	public_variables(variables) 
-{ }
+				Variable * variables,
+	     		Function * functions,
+	     		Function * s_functions ):
+	CommonDeclaration(variables, c->get_id()), m_class(c), mSupportsPragmas(true)
+{
+	variables->addRightChild(functions);
+	functions->addRightChild(s_functions);
+}
 
 Class::Class(ClassHashed *c,
-			const vector<Function *> &functions, 
-			const vector<Variable *> &variables ):
-	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(functions),static_functions(),public_variables(variables) 
+			Variable * variables,
+			Function * functions ):
+	CommonDeclaration(variables, c->get_id()), m_class(c), mSupportsPragmas(true)
+{
+	variables->addRightChild(functions);
+}
+
+Class::Class(ClassHashed *c, Function * functions):
+	CommonDeclaration(functions, c->get_id()), m_class(c), mSupportsPragmas(true) 
 { }
 
-Class::Class(ClassHashed *c, const vector<Function *> &functions):
-	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(functions),static_functions(),public_variables() 
-{ }
-
-Class::Class(ClassHashed *c, const vector<Variable *> &variables ):
-	CommonDeclaration(nullptr, c->get_id()), m_class(c),public_functions(),static_functions(),public_variables(variables) 
-{ }
-
-Class::Class(const Class & cpy):
-	CommonDeclaration(nullptr, cpy.getClassName()), m_class(cpy.m_class), 
-	public_functions(cpy.public_functions),
-	static_functions(cpy.static_functions),
-	public_variables(cpy.public_variables)
+Class::Class(ClassHashed *c, Variable * variables ):
+	CommonDeclaration(nullptr, c->get_id()), m_class(c), mSupportsPragmas(true)
 { }
 
 Class::~Class()
@@ -46,73 +41,36 @@ ClassHashed * Class::get_class() const{
 	return m_class;
 }
 
-const vector<Variable *>&  Class::get_variables() const{
-	return public_variables;
+void Class::addFunction(Function *function) {
+	addRightChild(function);
 }
 
-const vector<Function *>&  Class::get_functions() const{
-	return public_functions;
+// void Class::add_static_function(Function *function) {
+// 	addRightChild(function);
+// }
+
+void Class::addVariable(Variable * variable){
+	addRightChild(variable);
 }
 
-const vector<Function *>&  Class::get_static_functions() const{
-	return static_functions;
-}
-
-void Class::set_class(ClassHashed *c){
-	m_class=c;
-}
-
-void Class::set_variable(const vector<Variable *>&variables){
-	public_variables=variables;
-}
-
-void Class::set_functions(const vector<Function *>&functions){
-	public_functions=functions;
-}
-
-void Class::set_static_functions(const vector<Function *>&s_functions){
-	static_functions=s_functions;
-}
-
-void Class::add_function(Function *function) {
-	if(!this->is_in_class(function)){
-		public_functions.push_back(function);
-	}
-	else cout<<"already in class"<<endl;
-}
-
-void Class::add_static_function(Function *function) {
-	if(!this->is_in_class(function)){
-		static_functions.push_back(function);
-	}
-	else cout<<"already in class"<<endl;
-}
-
-void Class::add_variable(Variable * variable){
-	if(!this->is_in_class(variable)){
-		public_variables.push_back(variable);
-	}
-	else cout<<"already in class"<<endl;
-}
-
-bool Class::is_in_class(Function * function){
+// bool Class::is_in_class(Function * function){
 	
-	for(unsigned int i=0;i<public_functions.size();i++){
-		if(public_functions[i]==function) return true;
-	}
-	for(unsigned int i=0;i<static_functions.size();i++){
-		if(static_functions[i]==function) return true;
-	}
-	return false;
-}
+// 	for(unsigned int i=0;i<public_functions.size();i++){
+// 		if(public_functions[i]==function) return true;
+// 	}
+// 	for(unsigned int i=0;i<static_functions.size();i++){
+// 		if(static_functions[i]==function) return true;
+// 	}
+// 	return false;
+// }
 
-bool Class::is_in_class(Variable * variable){
+// bool Class::is_in_class(Variable * variable){
 
-	for(unsigned int i=0;i<public_variables.size();i++){
-		if(public_variables[i]==variable) return true;
-	}
-	return false;
-}
+// 	for(unsigned int i=0;i<public_variables.size();i++){
+// 		if(public_variables[i]==variable) return true;
+// 	}
+// 	return false;
+// }
 
 string Class::preTranslate() const
 {
@@ -125,20 +83,20 @@ string Class::preTranslate() const
 		// the attributes
 		string buf_params_constructor= "";
 		string buf_attribute_init= "";
-		for(unsigned int i=0;i<public_variables.size();i++) {
-			res+="\t\t"+public_variables[i]->translate() + "\n";
+		// for(unsigned int i=0;i<public_variables.size();i++) {
+			
             
-            const VariableHashed* var= public_variables[i]->getVariableHashed();
-			// Add construtor parameters
-			buf_params_constructor+= var->get_type()+" arg_"+to_string(i);
-			// Add attribute initilization
-			buf_attribute_init+=var->get_id()+"(arg_"+to_string(i)+")";
+        //     const VariableHashed* var= public_variables[i]->getVariableHashed();
+		// 	// Add construtor parameters
+		// 	buf_params_constructor+= var->get_type()+" arg_"+to_string(i);
+		// 	// Add attribute initilization
+		// 	buf_attribute_init+=var->get_id()+"(arg_"+to_string(i)+")";
 
-			if(i+1<public_variables.size()-1) {
-			    buf_params_constructor+=",";
-                buf_attribute_init+=",";
-			}
-		}
+		// 	if(i+1<public_variables.size()-1) {
+		// 	    buf_params_constructor+=",";
+        //         buf_attribute_init+=",";
+		// 	}
+		// }
 		// the CONSTRUCTORS (according to classes.pdf default constructor and constructor with parameters are required )
 		res+="\t\t"+m_class->get_id()+"(){}\n";
 
@@ -158,16 +116,16 @@ string Class::preTranslate() const
 		res+="\t\t~"+m_class->get_id()+"(){}\n";
 	
 		// the static functions
-		for(unsigned int i=0;i<static_functions.size();i++) {
-			res+="\t\t";
-			res+="static "+static_functions[i]->translate()+"\n";
-		}
+		// for(unsigned int i=0;i<static_functions.size();i++) {
+		// 	res+="\t\t";
+		// 	res+="static "+static_functions[i]->translate()+"\n";
+		// }
 
 		// functions
-		for(unsigned int i=0;i<public_functions.size();i++) {
-			res+="\t\t";
-			res+=public_functions[i]->translate()+"\n";
-		}
+		// for(unsigned int i=0;i<public_functions.size();i++) {
+		// 	res+="\t\t";
+		// 	res+=public_functions[i]->translate()+"\n";
+		// }
 
 	return res;
 }
