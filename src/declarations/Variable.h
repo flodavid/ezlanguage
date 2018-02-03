@@ -9,6 +9,7 @@
  * @author : GINISTY Valentin
  * 
  * exemple : my_great_variable is integer -> int my_great_variable;
+ * TODO Handle hashed variable (VariableHashed class) association or merging
  */
 class Variable : public CommonDeclaration {
 	

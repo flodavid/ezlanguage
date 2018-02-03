@@ -1,18 +1,23 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+
 #include "./addons/log.h"
 #include "./modules/Node.h"
+
 #include "./modules/ConditionalExpression.h"
+#include "./modules/Expression.h"
 #include "./modules/Operator.h"
 #include "./modules/TranslatedNode.h"
+
 #include "./declarations/Array.h"
 #include "./declarations/Container.h"
 #include "./declarations/Parameter.h"
 #include "./declarations/Variable.h"
+
 #include "./instructions/Affectation.h"
-#include "./instructions/If.h"
 #include "./instructions/Else.h"
+#include "./instructions/If.h"
 #include "./instructions/FunctionCall.h"
 #include "./instructions/Return.h"
 #include "./hash_table/VariableHashed.h"
@@ -22,29 +27,32 @@
 extern ScopeHashTable symbolTable;
 
 /**
- * @struct s_mon_type used to exchange value between flex and bison during parsing
+ * @struct s_node_types used to exchange value between flex and bison during parsing
  * @authors Valérian De Leeuw, Florentin Noël
  */
-typedef struct s_mon_type {
+typedef struct s_node_types {
     int numerical_value;
     double real_value;
     bool boolean;
     std::string text;
+    // Modules
     Node* tree;
-    Array* array;
-    Container* cont;
-    Variable* var;
-    Expression* expr;
-    Affectation* affectation;
     ConditionalExpression* condExpr;
-    FunctionCall* functionCall;
+    Expression* expr;
     Operator* opeNode;
     TranslatedNode* transNode;
-    If* ifNode;
+    // Declarations
+    Array* array;
+    Class* classNode;
+    Container* cont;
+    Variable* var;
+    // Instructions
+    Affectation* affectation;
     Else* elseNode;
+    If* ifNode;
+    FunctionCall* functionCall;
     Return* returnNode;
-//    MaClasse	une_maclasse;
-} mon_type;
+} node_types;
 
 typedef struct yyltype
 {

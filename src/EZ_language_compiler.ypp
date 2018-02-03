@@ -141,11 +141,12 @@ int yycolumn = 1;
 %type<ifNode> if
 %type<elseNode> .else
 %type<returnNode> return
+%type<classNode> class
 %type<var>  simpleVariable variable // TODO variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
 %type<functionCall> simpleFunction functionCall functionCallNoParenthesis
 %type<transNode> code
-%type<tree> function procedure class import 
+%type<tree> function procedure import 
 %type<tree> statement
 %type<text> type string .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
@@ -155,7 +156,7 @@ int yycolumn = 1;
 %type<text> objectDotOperator
 %type<tree> function_string statement_sequence .affect .streamedExpressions .argumentsSeparated
 %type<tree> for.body simpleFunction.arguments
-%type<text> names
++// %type<text> names // Add multiple variables declarations in one instruction
 %type<text> for.decl for.type var.decl array.decl array.type
 %type<cont> container.decl
 %type<text> returnstype
@@ -358,7 +359,7 @@ class:
 	{
     /* TODO class declaration logic */
 		debugYacc("class declaration "+ $2, AT);
-		// $$ = new Class();
+	  $$ = new Class();
 	}
 ;
 
@@ -389,21 +390,10 @@ statement_sequence:
 //   }
 ;
 
-names:
-  NAME              { $$ = $1; }
-| names COMMA NAME  { $$ = $1 + ", " + $3; }
-;
-
-basicExpressions:
-  basicExpression
-| basicExpressions COMMA basicExpression {
-    TranslatedNode* comma= new TranslatedNode(", ", $3);
-
-    $1->addRightChild(comma);
-    $$ = $1;
-  }
-;
-
+// names:
+//   NAME              { $$ = $1; }
+// | names COMMA NAME  { $$ = $1 + ", " + $3; }
+// ;
 
 /* **********************
  *  METHODS DECLARATION *
@@ -442,9 +432,9 @@ parameters:
     $1->addRightChild($3);
     $$ = $1;
  	}
-// | NAME names ARE type { /* TODO parameters logic */ }
+// | names ARE type { /* TODO parameters logic */ }
 // TODO handle SHARED parameters
-// | NAME names ARE SHARED type affect
+// | names ARE SHARED type affect
 // 	{
 // 		cout << "Variable des variables1 "<< $1 << endl;
 // 	}
@@ -838,6 +828,16 @@ next_line:
 | next_line BACK_LINE /* Nothing to do */
 ;
 
+basicExpressions:
+  basicExpression
+| basicExpressions COMMA basicExpression {
+    TranslatedNode* comma= new TranslatedNode(", ", $3);
+
+    $1->addRightChild(comma);
+    $$ = $1;
+  }
+;
+
 // @see tranform TranslatedNode by Expression or subclass use ?
 expression:
   /* TODO check that there is no other operators*/
@@ -924,7 +924,7 @@ simpleVariable:
     symbolTable.addElement(v);
     $$ = new Variable($1,$2,"local ",$3,false);
   }
-// | NAME names ARE type affect BACK_LINE
+// | names ARE type affect BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 1 */
 // 		debugYacc("Variable declaration: "+ $1, AT);
@@ -937,7 +937,7 @@ simpleVariable:
 // 		// $$ = new Variable($2,$4,$1,true);
 // 	}
 //     // TODO Handle SHARED
-// | NAME names ARE SHARED type BACK_LINE
+// | names ARE SHARED type BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 2 */
 // 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
