@@ -3,7 +3,7 @@
 using namespace std;
 
 Procedure::Procedure(const string & name, Node * parameters, Node * left):
-	CommonDeclaration(left, name), mParameters(parameters)
+	Method(name, parameters, left)
 {}
 
 std::string Procedure::preTranslate() const {

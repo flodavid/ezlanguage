@@ -2,6 +2,7 @@
 #define VARIABLE_H
 
 #include "CommonDeclaration.h"
+#include "../modules/Expression.h"
 #include "../hash_table/VariableHashed.h"
 
 /** 
@@ -16,10 +17,11 @@ class Variable : public CommonDeclaration {
 protected:
     std::string mType;
     std::string mScope;
-    const Node* affect;
+    const Node* mAffect;
     VariableHashed* hashed;
     bool isConst;
     bool isStatic;
+    Expression* mConstructionParameters;
 
 public:
 
@@ -35,7 +37,13 @@ public:
 	 * @param st : if the variable is static
 	 */
     Variable(const std::string & name, const std::string & type,
-            const std::string & scope, const Node* content, bool co = false, bool st = false);
+            const std::string & scope, const Node* content, bool co = false,
+            bool st = false, Expression * construction_parameters = nullptr);
+
+    /**
+     * @brief Destructor
+     */
+    ~Variable();
 
 
 public:
@@ -51,6 +59,10 @@ public:
      */
     const std::string & getVariableName() const { return getDeclarationName(); }
 
+    /**
+     * @brief Get the C++ type of the variable
+     */
+    std::string translateType() const;
 
     /**
      * @brief Set variable scope and constancy

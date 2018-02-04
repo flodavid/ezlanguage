@@ -10,10 +10,12 @@
 #include "./modules/Operator.h"
 #include "./modules/TranslatedNode.h"
 
+#include "./declarations/CommonDeclaration.h"
 #include "./declarations/Array.h"
 #include "./declarations/Class.h"
 #include "./declarations/Container.h"
 #include "./declarations/Parameter.h"
+#include "./declarations/Method.h"
 #include "./declarations/Variable.h"
 
 #include "./instructions/Affectation.h"
@@ -43,9 +45,11 @@ typedef struct s_node_types {
     Operator* opeNode;
     TranslatedNode* transNode;
     // Declarations
+    CommonDeclaration* declaration;
     Array* array;
     Class* classNode;
     Container* cont;
+    Method* method;
     Variable* var;
     // Instructions
     Affectation* affectation;

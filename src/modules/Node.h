@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../addons/log.h"
+// #include "../declarations/Class.h"
 
 /**
  * @brief Base class, used to structure the others classes as nodes of the main tree
@@ -12,6 +13,8 @@
  *
  */
 class Node {
+
+friend class Class;
 
 private:
     Node* left_son;

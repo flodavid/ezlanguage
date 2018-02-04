@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../src/global.h"	 // we start from ../obj because it's important
+#include "../src/hash_table/ClassHashed.h"
 #include "../src/hash_table/FunctionHashed.h"
 #include "../src/hash_table/ScopeHashTable.h"
 #include "../src/hash_table/VariableHashed.h"
@@ -131,8 +132,6 @@ int yycolumn = 1;
 %type<tree> program
 %type<tree> program.imports program.classes program.variables program.methods
 %type<tree> program.parameters method.parameters parameters parameter
-%type<tree> arguments .argumentsList argumentElement
-%type<tree> method  containerDeclaration
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
@@ -142,12 +141,14 @@ int yycolumn = 1;
 %type<elseNode> .else
 %type<returnNode> return
 %type<classNode> class
-%type<var>  simpleVariable variable // TODO variable_construct
+%type<declaration> declaration containerDeclaration
+%type<var>  simpleVariable variable variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
 %type<functionCall> simpleFunction functionCall functionCallNoParenthesis
 %type<transNode> code
-%type<tree> function procedure import 
-%type<tree> statement
+%type<method> method function procedure
+%type<expr> arguments .argumentsList argumentElement
+%type<tree> statement import
 %type<text> type string .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression basicExpression integerExpression basicExpressions
@@ -155,6 +156,8 @@ int yycolumn = 1;
 // Non basic elements
 %type<text> objectDotOperator
 %type<tree> function_string statement_sequence .affect .streamedExpressions .argumentsSeparated
+%type<var> variable_sequence
+%type<method> method_sequence
 %type<tree> for.body simpleFunction.arguments
 // %type<text> names // Add multiple variables declarations in one instruction
 %type<text> for.decl for.type var.decl array.decl array.type
@@ -355,11 +358,21 @@ method:
 
 /* program.classes */
 class:
-  CLASS NAME BACK_LINE begin statement_sequence END endclass
+  CLASS NAME BACK_LINE begin variable_sequence .jump method_sequence .jump END .jump endclass
 	{
-    /* TODO class declaration logic */
+    /* TODO class hashed logic */
 		debugYacc("class declaration "+ $2, AT);
-	  // $$ = new Class();
+    ClassHashed * hash_class= new ClassHashed($2);
+
+    $$ = new Class(hash_class, $5, $7);
+	}
+| CLASS NAME BACK_LINE begin method_sequence .jump variable_sequence .jump END .jump endclass
+	{
+    /* TODO class hashed logic */
+		debugYacc("class declaration "+ $2, AT);
+    ClassHashed * hash_class= new ClassHashed($2);
+
+    $$ = new Class(hash_class, $7, $5);
 	}
 ;
 
@@ -370,7 +383,7 @@ class:
 statement_sequence:
   /* empty */
   {
-    debugYacc("last statement", AT);
+    debugYacc("no more statements", AT);
     $$ = new EmptyNode;
   }
 | statement_sequence statement {
@@ -388,6 +401,38 @@ statement_sequence:
 //       $$ = $1;
 //     }
 //   }
+;
+
+variable_sequence:
+  /* empty */
+  {
+    debugYacc("no more declarations", AT);
+    $$ = nullptr;
+  }
+| variable_sequence variable {
+    debugYacc("declaration: "+ $2->getName(), AT);
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    }
+    else $$ = $2;
+  }
+;
+
+method_sequence:
+  /* empty */
+  {
+    debugYacc("no more declarations", AT);
+    $$ = nullptr;
+  }
+| method_sequence method {
+    debugYacc("declaration: "+ $2->getName(), AT);
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    }
+    else $$ = $2;
+  }
 ;
 
 // names:
@@ -507,10 +552,9 @@ procedure:
  * ******************/
 
 statement:
-  BACK_LINE             { $$ = new EmptyNode; debugYacc("Shouldn't happen on l67", AT); }
-| variable              { $$ = $1; }
+  BACK_LINE             { $$ = new EmptyNode; }
+| declaration           { $$ = $1; }
 | affectation           { $$ = $1; }
-| containerDeclaration  { $$ = $1; }
 | functionCall          { $$ = $1; }
 | functionCallNoParenthesis { $$ = $1; }
 | function_string       { $$ = $1;}
@@ -525,6 +569,12 @@ statement:
 | code      { $$ = $1; }
 // TODO add when implementation ?
 // | when      { $$ = $1; }
+;
+
+declaration:
+  variable              { $$ = $1; }
+| containerDeclaration  { $$ = $1; }
+| class                 { $$ = $1; }
 ;
 
 // TODO Add other container declarations
@@ -545,12 +595,11 @@ variable:
     // $3->setScope(scope_consistancy);
     $$ = $1;
   }
-// | variable_construct
-//   {
-//     /* TODO variable construction logic (with class) */
-//     debugYacc("variable construction (class)", AT);
-//     $$ = $1;
-//   }
+| variable_construct
+  {
+    debugYacc("variable construction (class)", AT);
+    $$ = $1;
+  }
 ;
 
 /* ****************************
@@ -920,6 +969,7 @@ simpleVariable:
   var.decl type .affect
   {
     debugYacc("Variable : "+ $1, AT);
+    // TODO VariableHashed use at variable declaration (creation)
     VariableHashed v($1,$2); // @see if same thing if function parameters
     symbolTable.addElement(v);
     $$ = new Variable($1,$2,"local ",$3,false);
@@ -962,11 +1012,21 @@ var.decl:
   NAME IS { $$ = $1; }
 ;
 
-// TODO creation of a variable as an instance of a class, when class declaration is implemented
-// variable_construct:
-//   var.decl NAME {}  // ex: c is Maclasse
-// | var.decl NAME arguments {} // c is MaClass(val1,va2)
-// ;
+variable_construct:
+  // ex: c is Maclasse
+  var.decl NAME .affect BACK_LINE {
+    // TODO ClassHashed use at class declaration (creation)
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,"local ",$3,false,false);
+  }
+  // c is MaClass(val1,va2)
+| var.decl NAME arguments .affect BACK_LINE {
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,"local ",$4,false,false,$3);
+  }
+;
 
 /* ******************
  *  GENERIC SIMPLE  *

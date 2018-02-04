@@ -4,7 +4,7 @@
 #include "CommonDeclaration.h"
 #include "../modules/EmptyNode.h"
 #include "../hash_table/ClassHashed.h"
-#include "Function.h"
+#include "Method.h"
 #include "Variable.h"
 #include <string>
 #include <vector>
@@ -19,7 +19,8 @@
 class Class : public CommonDeclaration {
 
 protected:
-    ClassHashed *m_class;
+    Variable * mVariables;
+    ClassHashed * mClass;
 
     // @see when/how to set to false mSupportsPragmas
     bool mSupportsPragmas;
@@ -47,8 +48,8 @@ public:
     */
     Class(ClassHashed *c, 
         Variable * variables,
-        Function * functions,
-        Function * s_functions);
+        Method * functions,
+        Method * s_functions);
 
     /**
     * Constructor with parameters
@@ -60,7 +61,7 @@ public:
     */
     Class(ClassHashed *c,
         Variable * variables,
-        Function * functions);
+        Method * functions);
 
     /**
     * Constructor with parameters
@@ -69,7 +70,7 @@ public:
     * @param functions : vector of functions
     * @author Ismail ELFAQIR
     */
-    Class(ClassHashed *c, Function * functions);
+    Class(ClassHashed *c, Method * functions);
 
     /**
     * Constructor with parameters
@@ -116,14 +117,14 @@ public:
      * @brief add an function to this class
      * @param function : pointer to the function
      */
-    void addFunction(Function *function);
+    void addMethod(Method *function);
 
     /**
      * @brief add an static function to this class
      * @param function : pointer to the function
      * TODO static functions implementation
      */
-    // void add_static_function(Function *function);
+    // void add_static_function(Method *function);
 
     /**
      * @brief add an attribute to this class
@@ -139,7 +140,7 @@ public:
      * @see if useful
      */
 
-    // bool is_in_class(Function * function);
+    // bool is_in_class(Method * function);
 
 
     /**

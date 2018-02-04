@@ -21,6 +21,19 @@ this is
 a multiple lines comment
 
 */
+    class TestClass
+    begin
+        int_member is integer
+
+        procedure hello()
+            print "Function into classes working, i have been assigned '" int_member "' for its protection"
+        end
+
+    end
+
+    myClass is TestClass(3)
+    myClass.hello()
+
     print "First statement"
 
     hello_world

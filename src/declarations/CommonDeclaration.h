@@ -27,7 +27,6 @@ public:
     CommonDeclaration(Node * left, const std::string & name);
     
 
-protected:
     /**
      * @brief Get some details about the node
      * @return the name of the node. Defined at class creation

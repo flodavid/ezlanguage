@@ -3,7 +3,7 @@
 using namespace std;
 
 EmptyNode::EmptyNode():
-	Node(nullptr, nullptr)
+	TranslatedNode("")
 { }
 
 EmptyNode::~EmptyNode()
