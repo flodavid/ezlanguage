@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include "TranslatedNode.h"
 
 /**
  * @brief Node of the tree which represent a condition else
  */
 
-class EmptyNode : public Node {
+class EmptyNode : public TranslatedNode {
 
 protected:
 	

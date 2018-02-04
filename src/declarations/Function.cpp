@@ -4,7 +4,7 @@ using namespace std;
 
 Function::Function(Node * parameters, const string & name, Node * left,
                 const string & type):
-    Procedure(name, parameters, left), return_type(type)
+    Method(name, parameters, left), return_type(type)
 { }
 
 string Function::preTranslate() const {

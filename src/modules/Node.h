@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../addons/log.h"
+// #include "../declarations/Class.h"
 
 /**
  * @brief Base class, used to structure the others classes as nodes of the main tree
@@ -12,6 +13,8 @@
  *
  */
 class Node {
+
+friend class Class;
 
 private:
     Node* left_son;
@@ -71,15 +74,15 @@ public:
      * @return the name of the node. Defined at class creation
      */
     virtual inline const std::string getDetails() const { return getName() +": "+ details(); }
-    
+
     /**
      * @brief Add a right son to the last of the right sons
      * @param child : New right son
      * 
      * If there is already a right son, the right son of the group formed by the current
-     * son and all its right sons (the right of its right son, of its ... etc) is the
-     * right son of the last current right son (that has no right son)
-     * TL;DR : The right son of a groupd is the right son of the last one of the group
+     * son and all its right sons (the right of its right son, of its ... etc) will be the
+     * right son of the current last right son (that had no right son)
+     * TL;DR : The right son of a group is the right son of the last one of the group
      */
     virtual void addRightChild(Node* child);
 

@@ -1,7 +1,7 @@
 #ifndef DECLARATION_FUNCTION_H
 #define DECLARATION_FUNCTION_H
 
-#include "Procedure.h"
+#include "Method.h"
 
 /**
  * @brief Allows the declaration of functions
@@ -13,7 +13,7 @@
  *              return variable;
  *          end function
  */
-class Function : public Procedure {
+class Function : public Method {
 
 protected:
     std::string return_type;

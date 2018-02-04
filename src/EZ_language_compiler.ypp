@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../src/global.h"	 // we start from ../obj because it's important
+#include "../src/hash_table/ClassHashed.h"
 #include "../src/hash_table/FunctionHashed.h"
 #include "../src/hash_table/ScopeHashTable.h"
 #include "../src/hash_table/VariableHashed.h"
@@ -87,8 +88,8 @@ int yycolumn = 1;
 
 // Tokens
 %token<text> NUM_INTEGER     // Integer
-%token<text>	NUM_REAL			  // Real
-%token<text> NAME RETOUR STRING STRING_PARAM
+%token<text> NUM_REAL			  // Real
+%token<text> NAME RETOUR STRING STRING_PARAM ANYTHING CODE_TEXT
 %token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
 %token<text> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
 %token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
@@ -98,16 +99,16 @@ int yycolumn = 1;
 %token IF THEN ELSE   						  // if else 
 %token WHEN CASE DEFAULT ENDWHEN	  // switch case ...
 %token WHILE ENDWHILE							  // while .. do ...
-%token REPEAT UNTIL ENDREPEAT 			// do .. while ...
+%token REPEAT UNTIL ENDREPEAT 			// do .. while ...functions
 %token FOR IN DO STEP 
 %token RETURN FALSE TRUE            // words
 %token FUNCTION PROCEDURE RETURNS	 	// functions
 %token PRINT INPUT                  // Print and get input text 
 %token OPERATOR                     // Overloading
-%token BEGINN END						        // can not use 'BEGIN'
+%token BEGINN END PROGRAM      // can not use 'BEGIN'
 %token END_OF_FILE
-%token CLASS PROGRAM DESTRUCT			  //class
-%token PARAMETERS AS							    // program arguments	
+%token CLASS  DESTRUCT			        //class
+%token PARAMETERS AS							  // program arguments	
 %token REGEX SEARCH MATCH 					// Regular expression
 
 %token LENGTH TOUPPERCASE TOLOWERCASE
@@ -131,8 +132,6 @@ int yycolumn = 1;
 %type<tree> program
 %type<tree> program.imports program.classes program.variables program.methods
 %type<tree> program.parameters method.parameters parameters parameter
-%type<tree> arguments .argumentsList argumentElement
-%type<tree> method  containerDeclaration
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
@@ -141,11 +140,15 @@ int yycolumn = 1;
 %type<ifNode> if
 %type<elseNode> .else
 %type<returnNode> return
-%type<var>  simpleVariable variable // TODO variable_construct
+%type<classNode> class
+%type<declaration> declaration containerDeclaration
+%type<var>  simpleVariable variable variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
 %type<functionCall> simpleFunction functionCall functionCallNoParenthesis
-%type<tree> function procedure class import 
-%type<tree> statement
+%type<transNode> code
+%type<method> method function procedure
+%type<expr> arguments .argumentsList argumentElement
+%type<tree> statement import
 %type<text> type string .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression basicExpression integerExpression basicExpressions
@@ -153,8 +156,10 @@ int yycolumn = 1;
 // Non basic elements
 %type<text> objectDotOperator
 %type<tree> function_string statement_sequence .affect .streamedExpressions .argumentsSeparated
+%type<var> variable_sequence
+%type<method> method_sequence
 %type<tree> for.body simpleFunction.arguments
-%type<text> names
+// %type<text> names // Add multiple variables declarations in one instruction
 %type<text> for.decl for.type var.decl array.decl array.type
 %type<cont> container.decl
 %type<text> returnstype
@@ -353,11 +358,21 @@ method:
 
 /* program.classes */
 class:
-  CLASS NAME BACK_LINE begin statement_sequence END endclass
+  CLASS NAME BACK_LINE begin variable_sequence .jump method_sequence .jump END .jump endclass
 	{
-    /* TODO class declaration logic */
+    /* TODO class hashed logic */
 		debugYacc("class declaration "+ $2, AT);
-		// $$ = new Class();
+    ClassHashed * hash_class= new ClassHashed($2);
+
+    $$ = new Class(hash_class, $5, $7);
+	}
+| CLASS NAME BACK_LINE begin method_sequence .jump variable_sequence .jump END .jump endclass
+	{
+    /* TODO class hashed logic */
+		debugYacc("class declaration "+ $2, AT);
+    ClassHashed * hash_class= new ClassHashed($2);
+
+    $$ = new Class(hash_class, $7, $5);
 	}
 ;
 
@@ -368,7 +383,7 @@ class:
 statement_sequence:
   /* empty */
   {
-    debugYacc("last statement", AT);
+    debugYacc("no more statements", AT);
     $$ = new EmptyNode;
   }
 | statement_sequence statement {
@@ -388,21 +403,42 @@ statement_sequence:
 //   }
 ;
 
-names:
-  NAME              { $$ = $1; }
-| names COMMA NAME  { $$ = $1 + ", " + $3; }
-;
-
-basicExpressions:
-  basicExpression
-| basicExpressions COMMA basicExpression {
-    TranslatedNode* comma= new TranslatedNode(", ", $3);
-
-    $1->addRightChild(comma);
-    $$ = $1;
+variable_sequence:
+  /* empty */
+  {
+    debugYacc("no more declarations", AT);
+    $$ = nullptr;
+  }
+| variable_sequence variable {
+    debugYacc("declaration: "+ $2->getName(), AT);
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    }
+    else $$ = $2;
   }
 ;
 
+method_sequence:
+  /* empty */
+  {
+    debugYacc("no more declarations", AT);
+    $$ = nullptr;
+  }
+| method_sequence method {
+    debugYacc("declaration: "+ $2->getName(), AT);
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    }
+    else $$ = $2;
+  }
+;
+
+// names:
+//   NAME              { $$ = $1; }
+// | names COMMA NAME  { $$ = $1 + ", " + $3; }
+// ;
 
 /* **********************
  *  METHODS DECLARATION *
@@ -441,9 +477,9 @@ parameters:
     $1->addRightChild($3);
     $$ = $1;
  	}
-// | NAME names ARE type { /* TODO parameters logic */ }
+// | names ARE type { /* TODO parameters logic */ }
 // TODO handle SHARED parameters
-// | NAME names ARE SHARED type affect
+// | names ARE SHARED type affect
 // 	{
 // 		cout << "Variable des variables1 "<< $1 << endl;
 // 	}
@@ -517,9 +553,8 @@ procedure:
 
 statement:
   BACK_LINE             { $$ = new EmptyNode; }
-| variable              { $$ = $1; }
+| declaration           { $$ = $1; }
 | affectation           { $$ = $1; }
-| containerDeclaration  { $$ = $1; }
 | functionCall          { $$ = $1; }
 | functionCallNoParenthesis { $$ = $1; }
 | function_string       { $$ = $1;}
@@ -531,8 +566,15 @@ statement:
 | while     { $$ = $1; }
 | repeat    { $$ = $1; }
 | for       { $$ = $1; }
+| code      { $$ = $1; }
 // TODO add when implementation ?
 // | when      { $$ = $1; }
+;
+
+declaration:
+  variable              { $$ = $1; }
+| containerDeclaration  { $$ = $1; }
+| class                 { $$ = $1; }
 ;
 
 // TODO Add other container declarations
@@ -553,12 +595,11 @@ variable:
     // $3->setScope(scope_consistancy);
     $$ = $1;
   }
-// | variable_construct
-//   {
-//     /* TODO variable construction logic (with class) */
-//     debugYacc("variable construction (class)", AT);
-//     $$ = $1;
-//   }
+| variable_construct
+  {
+    debugYacc("variable construction (class)", AT);
+    $$ = $1;
+  }
 ;
 
 /* ****************************
@@ -812,6 +853,20 @@ printing:
   }
 ;
 
+// code:
+//   CODE begin ANYTHING endcode {
+//     TranslatedNode* cpp_instructions= new TranslatedNode($3);
+//     $$ = cpp_instructions;
+//   }
+// ;
+
+code:
+  CODE_TEXT END lineend {
+    TranslatedNode* cpp_instructions= new TranslatedNode($1+"\n");
+    $$ = cpp_instructions;
+  }
+;
+
 /* *******************
  *  GENERIC COMPLEX  *
  * ******************/
@@ -820,6 +875,16 @@ printing:
 next_line:
   BACK_LINE BACK_LINE /* Nothing to do */
 | next_line BACK_LINE /* Nothing to do */
+;
+
+basicExpressions:
+  basicExpression
+| basicExpressions COMMA basicExpression {
+    TranslatedNode* comma= new TranslatedNode(", ", $3);
+
+    $1->addRightChild(comma);
+    $$ = $1;
+  }
 ;
 
 // @see tranform TranslatedNode by Expression or subclass use ?
@@ -904,11 +969,12 @@ simpleVariable:
   var.decl type .affect
   {
     debugYacc("Variable : "+ $1, AT);
+    // TODO VariableHashed use at variable declaration (creation)
     VariableHashed v($1,$2); // @see if same thing if function parameters
     symbolTable.addElement(v);
     $$ = new Variable($1,$2,"local ",$3,false);
   }
-// | NAME names ARE type affect BACK_LINE
+// | names ARE type affect BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 1 */
 // 		debugYacc("Variable declaration: "+ $1, AT);
@@ -921,7 +987,7 @@ simpleVariable:
 // 		// $$ = new Variable($2,$4,$1,true);
 // 	}
 //     // TODO Handle SHARED
-// | NAME names ARE SHARED type BACK_LINE
+// | names ARE SHARED type BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 2 */
 // 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
@@ -946,11 +1012,21 @@ var.decl:
   NAME IS { $$ = $1; }
 ;
 
-// TODO creation of a variable as an instance of a class, when class declaration is implemented
-// variable_construct:
-//   var.decl NAME {}  // ex: c is Maclasse
-// | var.decl NAME arguments {} // c is MaClass(val1,va2)
-// ;
+variable_construct:
+  // ex: c is Maclasse
+  var.decl NAME .affect BACK_LINE {
+    // TODO ClassHashed use at class declaration (creation)
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,"local ",$3,false,false);
+  }
+  // c is MaClass(val1,va2)
+| var.decl NAME arguments .affect BACK_LINE {
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,"local ",$4,false,false,$3);
+  }
+;
 
 /* ******************
  *  GENERIC SIMPLE  *
@@ -1079,15 +1155,15 @@ endif:
 | IF lineend {}
 ;
 
-endwhen:
-  lineend
-| WHEN lineend {}
-;
+// endwhen:
+//   lineend
+// | WHEN lineend {}
+// ;
 
-endcase:
-  lineend
-| CASE lineend {}
-;
+// endcase:
+//   lineend
+// | CASE lineend {}
+// ;
 
 endwhile:
   lineend
@@ -1098,6 +1174,11 @@ endfor:
   lineend
 | FOR lineend {}
 ;
+
+// endcode:
+//   lineend
+// | CODE lineend {}
+// ;
 
 enddestruct:
   lineend

@@ -21,6 +21,19 @@ this is
 a multiple lines comment
 
 */
+    class TestClass
+    begin
+        int_member is integer
+
+        procedure hello()
+            print "Function into classes working, i have been assigned '" int_member "' for its protection"
+        end
+
+    end
+
+    myClass is TestClass(3)
+    myClass.hello()
+
     print "First statement"
 
     hello_world
@@ -64,6 +77,9 @@ a multiple lines comment
     m is map of <string, integer>
     s is set of string
 
+code
+    std::cout << "C++ code inclusion is working, \"en route\" for coding !" << std::endl;
+end
 
     if true or true and false
     then print "Cond expr with no parenthesis priority working"

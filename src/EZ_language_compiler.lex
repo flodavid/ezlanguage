@@ -2,6 +2,11 @@
 %option yylineno
 
 %{
+/*
+This is the lex file for the EZLanguage to C++ compiler project
+As always, note the use of white-space before any C code.
+*/
+
 #include <stdlib.h> /* pour atoi - atof */
 #include <string.h> /* pour strdup */
 #include <iostream>
@@ -35,6 +40,11 @@ comment		(\/\*((.*)|(\n*))*\*\/)|(\/\/(.*))
 backLine 	\n
 minus     [-]
 
+anythingexceptend ([^e])+e([^n])+n([^d])+d([^\n])+\n
+
+end end
+code code
+
 %%
 
 {separators}   	{ /* On ignore */ }
@@ -42,10 +52,9 @@ minus     [-]
 {integer}		{ yylval.text= yytext; return(NUM_INTEGER); }  // integer
 {reel}      	{ yylval.text= yytext; return(NUM_REAL);}	// real
 
-{backLine}	return(BACK_LINE);
+{backLine}	{ debugLex("BACK_LINE", AT); return(BACK_LINE); }
 
-
-","		return(COMMA);
+","		return COMMA;
 
 "°"		return(DEGREE);
 "%"		return(PERCENT);
@@ -77,41 +86,56 @@ minus     [-]
 ".."		return (DOUBLE_DOT);
 "."	        return (SIMPLE_DOT);
 
+
 {quote}		return (QUOTE);
 
-(import|IMPORT)      return(IMPORT);
-(include|INCLUDE)    return(INCLUDE);
-(library|LIBRARY)    return(LIBRARY);
-(extern|EXTERN)      return(EXTERN);
 
-(mod|MOD)            return(MOD);
-(pow|POW)            return(POW);
-(abs|ABS)            return(ABS);
+ /*Everything else
+(code){anythingexceptend}{end}  { yylval.text= yytext; debugLex("Unrecognized char: "+ std::string(yytext), AT); yymore(); }
+*/
+{code}{anythingexceptend} {
+    // Substract the "end" characters
+    // yyless(3);
+    std::string text= yytext;
+    text= text.substr(5);
+    yylval.text= text;
+    debugLex("Chars: '"+ text +"'", AT);
+    return(CODE_TEXT);
+}
 
-(constant|CONSTANT)  return(CONST);
-(variable|VARIABLE)  return(VARIABLE);
-(global|GLOBAL)      return(GLOBAL);
-(is|IS)              return(IS) ;
-(are|ARE)            return(ARE) ;
-(integer|INTEGER)    return(TYPE_INTEGER);
-(real|REAL)          return(TYPE_REAL);
-(string|STRING)      return(TYPE_STRING);
-(boolean|BOOLEAN)    return(TYPE_BOOLEAN);
-(shared|SHARED)      return(SHARED);
+(import|IMPORT)     return(IMPORT);
+(include|INCLUDE)   return(INCLUDE);
+(library|LIBRARY)   return(LIBRARY);
+(extern|EXTERN)     return(EXTERN);
 
-(if|IF)              return(IF);
-(then|THEN)          return(THEN);
-(else|ELSE)          return(ELSE);
+(mod|MOD)           return(MOD);
+(pow|POW)           return(POW);
+(abs|ABS)           return(ABS);
 
-(begin|BEGIN)        return(BEGINN);
-(end|END)            return(END);
+(constant|CONSTANT) return(CONST);
+(variable|VARIABLE) return(VARIABLE);
+(global|GLOBAL)     return(GLOBAL);
+(is|IS)             return(IS) ;
+(are|ARE)           return(ARE) ;
+(integer|INTEGER)   return(TYPE_INTEGER);
+(real|REAL)         return(TYPE_REAL);
+(string|STRING)     return(TYPE_STRING);
+(boolean|BOOLEAN)   return(TYPE_BOOLEAN);
+(shared|SHARED)     return(SHARED);
 
-(when|WHEN)           return(WHEN);
-(case|CASE)           return(CASE);
-(default|DEFAULT)     return(DEFAULT);
+(if|IF)             return(IF);
+(then|THEN)         return(THEN);
+(else|ELSE)         return(ELSE);
 
-(while|WHILE)         return(WHILE);
-(do|DO)               return(DO);
+(begin|BEGIN)       return(BEGINN);
+(end|END)           return(END);
+
+(when|WHEN)         return(WHEN);
+(case|CASE)         return(CASE);
+(default|DEFAULT)   return(DEFAULT);
+
+(while|WHILE)       return(WHILE);
+(do|DO)             return(DO);
 
 (repeat|REPEAT)         return(REPEAT);
 (until|UNTIL)           return(UNTIL);
@@ -121,27 +145,27 @@ minus     [-]
 (in|IN)          return(IN);
 (step|STEP)      return(STEP);
 
-(function|FUNCTION)             return(FUNCTION);
-(procedure|PROCEDURE)           return(PROCEDURE);
-(returns|RETURNS)	        return(RETURNS);
-(return|RETURN)                 return(RETURN);
-(true|TRUE)			return (TRUE);
-(false|FALSE)			return (FALSE);
+(function|FUNCTION)     return(FUNCTION);
+(procedure|PROCEDURE)   return(PROCEDURE);
+(returns|RETURNS)       return(RETURNS);
+(return|RETURN)         return(RETURN);
+(true|TRUE)             return (TRUE);
+(false|FALSE)           return (FALSE);
 
-(operator|OPERATOR)             return(OPERATOR);
+(operator|OPERATOR) return(OPERATOR);
 
-(class|CLASS)                   return(CLASS);
-(program|PROGRAM)               return(PROGRAM);
-(destruct|DESTRUCT)             return(DESTRUCT);
+(class|CLASS)       return(CLASS);
+(program|PROGRAM)   return(PROGRAM);
+(destruct|DESTRUCT) return(DESTRUCT);
 
 
-(print|PRINT)     	        return(PRINT);
-(input|INPUT)		        return(INPUT);
+(print|PRINT)   return(PRINT);
+(input|INPUT)   return(INPUT);
 
-(parameters|PARAMETERS)         return(PARAMETERS);
-(as|AS)     		        return(AS);
+(parameters|PARAMETERS) return(PARAMETERS);
+(as|AS)                 return(AS);
 
-(length|LENGTH)     	        { return(LENGTH);}
+(length|LENGTH)                 { return(LENGTH);}
 (toUpperCase|TOUPPERCASE)     	{ return(TOUPPERCASE);}
 (toLowerCase|TOLOWERCASE)     	{ return(TOLOWERCASE);}
 (substring|SUBSTRING)     	{ return(SUBSTRING);}
@@ -154,12 +178,12 @@ minus     [-]
 (findLastOf|FINDLASTOF)  	{ return(FINDLASTOF);}
 
 
-(array|ARRAY)        	return(ARRAY);
-(vector|VECTOR)        	return(VECTOR);
+(array|ARRAY)       return(ARRAY);
+(vector|VECTOR)     return(VECTOR);
 (list|LIST)        	return(LIST);
 (set|SET)        	return(SET);
 (map|MAP)        	return(MAP);
-(of|OF)             	return(OF);
+(of|OF)             return(OF);
 
 (regex|REGEX)        	return(REGEX);
 (match|MATCH)        	return(MATCH);
@@ -195,13 +219,16 @@ minus     [-]
 (exist|EXIST)      				return(EXIST);
 
 
-{ID}	{	yylval.text= yytext;
-	    		return (NAME);
-	}
+{ID} {
+    debugLex(std::string("Identifier: ")+ std::string(yytext), AT); 
+    yylval.text= yytext;
+    return (NAME);
+}
 
-{quote}{minus}{minus}{ID}{quote}  {yylval.text = yytext; return(STRING_PARAM);}
-{quote}{phrase}{quote}  {yylval.text = yytext; return(STRING);}
+{quote}{minus}{minus}{ID}{quote}  { yylval.text = yytext; return(STRING_PARAM); }
+{quote}{phrase}{quote}  { debugLex("String", AT); yylval.text = yytext; return(STRING); }
 
 
 <<EOF>>     return END_OF_FILE;
+
 %%

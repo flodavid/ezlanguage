@@ -18,5 +18,6 @@
 
 void error(const char *location, const char *msg);
 void debug(const std::string& msg, const char *location);
+void debugLex(const std::string& msg, const char *location);
 void debugYacc(const std::string& msg, const char *location);
 void debugNode(const std::string& msg, const char *location);

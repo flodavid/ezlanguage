@@ -1,7 +1,7 @@
 #ifndef DECLARATION_PROCEDURE_H
 #define DECLARATION_PROCEDURE_H
 
-#include "CommonDeclaration.h"
+#include "Method.h"
 #include "Parameter.h"
 
 /**
@@ -12,10 +12,7 @@
  *              instruction(s);
  *         end procedure
  */
-class Procedure : public CommonDeclaration {
-
-protected:
-    Node* mParameters;
+class Procedure : public Method {
 
 public:
 
