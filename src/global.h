@@ -11,6 +11,7 @@
 #include "./modules/TranslatedNode.h"
 
 #include "./declarations/Array.h"
+#include "./declarations/Class.h"
 #include "./declarations/Container.h"
 #include "./declarations/Parameter.h"
 #include "./declarations/Variable.h"
@@ -84,7 +85,7 @@ typedef struct yyltype
         }                                                              \
     while (0)
 
-#define YYSTYPE mon_type
+#define YYSTYPE node_types
 extern YYSTYPE yylval;
 
 

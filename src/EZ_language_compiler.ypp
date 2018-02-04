@@ -156,7 +156,7 @@ int yycolumn = 1;
 %type<text> objectDotOperator
 %type<tree> function_string statement_sequence .affect .streamedExpressions .argumentsSeparated
 %type<tree> for.body simpleFunction.arguments
-+// %type<text> names // Add multiple variables declarations in one instruction
+// %type<text> names // Add multiple variables declarations in one instruction
 %type<text> for.decl for.type var.decl array.decl array.type
 %type<cont> container.decl
 %type<text> returnstype
@@ -359,7 +359,7 @@ class:
 	{
     /* TODO class declaration logic */
 		debugYacc("class declaration "+ $2, AT);
-	  $$ = new Class();
+	  // $$ = new Class();
 	}
 ;
 
@@ -1095,15 +1095,15 @@ endif:
 | IF lineend {}
 ;
 
-endwhen:
-  lineend
-| WHEN lineend {}
-;
+// endwhen:
+//   lineend
+// | WHEN lineend {}
+// ;
 
-endcase:
-  lineend
-| CASE lineend {}
-;
+// endcase:
+//   lineend
+// | CASE lineend {}
+// ;
 
 endwhile:
   lineend
