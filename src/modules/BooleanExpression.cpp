@@ -32,7 +32,7 @@ string BooleanExpression::preTranslate() const {
     string res= "( ";
 
     if (value != "") {
-        debug("Cond. Expr., just value", AT);
+        debugNode("Cond. Expr., just value", AT);
         res+= value;
     } else {
         // Two operandes case
@@ -40,7 +40,7 @@ string BooleanExpression::preTranslate() const {
             res+= left_part->translate() +" ";
         }
         if(right_part != nullptr && mOperator != nullptr) {
-            debug("Cond. Expr.: binary operator", AT);
+            debugNode("Cond. Expr.: binary operator", AT);
             res+= mOperator->translate() + " "+ right_part->translate();
         }
         // There is no right part or operator whereas there is a left part

@@ -8,6 +8,8 @@
 #include "aide.h"
 #include "./hash_table/ScopeHashTable.h"
 
+#define GPP_EXE "g++-7"
+
 using namespace std;
 
 extern FILE* yyin;
@@ -126,7 +128,7 @@ int exec_cpp(std::string & gpp_command, std::string & output_name){
 			cout << gpp_command << endl;
             system_return= system(gpp_command.c_str());
             if (system_return != 0) {
-                cerr << "RETURN OF system(" << gpp_command.c_str()  <<") : " << system_return<< endl;
+                cerr << "Return of system command * " << gpp_command.c_str()  <<"* : " << system_return<< endl;
             }
             
             // Compilation success is independant of execution success
@@ -156,7 +158,7 @@ int main(int argc, char ** argv){
     string output_name = "";
 
     // Ligne de commande g++
-    string gpp_command = "g++ -std=c++11";
+    string gpp_command = GPP_EXE " -std=c++11";
 
     // vecteurs des fichiers EZ à traiter
     vector<char*> fic_ezl;
@@ -298,7 +300,12 @@ int main(int argc, char ** argv){
         int return_code= exec_cpp(gpp_command, output_name);
         if (return_code != 0) {
             cerr << "Parsing to C++ succeeded, but compilation failed. Report the problem."
-            "(Maybe you used undeclared variable of function)"<< endl;
+            "\nHINT: Maybe you used undeclared variable of function, or do not have the correct"
+			" version of g++ installed, the one expected is : '" GPP_EXE "'"<< endl;
+			#if DEBUG
+			cerr << "The g++ version is set by a pre-processor definition of 'GPP_EXE' into"
+			" main.cpp, you may want to change it to correct the problem" << endl;
+			#endif
             return EXIT_FAILURE;
         }
         else return return_code;

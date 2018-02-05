@@ -17,6 +17,7 @@
 #define AT TOSTRING(__FILE__) ":l" TOSTRING(__LINE__)
 
 void error(const char *location, const char *msg);
+void info(const std::string& msg, const char *location);
 void debug(const std::string& msg, const char *location);
 void debugLex(const std::string& msg, const char *location);
 void debugYacc(const std::string& msg, const char *location);

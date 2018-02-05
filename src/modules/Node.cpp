@@ -27,7 +27,7 @@ void Node::setRightSon(Node* son) {
 }
 
 void Node::addRightChild(Node* child) {
-    // debug("addRightChildCall:"+ getName(), AT);
+    // debugNode("addRightChildCall:"+ getName(), AT);
     // Right son recursive definition
     if (right_son == nullptr) {
         right_son= child;
@@ -44,10 +44,10 @@ string Node::postTranslate() const
 
 string Node::translate() const {
     if (left_son) {
-        if (right_son) debug(""+ getName() +"--translate(), has left and right sons", AT);
-        else debug(""+ getName() +"--translate(), has left son", AT);
-    } else if (right_son) debug(""+ getName() +"--translate(), has right son", AT);
-        else debug(""+ getName() +"--translate(), no sons", AT);
+        if (right_son) debugNode(""+ getName() +"--translate(), has left and right sons", AT);
+        else debugNode(""+ getName() +"--translate(), has left son", AT);
+    } else if (right_son) debugNode(""+ getName() +"--translate(), has right son", AT);
+        else debugNode(""+ getName() +"--translate(), no sons", AT);
 
     string left_translate= "";
     string right_translate= "";

@@ -211,7 +211,7 @@ program:
     delete racine;
 
     // debug log
-    debug("\n      TRANSLATION\n======================>>>>>\n"+ translation +
+    info("\n      TRANSLATION\n======================>>>>>\n"+ translation +
         "\n<<<<<======================\n        END TRANSLATION\n", AT);
     // output the translation in the output file (should result a valid cpp file)
     fprintf(yyout, "%s", translation.c_str());
@@ -237,7 +237,7 @@ program.imports:
   { $$= new EmptyNode; }
 | program.imports import {
     /* TODO import logic */
-    debugYacc("import", AT);
+    debug("import", AT);
     $1->addRightChild($2);
     $$ = $1;
   }
@@ -259,7 +259,7 @@ program.classes:
   { $$= new TranslatedNode("\n"); }
 | program.classes class
 	{
-    debugYacc("class declared: "+ $1->getDetails(), AT);
+    debug("class declared: "+ $1->getDetails(), AT);
 		$1->addRightChild($2);
 		$$ = $1;
 	}
@@ -383,18 +383,18 @@ class:
 statement_sequence:
   /* empty */
   {
-    debugYacc("no more statements", AT);
+    debug("no more statements", AT);
     $$ = new EmptyNode;
   }
 | statement_sequence statement {
-    debugYacc("statement: "+ $2->getName(), AT);
+    debug("statement: "+ $2->getName(), AT);
     
     $1->addRightChild($2);
     $$ = $1;
   }
 // @see if it is possible to use left recursion
 // | statement_sequence statement {
-//     debugYacc("statement: "+ $2->getName(), AT);
+//     debug("statement: "+ $2->getName(), AT);
 //     if ($1 == nullptr) $$ = $2;
 //     else {
 //       $1->addRightChild($2);
@@ -406,11 +406,11 @@ statement_sequence:
 variable_sequence:
   /* empty */
   {
-    debugYacc("no more declarations", AT);
+    debug("no more declarations", AT);
     $$ = nullptr;
   }
 | variable_sequence variable {
-    debugYacc("declaration: "+ $2->getName(), AT);
+    debug("declaration: "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -422,11 +422,11 @@ variable_sequence:
 method_sequence:
   /* empty */
   {
-    debugYacc("no more declarations", AT);
+    debug("no more declarations", AT);
     $$ = nullptr;
   }
 | method_sequence method {
-    debugYacc("declaration: "+ $2->getName(), AT);
+    debug("declaration: "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -590,14 +590,14 @@ containerDeclaration:
 variable:
   /* scope constancy */ simpleVariable BACK_LINE
   {
-    debugYacc("Variable declaration: "+ $1->getName(), AT);
+    debug("Variable declaration: "+ $1->getName(), AT);
     // string scope_consistancy= $1+$2;
     // $3->setScope(scope_consistancy);
     $$ = $1;
   }
 | variable_construct
   {
-    debugYacc("variable construction (class)", AT);
+    debug("variable construction (class)", AT);
     $$ = $1;
   }
 ;
@@ -761,7 +761,7 @@ simpleFunction:
 arguments:
   LEFT_PARENTHESIS .argumentsList RIGHT_PARENTHESIS
   {
-    debugYacc("Arguments (w/ parenthesis)", AT);
+    debug("Arguments (w/ parenthesis)", AT);
     $$ = $2;
   }
 ;
@@ -815,7 +815,7 @@ destruct:
   // TODO reword destruction definition
   DESTRUCT BACK_LINE statement_sequence END enddestruct {
     /* TODO destructions logic */
-    debugYacc("destructeur ", AT);
+    debugYacc("destructeur (not implemented yet)", AT);
   }
 ;
 
@@ -891,7 +891,7 @@ basicExpressions:
 expression:
   /* TODO check that there is no other operators*/
   expression arithmeticOperator expression {
-    debugYacc("Operation between two expressions", AT);
+    debug("Operation between two expressions", AT);
 
     $1->addRightChild($2);
     $2->addRightChild($3);
@@ -903,7 +903,7 @@ expression:
     $$ = parenthExpr;
   }
 | basicExpression {
-    debugYacc("expression from basicExpression", AT);
+    debug("expression from basicExpression", AT);
     $$ = $1;
   }
 | functionCall {
@@ -1049,7 +1049,7 @@ begin:
   /* empty */
   { $$ = new EmptyNode; }
 | EQUALS basicExpression {
-    debugYacc("Affectation value: "+ $2->translate(), AT);
+    debug("Affectation value: "+ $2->translate(), AT);
     $$ = $2;
   }
 // | EQUALS expression { $$ = $2; } // TODO use expression ?

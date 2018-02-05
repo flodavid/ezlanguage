@@ -8,7 +8,8 @@
 #define NO_DEBUG            0 // Not any debug
 
 // Generic debug
-#define DEBUG               0
+#define INFO                0
+#define DEBUG               1
 #define DEBUGLEX            0
 #define DEBUGYACC           1
 #define MINYACC             0

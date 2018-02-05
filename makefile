@@ -1,5 +1,5 @@
 # Compiler used
-CC = g++-5
+CC = g++-7
 # Compilation flags
 CC_FLAGS = -Wall -std=c++11 -ggdb
 EXT_SRC = 
