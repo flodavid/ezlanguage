@@ -50,6 +50,7 @@ typedef struct s_node_types {
     Class* classNode;
     Container* cont;
     Method* method;
+    Parameter* param;
     Variable* var;
     // Instructions
     Affectation* affectation;

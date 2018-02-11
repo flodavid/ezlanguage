@@ -3,6 +3,21 @@ program main_simple
 
 include "sstream"
 
+parameters
+    argc is integer
+    argv is vector of string
+end
+
+class TestClass
+begin
+    int_member is integer
+
+    procedure hello()
+        print "Function into classes working, i have been assigned '" int_member "' for its protection"
+    end
+
+end
+
 procedure hello_world()
 print "Hello World !"
 end
@@ -21,15 +36,18 @@ this is
 a multiple lines comment
 
 */
-    class TestClass
-    begin
-        int_member is integer
 
-        procedure hello()
-            print "Function into classes working, i have been assigned '" int_member "' for its protection"
+    for i is integer in 0..argc-1 do
+        print "Argument " i
+        if i == 1
+        then print "st"
+        else if i == 2
+            then print "nd"
+            else print "th"
+            end
         end
-
-    end
+        print " argument: " argv[i]
+    end for
 
     myClass is TestClass(3)
     myClass.hello()

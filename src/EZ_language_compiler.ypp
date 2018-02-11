@@ -131,7 +131,7 @@ int yycolumn = 1;
 // Basic elements
 %type<tree> program
 %type<tree> program.imports program.classes program.variables program.methods
-%type<tree> program.parameters method.parameters parameters parameter
+%type<declaration> method.parameters program.parameters parameter_sequence parameter parameters
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
@@ -189,25 +189,25 @@ program:
     }
 
     // Symbols naming
-		Node* p_imports = $4;
+    Node* p_imports = $4;
     Node* p_decl_parameters = $5;
-		Node* p_decl_classes = $6;
-		Node* p_decl_vars = $7;
-		Node* p_decl_methods = $8;
+    Node* p_decl_classes = $6;
+    Node* p_decl_vars = $7;
+    Node* p_decl_methods = $8;
     Node* p_prog = $11;
     /* TODO add program parameters logic */
     // @see main : procedure or function with int return ?
     Procedure* main= new Procedure("main", p_decl_parameters, p_prog);
 
     // Progam declaration and nodes relations
-		Program *racine = new Program($2, p_imports, p_decl_classes);
+    Program *racine = new Program($2, p_imports, p_decl_classes);
     
     p_decl_classes->addRightChild(p_decl_vars);
     p_decl_vars->addRightChild(p_decl_methods);
     p_decl_methods->addRightChild(main);
 
     // Translation
-		const std::string & translation= racine->translate();
+    const std::string & translation= racine->translate();
     delete racine;
 
     // debug log
@@ -216,9 +216,9 @@ program:
     // output the translation in the output file (should result a valid cpp file)
     fprintf(yyout, "%s", translation.c_str());
     
-		return 1; // No other file
+    return 1; // No other file
     // return 0; // other file
-	}
+  }
   // | baseROOT NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 ;
 
@@ -245,13 +245,12 @@ program.imports:
 
 program.parameters:
   .jump
-  { $$ = new TranslatedNode("\n"); }
-// | PARAMETERS BACK_LINE param_args END endargument next_line {
-//     /* TODO arguements declaration logic */
-//     debugYacc("parameters declaration", AT);
-//     vector<Variable*> vars($3);
-//     $$ = vars;
-//   }
+  { $$ = nullptr; }
+| .jump PARAMETERS BACK_LINE parameter_sequence END endparameters {
+    /* TODO arguements declaration logic */
+    debug("parameters declaration", AT);
+    $$ = $4;
+  }
 ;
 
 program.classes:
@@ -406,11 +405,11 @@ statement_sequence:
 variable_sequence:
   /* empty */
   {
-    debug("no more declarations", AT);
+    debug("no more variable", AT);
     $$ = nullptr;
   }
 | variable_sequence variable {
-    debug("declaration: "+ $2->getName(), AT);
+    debug("variable: "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -422,11 +421,27 @@ variable_sequence:
 method_sequence:
   /* empty */
   {
-    debug("no more declarations", AT);
+    debug("no more method", AT);
     $$ = nullptr;
   }
 | method_sequence method {
-    debug("declaration: "+ $2->getName(), AT);
+    debug("method: "+ $2->getName(), AT);
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    }
+    else $$ = $2;
+  }
+;
+
+parameter_sequence:
+  /* empty */
+  {
+    debug("no more parameters", AT);
+    $$ = nullptr;
+  }
+| parameter_sequence parameter .jump {
+    debug("parameter: "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -469,7 +484,7 @@ method.parameters:
 // that are passed as arguments at function call
 parameters: 
   /* empty */
-  { $$ = new EmptyNode; }
+  { $$ = nullptr; }
 | parameter
  	{ $$ = $1; }
 | parameter COMMA parameters
@@ -572,9 +587,9 @@ statement:
 ;
 
 declaration:
-  variable              { $$ = $1; }
-| containerDeclaration  { $$ = $1; }
-| class                 { $$ = $1; }
+  variable             { $$ = $1; }
+| containerDeclaration { $$ = $1; }
+//| class                 { $$ = $1; }
 ;
 
 // TODO Add other container declarations
@@ -955,6 +970,7 @@ conditionalExpression:
 // | argument  { $$ = $1; }
 // ;
 
+// TODO create Parameter from Variable with constructor ?
 parameter:
   var.decl type .affect
   {
@@ -964,6 +980,8 @@ parameter:
     // TODO handle default value for parameters (affect)
     $$ = new Parameter($2,$1);
   }
+| containerDeclaration { $$ = $1; }
+;
 
 simpleVariable:
   var.decl type .affect
@@ -1185,11 +1203,10 @@ enddestruct:
 | DESTRUCT lineend {}
 ;
 
-// TODO implement program parameters
-// endargument:
-//   lineend
-// | ARGUMENTS lineend {}
-// ;
+endparameters:
+  next_line
+| PARAMETERS next_line {}
+;
 
 
 /* ************

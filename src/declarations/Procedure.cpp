@@ -17,7 +17,7 @@ std::string Procedure::preTranslate() const {
 		res+= "void " + getProcedureName() + "(";
 
 		//translation of the parameters
-		res+= mParameters->translate();
+		if (mParameters != nullptr) res+= mParameters->translate();
 	}
 	res += ") {\n";
 
