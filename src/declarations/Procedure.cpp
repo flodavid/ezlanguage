@@ -10,17 +10,12 @@ std::string Procedure::preTranslate() const {
     std::string res = "";
 	
 	// TODO correct main function check (main name is the program name, not mandatory "main")
-	if (getProcedureName() == "main") res =
-		"int main(int argc, char ** argv";
+	res+= "void " + getProcedureName() + "(";
 
-	else {
-		res+= "void " + getProcedureName() + "(";
+	//translation of the parameters
+	if (mParameters != nullptr) res+= mParameters->translate();
 
-		//translation of the parameters
-		if (mParameters != nullptr) res+= mParameters->translate();
-	}
 	res += ") {\n";
-
     return res;
 }
 

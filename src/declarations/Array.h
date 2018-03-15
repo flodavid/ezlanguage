@@ -6,18 +6,16 @@
 /**
  * @brief Node of the tree which represent a condition else
  */
-
 class Array : public CommonDeclaration {
 
 protected:
 	std::string mTypeElement; // int, double, string etc ...
-	Expression* mListInit;
-    unsigned mSize; 
+    unsigned mSize;
 	
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
-    * * * * * * * * */    
+    * * * * * * * * */
 
    /**
     * Constructor with size

@@ -23,6 +23,7 @@
 #include "../src/declarations/Function.h"
 #include "../src/declarations/Import.h"
 #include "../src/declarations/List.h"
+#include "../src/declarations/Main.h"
 #include "../src/declarations/Map.h"
 #include "../src/declarations/Parameter.h"
 #include "../src/declarations/Procedure.h"
@@ -197,7 +198,7 @@ program:
     Node* p_prog = $11;
     /* TODO add program parameters logic */
     // @see main : procedure or function with int return ?
-    Procedure* main= new Procedure("main", p_decl_parameters, p_prog);
+    Main* main= new Main(p_decl_parameters, p_prog);
 
     // Progam declaration and nodes relations
     Program *racine = new Program($2, p_imports, p_decl_classes);
