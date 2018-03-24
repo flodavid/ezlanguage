@@ -12,7 +12,7 @@ class FunctionCall : public Expression {
 protected:
     std::string mObjectName;
     std::string mFunctionName;
-    Node* mArguments; // TODO create an Argument class
+    Expression* mArguments;
     bool mHasAnOtherFunctionCall;
     bool mIsInstruction;
 	
@@ -24,13 +24,13 @@ public:
     /**
      * Constructor with object name
      */
-    FunctionCall(const std::string & functionName, Node * arguments);
+    FunctionCall(const std::string & functionName, Expression * arguments);
 
     /**
      * Constructor with an object
      */
     FunctionCall(const std::string & objectName, const std::string & functionName, 
-                Node * arguments);
+                Expression * arguments);
     
     /**
      * @brief destructor

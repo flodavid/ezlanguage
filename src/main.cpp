@@ -16,6 +16,7 @@ extern FILE* yyin;
 extern int yyparse();
 extern FILE* yyout;
 extern bool existing_parsing_error;
+extern int yydebug;
 
 ScopeHashTable symbolTable = ScopeHashTable(100);
 
@@ -153,7 +154,7 @@ int exec_cpp(std::string & gpp_command, std::string & output_name){
  * @param argv
  * @return
  */
-int main(int argc, char ** argv){
+int main(int argc, char ** argv) {
 	bool no_options = true;
     string output_name = "";
 
@@ -228,6 +229,7 @@ int main(int argc, char ** argv){
 			case 'v':
 				no_options = false;
 				verbose_flag = 1;
+				yydebug = 1;
 				break;
 			case 'w':
 				cout << "Warning messages will be displayed" << endl;
@@ -299,7 +301,7 @@ int main(int argc, char ** argv){
 
         int return_code= exec_cpp(gpp_command, output_name);
         if (return_code != 0) {
-            cerr << "Parsing to C++ succeeded, but compilation failed. Report the problem."
+            cerr << "\nParsing to C++ succeeded, but compilation failed. Report the problem."
             "\nHINT: Maybe you used undeclared variable of function, or do not have the correct"
 			" version of g++ installed, the one expected is : '" GPP_EXE "'"<< endl;
 			#if DEBUG

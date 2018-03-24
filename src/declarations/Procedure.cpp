@@ -7,10 +7,7 @@ Procedure::Procedure(const string & name, Node * parameters, Node * left):
 {}
 
 std::string Procedure::preTranslate() const {
-    std::string res = "";
-	
-	// TODO correct main function check (main name is the program name, not mandatory "main")
-	res+= "void " + getProcedureName() + "(";
+    std::string res = "void " + getProcedureName() + "(";
 
 	//translation of the parameters
 	if (mParameters != nullptr) res+= mParameters->translate();

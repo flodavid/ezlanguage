@@ -81,11 +81,11 @@ int yycolumn = 1;
     yycolumn += yyleng;
 
 #define YYERROR_VERBOSE
+#define YYDEBUG 1
 #define YY_USER_INIT yylloc.first_line=1;
-#define USE(VALUE) /* empty */  
+#define USE(VALUE) /* empty */
 
 %}
-
 
 // Tokens
 %token<text> NUM_INTEGER     // Integer
@@ -132,7 +132,7 @@ int yycolumn = 1;
 // Basic elements
 %type<tree> program
 %type<tree> program.imports program.classes program.variables program.methods
-%type<declaration> method.parameters program.parameters parameter_sequence parameter parameters
+%type<declaration> method.parameters program.parameters parameter_sequence parameter .parameters parameters
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
@@ -144,30 +144,35 @@ int yycolumn = 1;
 %type<classNode> class
 %type<declaration> declaration containerDeclaration
 %type<var>  simpleVariable variable variable_construct
-%type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator
+%type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator equalityOperator
 %type<functionCall> simpleFunction functionCall functionCallNoParenthesis
 %type<transNode> code
 %type<method> method function procedure
 %type<expr> arguments .argumentsList argumentElement
 %type<tree> statement import
-%type<text> type string .scope // TODO constancy
+%type<text> type .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
-%type<expr> expression basicExpression integerExpression basicExpressions
+%type<expr> expression stringExpressions stringExpression integerExpression numericExpression basicExpressions basicExpression
+%type<expr> runtimeValue varValue numeric number real integer string
+%type<arrayAccess> containerAccess
 
 // Non basic elements
 %type<text> objectDotOperator
-%type<tree> function_string statement_sequence .affect .streamedExpressions .argumentsSeparated
+%type<tree> function_string statement_sequence .statement_sequence .affect .streamedExpressions .argumentsSeparated
 %type<var> variable_sequence
 %type<method> method_sequence
-%type<tree> for.body simpleFunction.arguments
+%type<tree> for.body
 // %type<text> names // Add multiple variables declarations in one instruction
-%type<text> for.decl for.type var.decl array.decl array.type
+%type<text> for.decl for.type var.decl array.decl array.type class.decl
 %type<cont> container.decl
 %type<text> returnstype
+%type<expr> simpleFunction.arguments streamedExpressions.element
 %type<expr> for.step for.rangeStart for.rangeEnd .container.affectation container.affectation .container.initSize
 
 // Parameters
 // %define parse.trace
+%debug
+%error-verbose
 
 %start program
 %%
@@ -180,22 +185,22 @@ int yycolumn = 1;
 // ;
 
 program:
-  PROGRAM NAME next_line program.imports program.parameters program.classes program.variables // 7 emt
+  PROGRAM NAME next_line program.imports .jump program.parameters program.classes program.variables // 8 emt
   // baseROOT
-  program.methods NAME BACK_LINE statement_sequence END lineend END_OF_FILE
+  program.methods NAME BACK_LINE .statement_sequence END lineend END_OF_FILE
 	{
-    if ($9 != $2) {
+    if ($10 != $2) {
         cerr<< "Program and main procedure should have same names"<< endl;
         exit(EXIT_FAILURE);
     }
 
     // Symbols naming
     Node* p_imports = $4;
-    Node* p_decl_parameters = $5;
-    Node* p_decl_classes = $6;
-    Node* p_decl_vars = $7;
-    Node* p_decl_methods = $8;
-    Node* p_prog = $11;
+    Node* p_decl_parameters = $6;
+    Node* p_decl_classes = $7;
+    Node* p_decl_vars = $8;
+    Node* p_decl_methods = $9;
+    Node* p_prog = $12;
     /* TODO add program parameters logic */
     // @see main : procedure or function with int return ?
     Main* main= new Main(p_decl_parameters, p_prog);
@@ -245,12 +250,12 @@ program.imports:
 ;
 
 program.parameters:
-  .jump
+  /* empty */
   { $$ = nullptr; }
-| .jump PARAMETERS BACK_LINE parameter_sequence END endparameters {
+| PARAMETERS BACK_LINE parameter_sequence END endparameters {
     /* TODO arguements declaration logic */
     debug("parameters declaration", AT);
-    $$ = $4;
+    $$ = $3;
   }
 ;
 
@@ -295,7 +300,7 @@ import:
     $$= trans_node;
   }
   // For C++ system file include
-| INCLUDE string BACK_LINE {
+| INCLUDE STRING BACK_LINE {
     debugYacc(" inclusion de la bibliothèque "+ $2, AT);
     std::string import_name= replace($2, "\"", "");
     Import* trans_node= new Import(import_name, EXTERNAL_LIBRARY);
@@ -338,69 +343,68 @@ program.variables:
 program.methods:
   /* empty */
   { $$ = new EmptyNode; }
-| program.methods .jump method .jump
+| program.methods method .jump
 	{
-		$1->addRightChild($3);
+		$1->addRightChild($2);
 		$$ = $1;
 	}
 ;
 
 method:
-  function
-	{
-		$$ = $1;
-	}
-| procedure
-	{
-    $$ = $1;
-	}
+  function  { $$ = $1; }
+| procedure { $$ = $1; }
 ;
 
 /* program.classes */
 class:
-  CLASS NAME BACK_LINE begin variable_sequence .jump method_sequence .jump END .jump endclass
+  class.decl variable_sequence .jump method_sequence class.end
 	{
     /* TODO class hashed logic */
-		debugYacc("class declaration "+ $2, AT);
-    ClassHashed * hash_class= new ClassHashed($2);
+		debugYacc("class declaration "+ $1, AT);
+    ClassHashed * hash_class= new ClassHashed($1);
 
-    $$ = new Class(hash_class, $5, $7);
+    $$ = new Class(hash_class, $2, $4);
 	}
-| CLASS NAME BACK_LINE begin method_sequence .jump variable_sequence .jump END .jump endclass
+| class.decl method_sequence .jump variable_sequence class.end
 	{
     /* TODO class hashed logic */
-		debugYacc("class declaration "+ $2, AT);
-    ClassHashed * hash_class= new ClassHashed($2);
+		debugYacc("class declaration "+ $1, AT);
+    ClassHashed * hash_class= new ClassHashed($1);
 
-    $$ = new Class(hash_class, $7, $5);
+    $$ = new Class(hash_class, $4, $2);
 	}
+;
+
+class.decl:
+  CLASS NAME BACK_LINE begin { $$ = $2; }
+;
+
+class.end:
+  .jump END .jump endclass
 ;
 
 /* ********************
  *  GENERIC RECURSIVE *
  * ********************/
 
-statement_sequence:
+.statement_sequence:
   /* empty */
+// @see if it is possible not to use EmptyNode, but nullptr
   {
     debug("no more statements", AT);
     $$ = new EmptyNode;
   }
+| statement_sequence { $$ = $1; }
+;
+
+statement_sequence:
+  statement { $$ = $1; }
 | statement_sequence statement {
     debug("statement: "+ $2->getName(), AT);
     
     $1->addRightChild($2);
     $$ = $1;
   }
-// @see if it is possible to use left recursion
-// | statement_sequence statement {
-//     debug("statement: "+ $2->getName(), AT);
-//     if ($1 == nullptr) $$ = $2;
-//     else {
-//       $1->addRightChild($2);
-//       $$ = $1;
-//     }
-//   }
 ;
 
 variable_sequence:
@@ -451,11 +455,6 @@ parameter_sequence:
   }
 ;
 
-// names:
-//   NAME              { $$ = $1; }
-// | names COMMA NAME  { $$ = $1 + ", " + $3; }
-// ;
-
 /* **********************
  *  METHODS DECLARATION *
  * **********************/
@@ -476,17 +475,22 @@ return:
 ;
 
 method.parameters:
-  LEFT_PARENTHESIS parameters RIGHT_PARENTHESIS {
+  LEFT_PARENTHESIS .parameters RIGHT_PARENTHESIS {
     $$ = $2;
   }
 ;
 
 // Parameters are variables that will used in a method, initialiazed with values
 // that are passed as arguments at function call
-parameters: 
+.parameters: 
   /* empty */
   { $$ = nullptr; }
-| parameter
+| parameters 
+ 	{ $$ = $1; }
+;
+
+parameters:
+  parameter
  	{ $$ = $1; }
 | parameter COMMA parameters
  	{
@@ -499,7 +503,6 @@ parameters:
 // 	{
 // 		cout << "Variable des variables1 "<< $1 << endl;
 // 	}
-;
 
 // TODO function scope handling
 function:
@@ -689,19 +692,19 @@ for.type:
 ;
 
 for.rangeStart:
-  IN expression { $$ = $2; }
+  IN integerExpression { $$ = $2; }
 ;
 
 for.rangeEnd:
-  DOUBLE_DOT expression { $$ = $2; }
+  DOUBLE_DOT integerExpression { $$ = $2; }
 ;
 
 for.step: // @see do step should be text or numeric_value ?
-  STEP expression { $$= $2; }
+  STEP integerExpression { $$= $2; }
 ;
 
 for.body:
-  DO BACK_LINE statement_sequence END endfor { $$ = $3; }
+  DO BACK_LINE .statement_sequence END endfor { $$ = $3; }
 ;
 
 // TODO Add 'for' logics that handle going through containers
@@ -858,17 +861,6 @@ printing:
 //   }
 // ;
 
-.streamedExpressions:
-  /* empty */
-  { $$ = new EmptyNode; }
-| .streamedExpressions expression {
-    TranslatedNode* streamOperator= new TranslatedNode("<< ", $2);
-
-    $1->addRightChild(streamOperator);
-    $$ = $1;
-  }
-;
-
 // code:
 //   CODE begin ANYTHING endcode {
 //     TranslatedNode* cpp_instructions= new TranslatedNode($3);
@@ -893,6 +885,26 @@ next_line:
 | next_line BACK_LINE /* Nothing to do */
 ;
 
+.streamedExpressions:
+  streamedExpressions.element {
+    Operator* streamOperator= new Operator("<< ", $1);
+    $$ = streamOperator;
+  }
+//   /* empty */
+//   { $$ = new EmptyNode; }
+| .streamedExpressions streamedExpressions.element {
+    Operator* streamOperator= new Operator("<< ", $2);
+
+    $1->addRightChild(streamOperator);
+    $$ = $1;
+  }
+;
+
+streamedExpressions.element:
+  stringExpression  { $$ = $1; }
+| runtimeValue      { $$ = $1; }
+;
+
 basicExpressions:
   basicExpression
 | basicExpressions COMMA basicExpression {
@@ -903,45 +915,54 @@ basicExpressions:
   }
 ;
 
-// @see tranform TranslatedNode by Expression or subclass use ?
-expression:
-  /* TODO check that there is no other operators*/
-  expression arithmeticOperator expression {
-    debug("Operation between two expressions", AT);
+basicExpression:
+  string      { $$ = $1; }
+| boolean     { $$ = $1; }
+| varValue    { $$ = $1; }
+| integer     { $$ = $1; }
+| real        { $$ = $1; }
+// @see if variable must be retrieved from name for type checking
+;
 
-    $1->addRightChild($2);
-    $2->addRightChild($3);
+runtimeValue:
+  functionCall {
+    $1->setAsNotInstruction();
     $$ = $1;
   }
-| LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
+| containerAccess { $$ = $1; }
+| varValue { $$ = $1; }
+;
+
+// @see tranform TranslatedNode by Expression or subclass use ?
+expression:
+  LEFT_PARENTHESIS expression RIGHT_PARENTHESIS {
     TranslatedNode* parenthExpr= new TranslatedNode("("+ $2->translate() +")");
     delete $2;
     $$ = parenthExpr;
   }
-| basicExpression {
-    debug("expression from basicExpression", AT);
+| stringExpressions {
+    debug("expression from stringExpression", AT);
     $$ = $1;
   }
-| functionCall {
-    $1->setAsNotInstruction();
+| conditionalExpression {
+    debug("expression from conditionalExpression", AT);
     $$ = $1;
   }
-  // Container access
-| NAME LEFT_BRACKET integerExpression RIGHT_BRACKET {
-    debugYacc("expression from container access", AT);
-    
-    $$ = new ArrayAccess($1, $3);
+| numericExpression {
+    debug("expression from integerExpression", AT);
+    $$ = $1;
   }
+// | expression expression {
+//     $1->addRightChild($2);
+//     $$ = $1;
+//   }
+// | runtimeValue { $$ = $1; }
 ;
 
-// TODO handle parenthesis logic. Rework needs to be done on BooleanExpression class
+// @see There is no type checking :(
 conditionalExpression:
   boolean { $$ = $1; }
-  // NAME should be boolean
-| NAME    {
-    debugYacc("BooleanExpression from variable "+ $1, AT);
-    $$ = new BooleanExpression($1);
-  }
+// TODO handle parenthesis logic. Rework needs to be done on BooleanExpression class
 | LEFT_PARENTHESIS conditionalExpression RIGHT_PARENTHESIS { $$ = $2; }
 | conditionalExpression logicalOperator conditionalExpression {
     BooleanExpression* expr= new BooleanExpression($2,$1,$3);
@@ -952,11 +973,123 @@ conditionalExpression:
     BooleanExpression* negation= new BooleanExpression(new Operator("!"), $2);
     $$ = negation;
   }
-| expression relationalOperator expression {
-    debugYacc("conditionalExpression by comparison", AT);
+  // NAME should be boolean
+// | NAME {
+//     debugYacc("BooleanExpression from variable "+ $1, AT);
+//     $$ = new BooleanExpression(new TranslatedNode($1));
+//   }
+// TODO add type checking on all of container accesses
+// | containerAccess {
+//     BooleanExpression* expr= new BooleanExpression($1);
+//     $$ = expr;
+//   }
+
+| runtimeValue /* empty */
+  {
+    debugYacc("BooleanExpression from variable "+ $1->translate(), AT);
+    $$ = new BooleanExpression($1);
+  }
+| stringExpression equalityOperator stringExpression {
+    debugYacc("conditionalExpression by equality comparison", AT);
     BooleanExpression* comparison= new BooleanExpression($2,$1,$3);
 
     $$ = comparison;
+  }
+| numeric relationalOperator numeric {
+    debugYacc("conditionalExpression by comparison", AT);
+    BooleanExpression* comparison= new BooleanExpression($2,new BooleanExpression($1),new BooleanExpression($3));
+
+    $$ = comparison;
+  }
+| LEFT_PARENTHESIS numericExpression RIGHT_PARENTHESIS relationalOperator numericExpression {
+    debugYacc("conditionalExpression by comparison", AT);
+    BooleanExpression* comparison= new BooleanExpression($4,$2,$5);
+
+    $$ = comparison;
+  }
+;
+
+// conditionalExpression.varValued:
+// | runtimeValue relationalOperator numericExpression {
+//     debugYacc("conditionalExpression by comparison", AT);
+//     BooleanExpression* comparison= new BooleanExpression($2,$1,$3);
+
+//     $$ = comparison;
+//   }
+// | runtimeValue arithmeticOperator numericExpression relationalOperator numericExpression {
+//     debugYacc("conditionalExpression by comparison", AT);
+
+//     $1->addRightChild($2);
+//     $2->addRightChild($3);
+//     BooleanExpression* comparison= new BooleanExpression($4,$1,$5);
+
+//     $$ = comparison;
+//   }
+;
+
+stringExpressions:
+  string { $$ = $1; }
+| stringExpressions stringExpression {
+    debug("Concatenation of two string expressions", AT);
+    $2->interpretAsString();
+    Operator* concat = new Operator(" + ");
+
+    $1->addRightChild(concat);
+    concat->addRightChild($2);
+    $$ = $1;
+  }
+| stringExpressions runtimeValue {
+    debug("Concatenation of two string expressions", AT);
+    $2->interpretAsString();
+    Operator* concat = new Operator(" + ", $2);
+
+    $1->addRightChild(concat);
+    $$ = $1;
+  }
+;
+
+// @see There is no type checking :(
+stringExpression:
+  string        { $$ = $1; }
+| NUM_INTEGER   { $$ = new TranslatedNode("std::to_string("+ $1 + ")"); }
+| NUM_REAL      { $$ = new TranslatedNode("std::to_string("+ $1 + ")"); }
+;
+
+numeric:
+  number        { $$ = $1; }
+| runtimeValue  { $$ = $1; }
+;
+
+number:
+  real    { $$ = $1; }
+| integer { $$ = $1; }
+;
+
+numericExpression:
+  real { $$ = $1; }
+| integerExpression { $$ = $1; }
+  /* TODO check that there is no other operators */
+| numericExpression arithmeticOperator numericExpression {
+    debug("Operation between two numeric expressions", AT);
+
+    $1->addRightChild($2);
+    $2->addRightChild($3);
+    $$ = $1;
+  }
+;
+
+// @see There is no type checking :(
+integerExpression:
+  integer { $$ = $1; }
+// @see if variable must be retrieved from name for type checking
+| runtimeValue { $$ = $1; }
+  /* TODO check that there is no other operators */
+| integerExpression arithmeticOperator integerExpression {
+    debug("Operation between two expressions", AT);
+
+    $1->addRightChild($2);
+    $2->addRightChild($3);
+    $$ = $1;
   }
 ;
 
@@ -970,6 +1103,12 @@ conditionalExpression:
 // // | ABS single_expression { /* $$ = new Variable(); */ } // @see how to handle absolute
 // | argument  { $$ = $1; }
 // ;
+
+containerAccess:
+  NAME LEFT_BRACKET integerExpression RIGHT_BRACKET {
+    $$ = new ArrayAccess($1, $3);
+  }
+;
 
 // TODO create Parameter from Variable with constructor ?
 parameter:
@@ -1067,7 +1206,7 @@ begin:
 .affect:
   /* empty */
   { $$ = new EmptyNode; }
-| EQUALS basicExpression {
+| EQUALS expression {
     debug("Affectation value: "+ $2->translate(), AT);
     $$ = $2;
   }
@@ -1083,7 +1222,7 @@ type:
 ;
 
 string:
-  STRING  { $$ = $1; }
+  STRING  { $$ = new TranslatedNode($1); }
 ;
 
 boolean:
@@ -1091,19 +1230,19 @@ boolean:
 | FALSE { $$ = new BooleanValue(false); }
 ;
 
-basicExpression:
-  string      { $$ = new TranslatedNode($1); }
-| boolean     { $$ = $1; }
-| NUM_INTEGER { $$ = new TranslatedNode($1); }
-| NUM_REAL    { $$ = new TranslatedNode($1); }
+real:
 // @see if variable must be retrieved from name for type checking
-| NAME        { $$ = new TranslatedNode($1); }
+  NUM_REAL { $$ = new TranslatedNode($1); }
 ;
 
-integerExpression:
-  NUM_INTEGER { $$ = new TranslatedNode($1); }
+integer:
 // @see if variable must be retrieved from name for type checking
-| NAME        { $$ = new TranslatedNode($1); }
+  NUM_INTEGER { $$ = new TranslatedNode($1); }
+;
+
+varValue:
+// @see if variable must be retrieved from name for type checking
+  NAME { $$ = new TranslatedNode($1); }
 ;
 
 /* ******************
@@ -1113,9 +1252,7 @@ integerExpression:
 assignmentOperator:
   EQUALS { $$ = new Operator("="); }
 | arithmeticOperator EQUALS {
-    Operator* equals= new Operator("=");
-    
-    $1->addRightChild(equals);
+    $1->setAsAffectation();
     $$ = $1;
   }
 ;
@@ -1136,12 +1273,16 @@ logicalOperator:
 ;
 
 relationalOperator:
-  EQUALS EQUALS { $$ = new Operator("=="); }
-| NE  { $$ = new Operator("!="); }
-| LT  { $$ = new Operator("<"); }
+  LT  { $$ = new Operator("<"); }
 | LE  { $$ = new Operator("<="); }
 | GT  { $$ = new Operator(">"); }
 | GE  { $$ = new Operator(">="); }
+| equalityOperator { $$ = $1; }
+;
+
+equalityOperator:
+  EQUALS EQUALS { $$ = new Operator("=="); }
+| NE  { $$ = new Operator("!="); }
 ;
 
 objectDotOperator:

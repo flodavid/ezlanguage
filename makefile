@@ -14,8 +14,8 @@ LEX_FlAGS =
 # Yacc files extension (.XXX)
 YACC_EXT = ypp
 # interpréteur des fichiers Yacc : analyse syntaxique et sémantique
-YACC = bison -t
-YACC_FLAGS =
+YACC = bison
+YACC_FLAGS = -t --verbose
 
 
 # cpp sources
@@ -78,7 +78,7 @@ obj/lex.yy.c: src/EZ_language_compiler.$(LEX_EXT) obj/EZ_language_compiler.tab.h
 	@echo -e "\033[1;33mInterprétation du fichier Lex\033[0m"
 	$(LEX) -o $@ $^ $(LEX_FLAGS)
 	@echo ""
- 	
+
 obj/EZ_language_compiler.tab.cpp obj/EZ_language_compiler.tab.hpp:  src/EZ_language_compiler.$(YACC_EXT)
 	@echo -e "\033[1;33mInterprétation et compilation intermédiaire des fichiers Yacc\033[0m"
 	$(YACC) $^ --defines=obj/EZ_language_compiler.tab.hpp --output=obj/EZ_language_compiler.tab.cpp $(YACC_FLAGS) 
@@ -166,6 +166,14 @@ launch: all
 basic_tests: all
 	@echo -e "\n\033[1;33mExécution des tests ...\033[0m"
 	bash tests/basic_tests.sh
+ 	
+trace_tests: all
+	@echo -e "\n\033[1;33mExécution des tests ...\033[0m"
+	bash tests/basic_tests.sh -v
+ 	
+# debug_tests: debug_yacc
+# 	@echo -e "\n\033[1;33mExécution des tests en mode debug Yacc ...\033[0m"
+# 	bash tests/basic_tests.sh
  	
 full_tests: all
 	@echo -e "\n\033[1;33mExécution des tests ...\033[0m"

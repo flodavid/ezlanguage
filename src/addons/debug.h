@@ -10,9 +10,10 @@
 // Generic debug
 #define INFO                0
 #define DEBUG               1
+#define MINYACC             0
+
 #define DEBUGLEX            0
 #define DEBUGYACC           1
-#define MINYACC             0
 #define DEBUGNODE           0
 
 

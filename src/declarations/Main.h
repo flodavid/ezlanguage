@@ -9,6 +9,7 @@
  * usage : procedure Name_Main (arguments list)
  *              instruction(s);
  *         end procedure
+ *  TODO correct main function check (main name is the program name, not mandatory "main")
  */
 class Main : public Procedure {
 

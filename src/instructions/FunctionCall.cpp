@@ -2,13 +2,13 @@
 
 using namespace std;
 
-FunctionCall::FunctionCall(const string & functionName, Node * arguments):
+FunctionCall::FunctionCall(const string & functionName, Expression * arguments):
 	Expression(nullptr, nullptr), mObjectName(""), mFunctionName(functionName),
     mArguments(arguments), mHasAnOtherFunctionCall(false), mIsInstruction(true)
 { }
 
 FunctionCall::FunctionCall(const string & objectName, const string & functionName,
-                        Node * arguments):
+                        Expression * arguments):
 	Expression(nullptr, nullptr), mObjectName(objectName), mFunctionName(functionName),
     mArguments(arguments), mHasAnOtherFunctionCall(false), mIsInstruction(true)
 { }
@@ -26,7 +26,10 @@ void FunctionCall::addFunctionCall(FunctionCall* otherFunctionCall)
 
 string FunctionCall::preTranslate() const
 {
+	// TODO check return type to convert to string if useful
     string res= "";
+	if (isString) res+= "std::to_string(";
+
     if (mObjectName != "") res+= mObjectName +".";
     res+= mFunctionName +"(";
     if (mArguments != nullptr) {
@@ -34,6 +37,8 @@ string FunctionCall::preTranslate() const
         debugNode("mArguments translation: "+ mArguments->translate(), AT);
     } 
     res+= ")";
+    
+	if (isString) res+= ")";
     if (mHasAnOtherFunctionCall) res+= ".";
     else if (mIsInstruction) res+= ";\n";
     

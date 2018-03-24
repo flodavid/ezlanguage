@@ -6,12 +6,31 @@ echo -e "\n\033[1;33m=========================================="
 echo -e "\t\033[1;33mComponents tests execution"
 echo -e "\033[1;33m==========================================\033[0m\n"
 
+debug=false
+
+while getopts "hv" arg; do
+  case $arg in
+    h)
+      echo "usage: $0 [-v] [-h]" 1>&2; exit 1; 
+      ;;
+    v)
+      debug=true
+      ;;
+  esac
+done
+
 # Execute tests
 echo "Test 1 : main_simple"
-run_test 1_main_simple.ez
+if [ "$debug" = true ]
+then run_test_traces 1_main_simple.ez
+else run_test 1_main_simple.ez
+fi
 
 echo "Test 2 : procedure_vide"
-run_test 2_procedure_vide.ez
+if [ "$debug" = true ]
+then run_test_traces 2_procedure_vide.ez
+else run_test 2_procedure_vide.ez
+fi
 
 check_tests_success
 #echo "Test 3 : julia"

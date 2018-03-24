@@ -37,16 +37,23 @@ a multiple lines comment
 
 */
 
-    for i is integer in 0..argc-1 do
-        print "Argument " i
+    if (argc-1) < 1
+    then print "There has not any argument"
+    end
+
+    for i is integer in 1..argc-1 do
+        out is string = "" i
         if i == 1
-        then print "st"
+        then out += "st"
         else if i == 2
-            then print "nd"
-            else print "th"
+            then out += "nd"
+            else if i == 3
+                then out += "rd"
+                else out += "th"
+                end
             end
         end
-        print " argument: " argv[i]
+        print out " argument: " argv[i]
     end for
 
     myClass is TestClass(3)
@@ -69,7 +76,7 @@ a multiple lines comment
         print "value of c[" i "]: " c[i]
     end
 
-    while a - 1 * 2 > 0 do
+    while (a - 1 * 2) > 0 do
         a = a -1
         b = true
         print "a : " a

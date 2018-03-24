@@ -1,10 +1,9 @@
-#ifndef GLOBAL_H
-#define GLOBAL_H
-
+#pragma once
 
 #include "./addons/log.h"
 #include "./modules/Node.h"
 
+#include "./modules/ArrayAccess.h"
 #include "./modules/ConditionalExpression.h"
 #include "./modules/Expression.h"
 #include "./modules/Operator.h"
@@ -40,6 +39,7 @@ typedef struct s_node_types {
     std::string text;
     // Modules
     Node* tree;
+    ArrayAccess* arrayAccess;
     ConditionalExpression* condExpr;
     Expression* expr;
     Operator* opeNode;
@@ -92,6 +92,3 @@ typedef struct yyltype
 
 #define YYSTYPE node_types
 extern YYSTYPE yylval;
-
-
-#endif
