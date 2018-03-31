@@ -2,18 +2,17 @@
 
 using namespace std;
 
-Parameter::Parameter(const string & type, const string & name):
-    CommonDeclaration(nullptr, name), mType(type), mIsLastOneOfList(true)
+Parameter::Parameter(const std::string & name, const std::string & type,
+        const Node* content, bool co):
+    CommonVar(name, type, "", content, co), mIsLastOneOfList(true)
 {
-    debugNode("Parameter : "+ type +"_"+ name, AT);
+    debugNode("Parameter : "+ mType +"_"+ mName, AT);
 }
 
 
 string Parameter::preTranslate() const
 {
-    string res= mType +" "+ mName;
-    if (!mIsLastOneOfList) res+= ", ";
-    return res;
+    return CommonVar::preTranslate() + (!mIsLastOneOfList ? ", " : "");
 }
 
 void Parameter::addRightChild(Node* child)

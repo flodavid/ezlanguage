@@ -12,9 +12,9 @@
 class ArrayAccess : public Expression {
 
 protected:	
-	std::string mArrayName;
+    std::string mArrayName;
     int mIndex;
-	Expression * mExpression;
+    Expression * mExpression;
 
 public:
 
@@ -60,29 +60,29 @@ public:
     virtual inline const std::string getName() const { return "Array access"; }
 
     /**
-    * getter of array
-    * @author Ismail ELFAQIR
-    */
+     * getter of array
+     * @author Ismail ELFAQIR
+     */
     const std::string & get_array() const;
 
     /**
-    * getter of index
-    * @author Ismail ELFAQIR
-    */
+     * getter of index
+     * @author Ismail ELFAQIR
+     */
     int get_index() const;
 
     /**
-    * setter of array
-    * @param a : reference to the ArrayDeclaration
-    * @author Ismail ELFAQIR
-    */
+     * setter of array
+     * @param a : reference to the ArrayDeclaration
+     * @author Ismail ELFAQIR
+     */
     void set_array(const std::string & a);
 
     /**
-    * setter of index
-    * @param i : index
-    * @author Ismail ELFAQIR
-    */
+     * setter of index
+     * @param i : index
+     * @author Ismail ELFAQIR
+     */
     void set_index(int i);
 
     /* * * * * * * *

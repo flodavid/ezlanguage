@@ -1,27 +1,29 @@
 #pragma once
 
-#include "CommonDeclaration.h"
+#include "CommonVar.h"
 
 /**
  * @brief Represent the root node of the tree
  * 
  * @author Florian DAVID
  */
-class Parameter : public CommonDeclaration {
+class Parameter : public CommonVar {
 
 private:
     std::string mType;
-    // At construction, we suppose that 
+    // At construction, we suppose that it is true
     bool mIsLastOneOfList;
 
 public:
-    /**
-     * @brief constructor with parameters
-     * @param right : right son
-     * @param prg_name : name of the program
-     * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
-     */
-    Parameter(const std::string & type, const std::string & name);
+	/**
+	 * @brief Constructor with parameters
+	 * @param name : name of the variable
+	 * @param type : type of the variable
+	 * @param content : the value that will be affected to the variable
+	 * @param co : if the variable is const
+	 */
+    Parameter(const std::string & name, const std::string & type,
+            const Node* content, bool co = false);
     
 
     /**
@@ -30,6 +32,12 @@ public:
      */
     virtual inline const std::string getName() const { return "Parameter"; }
     
+    /**
+     * @brief Getter for the parameter's name
+     * @return name of the parameter
+     */
+    const std::string & getParameterName() const { return getVariableName(); }
+
     /**
      * @brief Translate the begining part of the Repeat
      * @return a string containing the C++ code of the instruction

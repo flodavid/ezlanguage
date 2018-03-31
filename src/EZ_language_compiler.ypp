@@ -140,7 +140,8 @@ int yycolumn = 1;
 %type<affectation> affectation
 %type<ifNode> if
 %type<elseNode> .else
-%type<returnNode> return
+%type<returnNode> function.return
+%type<text> function.returnedType
 %type<classNode> class
 %type<declaration> declaration containerDeclaration
 %type<var>  simpleVariable variable variable_construct
@@ -158,14 +159,14 @@ int yycolumn = 1;
 
 // Non basic elements
 %type<text> objectDotOperator
-%type<tree> function_string statement_sequence .statement_sequence .affect .streamedExpressions .argumentsSeparated
-%type<var> variable_sequence
-%type<method> method_sequence
+%type<tree> function_string statement_sequence .statement_sequence .streamedExpressions .argumentsSeparated
+%type<expr> .affect
+%type<var> class.variables
+%type<method> class.methods
 %type<tree> for.body
 // %type<text> names // Add multiple variables declarations in one instruction
 %type<text> for.decl for.type var.decl array.decl array.type class.decl
 %type<cont> container.decl
-%type<text> returnstype
 %type<expr> simpleFunction.arguments streamedExpressions.element
 %type<expr> for.step for.rangeStart for.rangeEnd .container.affectation container.affectation .container.initSize
 
@@ -233,6 +234,12 @@ program:
 | .jump BACK_LINE
 ;
 
+// one or several new lines
+next_line:
+  BACK_LINE BACK_LINE /* Nothing to do */
+| next_line BACK_LINE /* Nothing to do */
+;
+
 /* ******************
  *  PROGRAM MODULES *
  * ******************/
@@ -249,6 +256,7 @@ program.imports:
   }
 ;
 
+// @see in foc there is: [...] AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x0"
 program.parameters:
   /* empty */
   { $$ = nullptr; }
@@ -308,26 +316,6 @@ import:
   }
 ;
 
-/* declaration_arguments */
-// param_args:
-//    var.decl param_type AS STRING_PARAM BACK_LINE { // ex: x is integer as "--x"
-//     cout << "parameter " << get_argument_value($4) << endl;
-//     vector<Variable*> var;
-//     TranslatedNode* string_param= new TranslatedNode($4);
-//     var.push_back(new Variable(nullptr, $1, $2, "local ", string_param));
-//     $$= var;
-//   }
-// |  var.decl param_type AS STRING_PARAM BACK_LINE param_args {
-//   // TODO transform it into left recursive
-//     debugYacc("paramètre "+ get_argument_value($4), AT);
-//     TranslatedNode* string_param= new TranslatedNode($4);
-//     // Add parameter declaration to vector
-//     // TODO Variable should have right son, instead, of using Vector (replace nullptr) ?
-//     $6.push_back(new Variable(nullptr, $1, $2, "local ", string_param));
-//     $$= $6;
-//   }
-// ;
-
 /* declarations_list */
 program.variables:
   /* empty */
@@ -350,42 +338,25 @@ program.methods:
 	}
 ;
 
-method:
-  function  { $$ = $1; }
-| procedure { $$ = $1; }
+parameter_sequence:
+  /* empty */
+  {
+    debug("no more parameters", AT);
+    $$ = nullptr;
+  }
+| parameter_sequence parameter .jump {
+    debug("parameter: "+ $2->getName(), AT);
+    if ($1 != nullptr){
+      $1->addRightChild($2);
+      $$ = $1;
+    }
+    else $$ = $2;
+  }
 ;
 
-/* program.classes */
-class:
-  class.decl variable_sequence .jump method_sequence class.end
-	{
-    /* TODO class hashed logic */
-		debugYacc("class declaration "+ $1, AT);
-    ClassHashed * hash_class= new ClassHashed($1);
-
-    $$ = new Class(hash_class, $2, $4);
-	}
-| class.decl method_sequence .jump variable_sequence class.end
-	{
-    /* TODO class hashed logic */
-		debugYacc("class declaration "+ $1, AT);
-    ClassHashed * hash_class= new ClassHashed($1);
-
-    $$ = new Class(hash_class, $4, $2);
-	}
-;
-
-class.decl:
-  CLASS NAME BACK_LINE begin { $$ = $2; }
-;
-
-class.end:
-  .jump END .jump endclass
-;
-
-/* ********************
- *  GENERIC RECURSIVE *
- * ********************/
+/* *************
+ *  STATEMENTS *
+ * *************/
 
 .statement_sequence:
   /* empty */
@@ -407,14 +378,42 @@ statement_sequence:
   }
 ;
 
-variable_sequence:
+/* **********************
+ *  CLASS DECLARATION *
+ * **********************/
+
+/* program.classes */
+class:
+  class.decl class.variables .jump class.methods class.end
+  {
+    /* TODO class hashed logic */
+    debugYacc("class declaration "+ $1, AT);
+    ClassHashed * hash_class= new ClassHashed($1);
+
+    $$ = new Class(hash_class, $2, $4);
+  }
+| class.decl class.methods .jump class.variables class.end
+  {
+    /* TODO class hashed logic */
+    debugYacc("class declaration "+ $1, AT);
+    ClassHashed * hash_class= new ClassHashed($1);
+
+    $$ = new Class(hash_class, $4, $2);
+  }
+;
+
+class.decl:
+  CLASS NAME BACK_LINE begin { $$ = $2; }
+;
+
+class.variables:
   /* empty */
   {
-    debug("no more variable", AT);
+    debugYacc("no more variable", AT);
     $$ = nullptr;
   }
-| variable_sequence variable {
-    debug("variable: "+ $2->getName(), AT);
+| class.variables variable {
+    debugYacc("variable: "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -423,13 +422,13 @@ variable_sequence:
   }
 ;
 
-method_sequence:
+class.methods:
   /* empty */
   {
     debug("no more method", AT);
     $$ = nullptr;
   }
-| method_sequence method {
+| class.methods method {
     debug("method: "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
@@ -439,75 +438,23 @@ method_sequence:
   }
 ;
 
-parameter_sequence:
-  /* empty */
-  {
-    debug("no more parameters", AT);
-    $$ = nullptr;
-  }
-| parameter_sequence parameter .jump {
-    debug("parameter: "+ $2->getName(), AT);
-    if ($1 != nullptr) {
-      $1->addRightChild($2);
-      $$ = $1;
-    }
-    else $$ = $2;
-  }
+class.end:
+  .jump END .jump endclass
 ;
 
 /* **********************
  *  METHODS DECLARATION *
  * **********************/
 
-returnstype:
-  RETURNS type
-  {
-    // $$= new Type($2);
-  }
+method:
+  function  { $$ = $1; }
+| procedure { $$ = $1; }
 ;
-
-return:
-  RETURN expression
-  {
-    Return* returnWord= new Return($2);
-    $$ = returnWord;
-  }
-;
-
-method.parameters:
-  LEFT_PARENTHESIS .parameters RIGHT_PARENTHESIS {
-    $$ = $2;
-  }
-;
-
-// Parameters are variables that will used in a method, initialiazed with values
-// that are passed as arguments at function call
-.parameters: 
-  /* empty */
-  { $$ = nullptr; }
-| parameters 
- 	{ $$ = $1; }
-;
-
-parameters:
-  parameter
- 	{ $$ = $1; }
-| parameter COMMA parameters
- 	{
-    $1->addRightChild($3);
-    $$ = $1;
- 	}
-// | names ARE type { /* TODO parameters logic */ }
-// TODO handle SHARED parameters
-// | names ARE SHARED type affect
-// 	{
-// 		cout << "Variable des variables1 "<< $1 << endl;
-// 	}
 
 // TODO function scope handling
 function:
-  FUNCTION NAME method.parameters returnstype BACK_LINE // { symbolTable.incScope(); }
-  begin statement_sequence return BACK_LINE END endfunction
+  FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
+  begin statement_sequence function.return BACK_LINE END endfunction
   {
 		// symbolTable.decScope();
 		debugYacc("fonction declaration: "+ $2, AT);
@@ -522,7 +469,7 @@ function:
 //     /* TODO extern function declaration logic @see hash table, but not no function creation ? */
 //     cout << "declaration d'une fonction externe " << endl;
 //   }
-// | SHARED FUNCTION NAME method.parameters returnstype BACK_LINE // 6 elements {symbolTable.incScope(); }
+// | SHARED FUNCTION NAME method.parameters function.returnedType BACK_LINE // 6 elements {symbolTable.incScope(); }
 //   begin statement_sequence return BACK_LINE END endfunction
 //   {
 //     /* TODO shared function declaration logic */
@@ -566,12 +513,60 @@ procedure:
 //   }
 ;
 
+function.returnedType:
+  RETURNS type
+  {
+    // TODO function.returnedType logic
+    // $$= new Type($2);
+  }
+;
+
+function.return:
+  RETURN expression
+  {
+    Return* returnWord= new Return($2);
+    $$ = returnWord;
+  }
+;
+
+method.parameters:
+  LEFT_PARENTHESIS .parameters RIGHT_PARENTHESIS { $$ = $2; }
+;
+
+// Parameters are variables that will used in a method, initialiazed with values
+// that are passed as arguments at function call
+.parameters: 
+  /* empty */
+  { $$ = nullptr; }
+| parameters 
+ 	{ $$ = $1; }
+;
+
+parameters:
+  parameter
+ 	{ $$ = $1; }
+| parameter COMMA parameters
+ 	{
+    $1->addRightChild($3);
+    $$ = $1;
+ 	}
+// | names ARE type { /* TODO parameters logic */ }
+// TODO handle SHARED parameters
+// | names ARE SHARED type affect
+// 	{
+// 		cout << "Variable des variables1 "<< $1 << endl;
+// 	}
+
 /* ******************
  *   INSTRUCTIONS   *
  * ******************/
 
 statement:
-  BACK_LINE             { $$ = new EmptyNode; }
+  BACK_LINE { $$ = new EmptyNode; }
+| if        { $$ = $1; }
+| while     { $$ = $1; }
+| repeat    { $$ = $1; }
+| for       { $$ = $1; }
 | declaration           { $$ = $1; }
 | affectation           { $$ = $1; }
 | functionCall          { $$ = $1; }
@@ -581,51 +576,13 @@ statement:
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
 // | overloading { $$ = $1; }
-| if        { $$ = $1; }
-| while     { $$ = $1; }
-| repeat    { $$ = $1; }
-| for       { $$ = $1; }
 | code      { $$ = $1; }
 // TODO add when implementation ?
 // | when      { $$ = $1; }
 ;
 
-declaration:
-  variable             { $$ = $1; }
-| containerDeclaration { $$ = $1; }
-//| class                 { $$ = $1; }
-;
-
-// TODO Add other container declarations
-containerDeclaration:
-  arrayDeclaration        { $$ = $1; }
-| stdContainerDeclaration { $$ = $1; }
-// | map_declaration     { $$ = $1; }
-// | list_declaration    { $$ = $1; }
-// | set_declaration     { $$ = $1; }
-;
-
-// TODO Avoid shift/reduce by factorising shared/not shared
-variable:
-  /* scope constancy */ simpleVariable BACK_LINE
-  {
-    debug("Variable declaration: "+ $1->getName(), AT);
-    // string scope_consistancy= $1+$2;
-    // $3->setScope(scope_consistancy);
-    $$ = $1;
-  }
-| variable_construct
-  {
-    debug("variable construction (class)", AT);
-    $$ = $1;
-  }
-;
-
-/* ****************************
- *  Conditional Instructions  *
- *        If and loops        *
- * ****************************/
-
+/*  Conditional Instructions  *
+ *        If and loops        */
 
 .else:
   /* empty */
@@ -731,91 +688,40 @@ for:
   }
 ;
 
-/* ************************
- *  Complex Instructions  *
- * ************************/
+/*    Other Instructions    *
+ * *************************/
 
-// TODO function call
-functionCall:
-  // objectDotOperator simpleFunction {}
-  functionCall SIMPLE_DOT simpleFunction {
-    $1->addRightChild($3);
-    $$ = $1;
-  }
-| objectDotOperator simpleFunction {
-    $2->addObject($1);
-    $$ = $2;
-  }
-| simpleFunction {
-    $$ = $1;
-  }
-// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?
-// | containers_methods { } // TODO implement containers methods
-// | function_regex { }
+declaration:
+  variable             { $$ = $1; }
+| containerDeclaration { $$ = $1; }
+//| class                 { $$ = $1; }
 ;
 
-  // At least one argument when no parenthesis
-functionCallNoParenthesis:
-  NAME .argumentsList {
-    debugYacc("Call of function (no parenthesis) '"+ $1 +"'", AT);
-
-    $$ = new FunctionCall($1, $2);
-  }
+// TODO Add other container declarations
+containerDeclaration:
+  arrayDeclaration        { $$ = $1; }
+| stdContainerDeclaration { $$ = $1; }
+// | map_declaration     { $$ = $1; }
+// | list_declaration    { $$ = $1; }
+// | set_declaration     { $$ = $1; }
 ;
 
-simpleFunction.arguments:
-  arguments { $$ = $1; }
-;
-
-simpleFunction:
-  // function call without parenthesis
-  NAME simpleFunction.arguments {
-    debugYacc("Call of function '"+ $1 +"'", AT);
-
-    $$ = new FunctionCall($1, $2);
-  }
-// @see Should it be "object" instead of NAME ?
-;
-
-arguments:
-  LEFT_PARENTHESIS .argumentsList RIGHT_PARENTHESIS
+// TODO Avoid shift/reduce by factorising shared/not shared
+variable:
+  /* scope constancy */ simpleVariable BACK_LINE
   {
-    debug("Arguments (w/ parenthesis)", AT);
-    $$ = $2;
-  }
-;
-
-// arguments are separated by commas : they have a comma before, except the first one
-.argumentsList:
-  /* empty */ // No argument
-  { $$ = new EmptyNode; }
-| argumentElement .argumentsSeparated {// One or more arguments
-    $1->addRightChild($2);
+    debug("Variable declaration: "+ $1->getName(), AT);
+    // string scope_consistancy= $1+$2;
+    // $3->setScope(scope_consistancy);
     $$ = $1;
   }
-;
-
-.argumentsSeparated:
-  /* empty */
-  { $$ = new EmptyNode; }
-| .argumentsSeparated COMMA argumentElement
+| variable_construct
   {
-    TranslatedNode* comma= new TranslatedNode(", ", $3);
-
-    $1->addRightChild(comma);
+    debug("variable construction (class)", AT);
     $$ = $1;
   }
 ;
 
-argumentElement:
-  expression {
-    $$ = $1;
-  }
-;
-
-/* ************************
- *   Simple Instructions  *
- * ************************/
 // TODO handle unary affectation operators (++, --, ...)*
 affectation:
   NAME assignmentOperator expression {
@@ -875,15 +781,182 @@ code:
   }
 ;
 
+// TODO function call
+functionCall:
+  // objectDotOperator simpleFunction {}
+  functionCall SIMPLE_DOT simpleFunction {
+    $1->addRightChild($3);
+    $$ = $1;
+  }
+| objectDotOperator simpleFunction {
+    $2->addObject($1);
+    $$ = $2;
+  }
+| simpleFunction {
+    $$ = $1;
+  }
+// | objectDotOperator NAME { } attributeAccess ? (in classAccess ?
+// | containers_methods { } // TODO implement containers methods
+// | function_regex { }
+;
+
+  // At least one argument when no parenthesis
+functionCallNoParenthesis:
+  NAME .argumentsList {
+    debugYacc("Call of function (no parenthesis) '"+ $1 +"'", AT);
+
+    $$ = new FunctionCall($1, $2);
+  }
+;
+
+simpleFunction.arguments:
+  arguments { $$ = $1; }
+;
+
+simpleFunction:
+  // function call without parenthesis
+  NAME simpleFunction.arguments {
+    debugYacc("Call of function '"+ $1 +"'", AT);
+
+    $$ = new FunctionCall($1, $2);
+  }
+// @see Should it be "object" instead of NAME ?
+;
+
 /* *******************
- *  GENERIC COMPLEX  *
+ *    GENERIC BLOCS  *
  * ******************/
 
-// one or several new lines
-next_line:
-  BACK_LINE BACK_LINE /* Nothing to do */
-| next_line BACK_LINE /* Nothing to do */
+arguments:
+  LEFT_PARENTHESIS .argumentsList RIGHT_PARENTHESIS
+  {
+    debug("Arguments (w/ parenthesis)", AT);
+    $$ = $2;
+  }
 ;
+
+// arguments are separated by commas : they have a comma before, except the first one
+.argumentsList:
+  /* empty */ // No argument
+  { $$ = new EmptyNode; }
+| argumentElement .argumentsSeparated {// One or more arguments
+    $1->addRightChild($2);
+    $$ = $1;
+  }
+;
+
+.argumentsSeparated:
+  /* empty */
+  { $$ = new EmptyNode; }
+| .argumentsSeparated COMMA argumentElement
+  {
+    TranslatedNode* comma= new TranslatedNode(", ", $3);
+
+    $1->addRightChild(comma);
+    $$ = $1;
+  }
+;
+
+argumentElement:
+  expression {
+    $$ = $1;
+  }
+;
+
+runtimeValue:
+  functionCall {
+    $1->setAsNotInstruction();
+    $$ = $1;
+  }
+| containerAccess { $$ = $1; }
+| varValue { $$ = $1; }
+;
+
+// TODO add constancy to parameter
+parameter:
+  var.decl type .affect
+  {
+    debugYacc("Parameter : "+ $1, AT);
+    // VariableHashed v($1,$2); //@see if variable hashed for method declaration parameters
+    // symbolTable.addElement(v);
+    $$ = new Parameter($1,$2,$3);
+  }
+| containerDeclaration { $$ = $1; }
+;
+
+simpleVariable:
+  var.decl type .affect
+  {
+    debugYacc("Variable : "+ $1, AT);
+    // TODO VariableHashed use at variable declaration (creation)
+    VariableHashed v($1,$2); // @see if same thing if function parameters
+    symbolTable.addElement(v);
+    $$ = new Variable($1,$2,"local ",$3,false);
+  }
+// | names ARE type affect BACK_LINE
+// 	{
+//     /* TODO multiple variables declaration logic 1 */
+// 		debugYacc("Variable declaration: "+ $1, AT);
+// 	}
+//     // TODO Handle SHARED
+// | var.decl SHARED type affect BACK_LINE
+// 	{
+// 		VariableHashed v($1,$3);
+// 		symbolTable.addElement(v);
+// 		// $$ = new Variable($2,$4,$1,true);
+// 	}
+//     // TODO Handle SHARED
+// | names ARE SHARED type BACK_LINE
+// 	{
+//     /* TODO multiple variables declaration logic 2 */
+// 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
+// 	}
+;
+
+// TODO add scope and constancy to variable constructions
+variable_construct:
+  // ex: c is Maclasse
+  var.decl NAME .affect BACK_LINE {
+    // TODO ClassHashed use at class declaration (creation)
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,"local ",$3,false,false);
+  }
+  // c is MaClass(val1,va2)
+| var.decl NAME arguments BACK_LINE {
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,$3,"local ",false,false);
+  }
+;
+
+.scope:
+  /* empty */
+  { $$ = "local "; }
+| LOCAL   { $$ = "local ";}
+| GLOBAL  { $$ = "global ";}
+;
+
+// TODO use 'constancy' in declarations
+// constancy:
+//   /* empty */
+//   { $$ = ""; }
+// | CONST { $$ = "const"; }
+// ;
+
+var.decl:
+  NAME IS { $$ = $1; }
+;
+
+containerAccess:
+  NAME LEFT_BRACKET integerExpression RIGHT_BRACKET {
+    $$ = new ArrayAccess($1, $3);
+  }
+;
+
+/* ******************
+ *    EXPRESSIONS   *
+ * ******************/
 
 .streamedExpressions:
   streamedExpressions.element {
@@ -922,15 +995,6 @@ basicExpression:
 | integer     { $$ = $1; }
 | real        { $$ = $1; }
 // @see if variable must be retrieved from name for type checking
-;
-
-runtimeValue:
-  functionCall {
-    $1->setAsNotInstruction();
-    $$ = $1;
-  }
-| containerAccess { $$ = $1; }
-| varValue { $$ = $1; }
 ;
 
 // @see tranform TranslatedNode by Expression or subclass use ?
@@ -1104,88 +1168,6 @@ integerExpression:
 // | argument  { $$ = $1; }
 // ;
 
-containerAccess:
-  NAME LEFT_BRACKET integerExpression RIGHT_BRACKET {
-    $$ = new ArrayAccess($1, $3);
-  }
-;
-
-// TODO create Parameter from Variable with constructor ?
-parameter:
-  var.decl type .affect
-  {
-    debugYacc("Parameter : "+ $1, AT);
-    // VariableHashed v($1,$2); //@see if variable hashed for method declaration parameters
-    // symbolTable.addElement(v);
-    // TODO handle default value for parameters (affect)
-    $$ = new Parameter($2,$1);
-  }
-| containerDeclaration { $$ = $1; }
-;
-
-simpleVariable:
-  var.decl type .affect
-  {
-    debugYacc("Variable : "+ $1, AT);
-    // TODO VariableHashed use at variable declaration (creation)
-    VariableHashed v($1,$2); // @see if same thing if function parameters
-    symbolTable.addElement(v);
-    $$ = new Variable($1,$2,"local ",$3,false);
-  }
-// | names ARE type affect BACK_LINE
-// 	{
-//     /* TODO multiple variables declaration logic 1 */
-// 		debugYacc("Variable declaration: "+ $1, AT);
-// 	}
-//     // TODO Handle SHARED
-// | var.decl SHARED type affect BACK_LINE
-// 	{
-// 		VariableHashed v($1,$3);
-// 		symbolTable.addElement(v);
-// 		// $$ = new Variable($2,$4,$1,true);
-// 	}
-//     // TODO Handle SHARED
-// | names ARE SHARED type BACK_LINE
-// 	{
-//     /* TODO multiple variables declaration logic 2 */
-// 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
-// 	}
-;
-
-.scope:
-  /* empty */
-  { $$ = "local "; }
-| LOCAL   { $$ = "local ";}
-| GLOBAL  { $$ = "global ";}
-;
-
-// TODO use 'constancy' in declarations
-// constancy:
-//   /* empty */
-//   { $$ = ""; }
-// | CONST { $$ = "const"; }
-// ;
-
-var.decl:
-  NAME IS { $$ = $1; }
-;
-
-variable_construct:
-  // ex: c is Maclasse
-  var.decl NAME .affect BACK_LINE {
-    // TODO ClassHashed use at class declaration (creation)
-    VariableHashed classHashed($1,$2);
-    symbolTable.addElement(classHashed);
-    $$ = new Variable($1,$2,"local ",$3,false,false);
-  }
-  // c is MaClass(val1,va2)
-| var.decl NAME arguments .affect BACK_LINE {
-    VariableHashed classHashed($1,$2);
-    symbolTable.addElement(classHashed);
-    $$ = new Variable($1,$2,"local ",$4,false,false,$3);
-  }
-;
-
 /* ******************
  *  GENERIC SIMPLE  *
  * ******************/
@@ -1205,7 +1187,7 @@ begin:
 // TODO affect logic
 .affect:
   /* empty */
-  { $$ = new EmptyNode; }
+  { $$ = nullptr; }
 | EQUALS expression {
     debug("Affectation value: "+ $2->translate(), AT);
     $$ = $2;

@@ -19,7 +19,7 @@ Node::~Node()
 }
 
 void Node::setLeftSon(Node *left) {
-    left_son = left; // TODO replace by reference
+    left_son= left;
 }
 
 void Node::setRightSon(Node* son) {
@@ -51,10 +51,10 @@ string Node::translate() const {
 
     string left_translate= "";
     string right_translate= "";
-    if (left_son != nullptr)	left_translate+= left_son->translate();
+    if (left_son != nullptr)    left_translate+= left_son->translate();
     if (left_translate == "\n") left_translate= "\n\n";
     if (left_translate != "")   right_translate+= '\n';
-    if (right_son != nullptr)	right_translate+= right_son->translate();
+    if (right_son != nullptr)   right_translate+= right_son->translate();
     // std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
     return preTranslate() + left_translate + postTranslate() + right_translate;
 }

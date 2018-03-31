@@ -26,7 +26,7 @@ void FunctionCall::addFunctionCall(FunctionCall* otherFunctionCall)
 
 string FunctionCall::preTranslate() const
 {
-	// TODO check return type to convert to string if useful
+	// TODO check return type to convert to string only if useful
     string res= "";
 	if (isString) res+= "std::to_string(";
 
