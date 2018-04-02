@@ -24,7 +24,7 @@ public:
      * 
      * Right son is set to null
      */
-    Procedure(const std::string & name, Node * parameters, Node * left);
+    Procedure(const std::string & name, Node * parameters, Node * instructions);
     
 
 public:

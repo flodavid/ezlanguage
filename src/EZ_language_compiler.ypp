@@ -132,7 +132,8 @@ int yycolumn = 1;
 // Basic elements
 %type<tree> program
 %type<tree> program.imports program.classes program.variables program.methods
-%type<declaration> method.parameters program.parameters parameter_sequence parameter .parameters parameters
+%type<declaration> method.parameters
+%type<param> program.parameters parameter_sequence parameter .parameters parameters
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
 %type<tree> destruct printing input // TODO overloading
@@ -143,7 +144,8 @@ int yycolumn = 1;
 %type<returnNode> function.return
 %type<text> function.returnedType
 %type<classNode> class
-%type<declaration> declaration containerDeclaration
+%type<declaration> declaration
+%type<genericCont> containerDeclaration
 %type<var>  simpleVariable variable variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator equalityOperator
 %type<functionCall> simpleFunction functionCall functionCallNoParenthesis
@@ -197,14 +199,13 @@ program:
 
     // Symbols naming
     Node* p_imports = $4;
-    Node* p_decl_parameters = $6;
+    CommonVar* p_decl_parameters = $6;
     Node* p_decl_classes = $7;
     Node* p_decl_vars = $8;
     Node* p_decl_methods = $9;
-    Node* p_prog = $12;
+    Node* p_prog_instr = $12;
     /* TODO add program parameters logic */
-    // @see main : procedure or function with int return ?
-    Main* main= new Main(p_decl_parameters, p_prog);
+    Main* main= new Main(p_decl_parameters, p_prog_instr);
 
     // Progam declaration and nodes relations
     Program *racine = new Program($2, p_imports, p_decl_classes);
@@ -345,7 +346,7 @@ parameter_sequence:
     $$ = nullptr;
   }
 | parameter_sequence parameter .jump {
-    debug("parameter: "+ $2->getName(), AT);
+    debug("parameter : "+ $2->getName(), AT);
     if ($1 != nullptr){
       $1->addRightChild($2);
       $$ = $1;
@@ -413,7 +414,7 @@ class.variables:
     $$ = nullptr;
   }
 | class.variables variable {
-    debugYacc("variable: "+ $2->getName(), AT);
+    debugYacc("variable : "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -461,7 +462,7 @@ function:
     // Right son of last instruction is return statement
     $7->addRightChild($8);
 
-		Function *func = new Function($7,$2,$3,$4);
+		Function *func = new Function($2,$3,$7,$4);
 		$$ = func;
 	}
 // | FUNCTION NAME method.parameters IS EXTERN NAME

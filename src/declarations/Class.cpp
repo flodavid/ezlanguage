@@ -5,44 +5,44 @@
 using namespace std;
 
 Class::Class(ClassHashed *c):
-	CommonDeclaration(nullptr, c->get_id()), mVariables(nullptr), mClass(c), mSupportsPragmas(true)
+    CommonDeclaration(nullptr, c->get_id()), mVariables(nullptr), mClass(c), mSupportsPragmas(true)
 { }
 
 Class::Class(ClassHashed *c,
-			Variable * variables,
-			Method * functions,
-			Method * s_functions ):
-	CommonDeclaration(variables, c->get_id()), mVariables(variables), mClass(c), mSupportsPragmas(true)
+            Variable * variables,
+            Method * functions,
+            Method * s_functions ):
+    CommonDeclaration(variables, c->get_id()), mVariables(variables), mClass(c), mSupportsPragmas(true)
 {
-	variables->addRightChild(functions);
-	functions->addRightChild(s_functions);
+    variables->addRightChild(functions);
+    functions->addRightChild(s_functions);
 }
 
 Class::Class(ClassHashed *c,
-			Variable * variables,
-			Method * functions ):
-	CommonDeclaration(variables, c->get_id()), mVariables(variables), mClass(c), mSupportsPragmas(true)
+            Variable * variables,
+            Method * functions ):
+    CommonDeclaration(variables, c->get_id()), mVariables(variables), mClass(c), mSupportsPragmas(true)
 {
-	variables->addRightChild(functions);
+    variables->addRightChild(functions);
 }
 
 Class::Class(ClassHashed *c, Method * functions):
-	CommonDeclaration(functions, c->get_id()), mVariables(nullptr), mClass(c), mSupportsPragmas(true) 
+    CommonDeclaration(functions, c->get_id()), mVariables(nullptr), mClass(c), mSupportsPragmas(true) 
 { }
 
 Class::Class(ClassHashed *c, Variable * variables ):
-	CommonDeclaration(variables, c->get_id()), mVariables(variables), mClass(c), mSupportsPragmas(true)
+    CommonDeclaration(variables, c->get_id()), mVariables(variables), mClass(c), mSupportsPragmas(true)
 { }
 
 Class::~Class()
 { }
 
 ClassHashed * Class::get_class() const{
-	return mClass;
+    return mClass;
 }
 
 void Class::addMethod(Method *function) {
-	addRightChild(function);
+    addRightChild(function);
 }
 
 // void Class::add_static_function(Method *function) {
@@ -50,11 +50,11 @@ void Class::addMethod(Method *function) {
 // }
 
 void Class::addVariable(Variable * variable){
-	addRightChild(variable);
+    addRightChild(variable);
 }
 
 // bool Class::is_in_class(Method * function){
-	
+    
 // 	for(unsigned int i=0;i<public_functions.size();i++){
 // 		if(public_functions[i]==function) return true;
 // 	}
@@ -90,63 +90,74 @@ void Class::addVariable(Variable * variable){
 
 string Class::preTranslate() const
 {
-	string res= "#ifndef "+toUpperCase(mClass->get_id())+"_H\n";
-	res+= "#define "+toUpperCase(mClass->get_id())+"_H\n";
-	// TODO see how to handle imports (set flags ? Always import ?)
-	res+= "#include <iostream>\n";
-	res+= "class "+mClass->get_id()+" {\n";
-	res+= "public:\n";
+    string res= "#ifndef "+toUpperCase(mClass->get_id())+"_H\n";
+    res+= "#define "+toUpperCase(mClass->get_id())+"_H\n";
+    // TODO see how to handle imports (set flags ? Always import ?)
+    res+= "#include <iostream>\n";
+    res+= "class "+mClass->get_id()+" {\n";
+    res+= "public:\n";
 
-	/** The CONSTRUCTORS (according to classes.pdf default constructor and constructor
-	 * with parameters are required ) **/
+    /** The CONSTRUCTORS (according to classes.pdf default constructor and constructor
+     * with parameters are required ) **/
 
-	/* Default constructor */
-	res+= "\t"+mClass->get_id()+"()";
-	res+= "\n\t{}\n\n";
+    /* Default constructor */
+    res+= "\t"+mClass->get_id()+"()";
+    res+= "\n\t{}\n\n";
 
-	/* Constructor with parameters*/
-	// Constructor parameters
-	if (mVariables != nullptr) {
-		string constructor_params= mVariables->translateType() +"_"+ mVariables->getDeclarationName();
-		string initialization_list= mVariables->getDeclarationName() +"(_"+ mVariables->getDeclarationName() +")";
-		
-		for(const Node * var= mVariables; var->right_son != nullptr; var= var->right_son) {
-			Variable * var_right_son= dynamic_cast<Variable *>(var->right_son);
+    // Constructor parameters
+    if (mVariables != nullptr) {
+        Node * varNode= mVariables;
+        string constructor_params= "";
+        string initialization_list= "";
+        bool lastVariable= false;
+        do {
+            Variable * var= dynamic_cast<Variable *>(varNode);
 
-			if (var_right_son != nullptr) {
-				string right_son_name= var_right_son->getDeclarationName();
-				constructor_params+= ", "+ var_right_son->translateType() +" _"+ right_son_name;
-				initialization_list+= ", "+ right_son_name +"(_"+ right_son_name +")";
-			}
-		}
+            // Add the variable to constructor parameters and initialization list
+            if (var != nullptr) {
+                string var_name= var->getDeclarationName();
+                constructor_params+= var->translateType() +" _"+ var_name;
+                initialization_list+= var_name +"(_"+ var_name +")";
 
-		// Constructor signature
-		res+= "\t"+mClass->get_id()+"("+ constructor_params +"):";
+                // Check if it was the last parameter, add a comma otherwise
+                varNode= var->right_son;
+                if (dynamic_cast<Variable *>(varNode) != nullptr) {
+                    constructor_params+= ", ";
+                    initialization_list+= ", ";
+                } else lastVariable= true;
+            } else {
+                // The right son of the variable is not a variable (probably a method)
+                lastVariable= true;
+            }
+        } while(!lastVariable);
 
-		// Put constructor parameters buffer into output
-		res+= "\n\t\t"+ initialization_list;
-		
-		// Empty definition
-		res+= "\n\t{}\n\n";
-	}
+        // Constructor signature
+        res+= "\t"+mClass->get_id()+"("+ constructor_params +"):";
 
-	// The Destructor
-	res+= "\t~"+mClass->get_id()+"()";
-	res+= "\n\t{}\n";
-	
-		// the static functions
-		// for(unsigned int i=0;i<static_functions.size();i++) {
-		// 	res+="\t\t";
-		// 	res+="static "+static_functions[i]->translate()+"\n";
-		// }
+        // Put constructor parameters buffer into output
+        res+= "\n\t\t"+ initialization_list;
+        
+        // Empty definition
+        res+= "\n\t{}\n\n";
+    }
 
-		// functions
-		// for(unsigned int i=0;i<public_functions.size();i++) {
-		// 	res+="\t\t";
-		// 	res+=public_functions[i]->translate()+"\n";
-		// }
+    // The Destructor
+    res+= "\t~"+mClass->get_id()+"()";
+    res+= "\n\t{}\n";
+    
+        // the static functions
+        // for(unsigned int i=0;i<static_functions.size();i++) {
+        // 	res+="\t\t";
+        // 	res+="static "+static_functions[i]->translate()+"\n";
+        // }
 
-	return res;
+        // functions
+        // for(unsigned int i=0;i<public_functions.size();i++) {
+        // 	res+="\t\t";
+        // 	res+=public_functions[i]->translate()+"\n";
+        // }
+
+    return res;
 }
 
 string Class::postTranslate() const

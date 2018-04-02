@@ -1,7 +1,7 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 
-#include "CommonDeclaration.h"
+#include "CommonVar.h"
 #include "../modules/Expression.h"
 
 /**
@@ -9,13 +9,15 @@
  * @brief Node of the tree whhich represent the declaration of a container
  * 
  * @author LAHYANI Zakaria - Ismail ELFAQIR - Johan Defaye
+ * @see if there must be a class for containers as parameter (not static), or flags in CommonVar ?
+ * TODO use CommonVar::preTranslate() or redefine comportment to handle CommonVar attributes
  */
-class Container : public CommonDeclaration {
-	
+class Container : public CommonVar {
+
 protected:
-	std::string mTypeContainer; // Vector, Array, Set, Map or List
-	std::string mTypeElement; // int, double, string etc ...
-	Expression* mSize;
+    std::string mTypeContainer; // Vector, Array, Set, Map or List
+    // std::string mTypeElement; // int, double, string etc ...
+    Expression* mSize;
     
 public:
 

@@ -3,15 +3,15 @@
 using namespace std;
 
 Array::Array(const std::string & nameC, const string & typeE, unsigned size):
-	CommonDeclaration(nullptr, nameC), mTypeElement(typeE), mSize(size)
+    CommonVar(nullptr, nameC, typeE), mSize(size)
 {
-	debugNode("Array with size "+ size, AT);
+    debugNode("Array with size "+ size, AT);
 }
 
 Array::Array(const std::string & nameC, const string & typeE, Expression* listInit):
-	CommonDeclaration(listInit, nameC), mTypeElement(typeE), mSize(0)
+    CommonVar(listInit, nameC, typeE), mSize(0)
 {
-	debugNode("Array with init list", AT);
+    debugNode("Array with init list", AT);
 }
 
 Array::~Array()
@@ -22,7 +22,7 @@ Array::~Array()
 
 string Array::preTranslate() const
 {
-    string res= mTypeElement + " " + getDeclarationName() + "[";
+    string res= mType + " " + getDeclarationName() + "[";
     if (mSize == 0) {
         res+= "] = {";;
     }
@@ -40,7 +40,7 @@ string Array::postTranslate() const
         res+= "}";
     }
 
-	res += ";\n";
+    res += ";\n";
 
     return res;
 }

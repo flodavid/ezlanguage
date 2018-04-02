@@ -11,14 +11,11 @@ CommonVar::CommonVar(const std::string & name, const std::string & type,
     hashed= new VariableHashed();
 }
 
-CommonVar::CommonVar(const std::string & name, const std::string & type,
+CommonVar::CommonVar(Node * left, const string & name, const std::string & type,
         const std::string & scope, bool co):
-    CommonDeclaration(nullptr, name), mType(type), mScope(scope), mAffect(nullptr),
+    CommonDeclaration(left, name), mType(type), mScope(scope), mAffect(nullptr),
     isConst(co)
-{
-    // TODO create a hashed instance of the variable and store it in the hash table
-    hashed= new VariableHashed();
-}
+{ }
 
 CommonVar::~CommonVar()
 {

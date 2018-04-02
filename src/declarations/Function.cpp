@@ -2,9 +2,9 @@
 
 using namespace std;
 
-Function::Function(Node * parameters, const string & name, Node * left,
-                const string & type):
-    Method(name, parameters, left), return_type(type)
+Function::Function(const string & name, Node * parameters, Node * instructions,
+                string type):
+    Method(name, parameters, instructions), return_type(type)
 { }
 
 string Function::preTranslate() const {

@@ -31,18 +31,17 @@ public:
      * @param co : if the variable is const
      */
     CommonVar(const std::string & name, const std::string & type,
-            const std::string & scope, const Node* content = nullptr, bool co = false);
-
+            const std::string & scope = "", const Node* content = nullptr, bool co = false);
+            
     /**
-     * @brief Constructor with parameters
-     * @param name : name of the variable
-     * @param type : type of the variable
-     * @param scope : scope of the variable (locale or globale)
-     * @param co : if the variable is const
-     * @param st : if the variable is static
+     * @brief : Constructor with left node
+     * @param left : left son
+     * @param name : variable's name
+     * 
+     * Right son is set to null
      */
-    CommonVar(const std::string & name, const std::string & type,
-            const std::string & scope, bool co = false);
+    CommonVar(Node * left, const std::string & name, const std::string & type,
+            const std::string & scope = "", bool co = false);
 
     /**
      * @brief Destructor

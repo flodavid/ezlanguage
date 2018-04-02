@@ -50,7 +50,9 @@ typedef struct s_node_types {
     Class* classNode;
     Container* cont;
     Method* method;
-    Parameter* param;
+    // Parameter* param; TODO define an abstract class that is inherited by parameters classes ?
+    CommonVar* param;
+    CommonVar* genericCont;
     Variable* var;
     // Instructions
     Affectation* affectation;

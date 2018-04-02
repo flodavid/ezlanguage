@@ -23,7 +23,7 @@ public:
 	 * @param co : if the variable is const
 	 */
     Parameter(const std::string & name, const std::string & type,
-            const Node* content, bool co = false);
+            const Node* content = nullptr, bool co = false);
     
 
     /**

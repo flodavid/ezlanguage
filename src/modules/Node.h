@@ -14,6 +14,7 @@
  */
 class Node {
 
+// Exception to the rule: Node sub-classes should not acceed to their sons
 friend class Class;
 
 private:
