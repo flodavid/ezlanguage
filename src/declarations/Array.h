@@ -3,7 +3,8 @@
 #include "CommonVar.h"
 
 /**
- * @brief Node of the tree which represent a condition else
+ * @brief Node of the tree which represent an array
+ * Cannot be set as parameter to a function
  */
 class Array : public CommonVar {
 

@@ -10,8 +10,7 @@ Function::Function(const string & name, Node * parameters, Node * instructions,
 string Function::preTranslate() const {
     string res= return_type + " " + getFunctionName() + "(";
 
-    //translation of the parameters
-    res+= mParameters->translate();
+    res+= translateParameters();
 
     res+= ") {\n";
 

@@ -3,13 +3,13 @@
 using namespace std;
 
 Array::Array(const std::string & nameC, const string & typeE, unsigned size):
-    CommonVar(nullptr, nameC, typeE), mSize(size)
+    CommonVar(nameC, typeE), mSize(size)
 {
     debugNode("Array with size "+ size, AT);
 }
 
 Array::Array(const std::string & nameC, const string & typeE, Expression* listInit):
-    CommonVar(listInit, nameC, typeE), mSize(0)
+    CommonVar(nameC, typeE, listInit, true), mSize(0)
 {
     debugNode("Array with init list", AT);
 }
@@ -22,7 +22,7 @@ Array::~Array()
 
 string Array::preTranslate() const
 {
-    string res= mType + " " + getDeclarationName() + "[";
+    string res= translateType() + " " + getDeclarationName() + "[";
     if (mSize == 0) {
         res+= "] = {";;
     }

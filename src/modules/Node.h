@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../addons/log.h"
+#include "../addons/String_addon.h"
 // #include "../declarations/Class.h"
 
 /**
@@ -16,6 +17,7 @@ class Node {
 
 // Exception to the rule: Node sub-classes should not acceed to their sons
 friend class Class;
+friend class Main;
 
 private:
     Node* left_son;

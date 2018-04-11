@@ -4,7 +4,7 @@
 #include "CommonVar.h"
 
 /**
- * @brief Allows the declaration of procedures
+ * @brief Allows the declaration of the main function (program entrance)
  *
  * usage : Main_Name (argument list)
  *              instruction-s;
@@ -59,5 +59,7 @@ public:
      * to their specifications, specificities and own values
      */
     virtual std::string postTranslate() const;
+
+    std::string createParsingParameterCode(std::string * input_arguments_summary) const;
 
 };

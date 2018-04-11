@@ -92,7 +92,7 @@ int yycolumn = 1;
 %token<text> NUM_REAL			  // Real
 %token<text> NAME RETOUR STRING STRING_PARAM ANYTHING CODE_TEXT
 %token COMMA DEGREE PERCENT SHARP DOUBLE_DOT SIMPLE_DOT QUOTE		// Caractères
-%token<text> TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN     // variables typeVar
+%token TYPE_INTEGER TYPE_REAL TYPE_STRING TYPE_BOOLEAN
 %token EQUALS NE LT LE GT GE PLUS MINUS MULT DIVISE
 %token LEFT_PARENTHESIS RIGHT_PARENTHESIS LEFT_ACCOLADE RIGHT_ACCOLADE LEFT_BRACKET RIGHT_BRACKET FIN BACK_LINE	// Special Characters
 %token<text> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
@@ -222,7 +222,7 @@ program:
     info("\n      TRANSLATION\n======================>>>>>\n"+ translation +
         "\n<<<<<======================\n        END TRANSLATION\n", AT);
     // output the translation in the output file (should result a valid cpp file)
-    fprintf(yyout, "%s", translation.c_str());
+    fputs(translation.c_str(), yyout);
     
     return 1; // No other file
     // return 0; // other file
@@ -410,11 +410,11 @@ class.decl:
 class.variables:
   /* empty */
   {
-    debugYacc("no more variable", AT);
+    debugYacc("no more variables", AT);
     $$ = nullptr;
   }
 | class.variables variable {
-    debugYacc("variable : "+ $2->getName(), AT);
+    debugYacc("Variable : "+ $2->getName(), AT);
     if ($1 != nullptr) {
       $1->addRightChild($2);
       $$ = $1;
@@ -684,7 +684,7 @@ for:
   }
 | for.decl for.type for.rangeStart for.rangeEnd for.step for.body {
     /* TODO 'for a is TYPE in b .. c step x' logic */
-    debugYacc("FOR type  IN .. STEP ...", AT);
+    debugYacc("FOR [Type]  IN .. STEP ...", AT);
     $$ = new For($1,$3,$4,$5,$6,$2);
   }
 ;
@@ -716,11 +716,42 @@ variable:
     // $3->setScope(scope_consistancy);
     $$ = $1;
   }
-| variable_construct
+;
+
+// TODO add scope, constancy and staticity to variable constructions
+simpleVariable:
+  var.decl type .affect
   {
-    debug("variable construction (class)", AT);
-    $$ = $1;
+    debugYacc("Variable : "+ $1, AT);
+    // TODO VariableHashed use at var declaration (creation)
+    VariableHashed var($1,$2); // @see if same thing if function parameters
+    symbolTable.addElement(var);
+    $$ = new Variable($1,$2,$3,"local ",false,false);
   }
+  // c is MaClass(val1,va2)
+| var.decl type arguments {
+    VariableHashed classHashed($1,$2);
+    symbolTable.addElement(classHashed);
+    $$ = new Variable($1,$2,$3,"local ",false,false);
+  }
+// | names ARE type affect BACK_LINE
+// 	{
+//     /* TODO multiple variables declaration logic 1 */
+// 		debugYacc("Variable declaration: "+ $1, AT);
+// 	}
+//     // TODO Handle SHARED
+// | var.decl SHARED type affect BACK_LINE
+// 	{
+// 		VariableHashed v($1,$3);
+// 		symbolTable.addElement(v);
+// 		// $$ = new Variable($2,$4,$1,true);
+// 	}
+//     // TODO Handle SHARED
+// | names ARE SHARED type BACK_LINE
+// 	{
+//     /* TODO multiple variables declaration logic 2 */
+// 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
+// 	}
 ;
 
 // TODO handle unary affectation operators (++, --, ...)*
@@ -878,57 +909,11 @@ parameter:
   var.decl type .affect
   {
     debugYacc("Parameter : "+ $1, AT);
-    // VariableHashed v($1,$2); //@see if variable hashed for method declaration parameters
+    // VariableHashed v($1,$2); //@see if var hashed for method declaration parameters
     // symbolTable.addElement(v);
     $$ = new Parameter($1,$2,$3);
   }
 | containerDeclaration { $$ = $1; }
-;
-
-simpleVariable:
-  var.decl type .affect
-  {
-    debugYacc("Variable : "+ $1, AT);
-    // TODO VariableHashed use at variable declaration (creation)
-    VariableHashed v($1,$2); // @see if same thing if function parameters
-    symbolTable.addElement(v);
-    $$ = new Variable($1,$2,"local ",$3,false);
-  }
-// | names ARE type affect BACK_LINE
-// 	{
-//     /* TODO multiple variables declaration logic 1 */
-// 		debugYacc("Variable declaration: "+ $1, AT);
-// 	}
-//     // TODO Handle SHARED
-// | var.decl SHARED type affect BACK_LINE
-// 	{
-// 		VariableHashed v($1,$3);
-// 		symbolTable.addElement(v);
-// 		// $$ = new Variable($2,$4,$1,true);
-// 	}
-//     // TODO Handle SHARED
-// | names ARE SHARED type BACK_LINE
-// 	{
-//     /* TODO multiple variables declaration logic 2 */
-// 		debugYacc("  Variable des variables  avec portee "+ $1, AT);
-// 	}
-;
-
-// TODO add scope and constancy to variable constructions
-variable_construct:
-  // ex: c is Maclasse
-  var.decl NAME .affect BACK_LINE {
-    // TODO ClassHashed use at class declaration (creation)
-    VariableHashed classHashed($1,$2);
-    symbolTable.addElement(classHashed);
-    $$ = new Variable($1,$2,"local ",$3,false,false);
-  }
-  // c is MaClass(val1,va2)
-| var.decl NAME arguments BACK_LINE {
-    VariableHashed classHashed($1,$2);
-    symbolTable.addElement(classHashed);
-    $$ = new Variable($1,$2,$3,"local ",false,false);
-  }
 ;
 
 .scope:
@@ -992,10 +977,9 @@ basicExpressions:
 basicExpression:
   string      { $$ = $1; }
 | boolean     { $$ = $1; }
-| varValue    { $$ = $1; }
 | integer     { $$ = $1; }
 | real        { $$ = $1; }
-// @see if variable must be retrieved from name for type checking
+| varValue    { $$ = $1; }
 ;
 
 // @see tranform TranslatedNode by Expression or subclass use ?
@@ -1039,19 +1023,14 @@ conditionalExpression:
     $$ = negation;
   }
   // NAME should be boolean
-// | NAME {
-//     debugYacc("BooleanExpression from variable "+ $1, AT);
-//     $$ = new BooleanExpression(new TranslatedNode($1));
-//   }
 // TODO add type checking on all of container accesses
 // | containerAccess {
 //     BooleanExpression* expr= new BooleanExpression($1);
 //     $$ = expr;
 //   }
 
-| runtimeValue /* empty */
-  {
-    debugYacc("BooleanExpression from variable "+ $1->translate(), AT);
+| runtimeValue {
+    debugYacc("BooleanExpression from variable or literal "+ $1->translate(), AT);
     $$ = new BooleanExpression($1);
   }
 | stringExpression equalityOperator stringExpression {
@@ -1146,7 +1125,6 @@ numericExpression:
 // @see There is no type checking :(
 integerExpression:
   integer { $$ = $1; }
-// @see if variable must be retrieved from name for type checking
 | runtimeValue { $$ = $1; }
   /* TODO check that there is no other operators */
 | integerExpression arithmeticOperator integerExpression {
@@ -1184,8 +1162,7 @@ begin:
 | BEGINN BACK_LINE  { }
 ;
 
-// @see can it just be a translated Node (variable name don't change) or a Node (Var or value)
-// TODO affect logic
+// @see can it just be a translated Node (var name don't change) or a Node (Var or value)
 .affect:
   /* empty */
   { $$ = nullptr; }
@@ -1198,10 +1175,11 @@ begin:
 ;
 
 type:
-  TYPE_INTEGER  { $$ = "int"; }
-| TYPE_REAL     { $$ = "float"; }
-| TYPE_STRING   { $$ = "std::string"; }
-| TYPE_BOOLEAN  { $$ = "bool"; }
+  TYPE_INTEGER  { $$ = "integer"; }
+| TYPE_REAL     { $$ = "real"; }
+| TYPE_STRING   { $$ = "string"; }
+| TYPE_BOOLEAN  { $$ = "boolean"; }
+| NAME          { $$ = $1; }
 ;
 
 string:
@@ -1402,7 +1380,7 @@ stdContainerDeclaration:
 
 container.decl:
   var.decl VECTOR .container.initSize OF type {
-    debugYacc("vector declaration", AT);
+    debugYacc("Vector declaration", AT);
     Vector* vector= new Vector($1, $5, $3);
 
     $$ = vector;

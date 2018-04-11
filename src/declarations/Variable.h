@@ -13,23 +13,10 @@
 class Variable : public CommonVar {
 	
 protected:
-    bool isStatic;
+    bool mIsStatic;
     Expression* mConstructionParameters;
 
 public:
-
-    /**
-     * @brief Constructor with parameters
-     * @param name : name of the variable
-     * @param type : type of the variable
-     * @param scope : scope of the variable (locale or globale)
-     * @param content : the value that will be affected to the variable
-     * @param co : if the variable is const
-     * @param st : if the variable is static
-     */
-    Variable(const std::string & name, const std::string & type,
-            const std::string & scope, const Node* content = nullptr, bool co = false,
-            bool st = false);
 
     /**
      * @brief Constructor for class construction
@@ -37,12 +24,12 @@ public:
      * @param type : type of the variable
      * @param construction_parameters : parameters used to construct the class
      * @param scope : scope of the variable (locale or globale)
-     * @param co : if the variable is const
-     * @param st : if the variable is static
+     * @param isConst : if the variable is const
+     * @param isStatic : if the variable is static
      */
     Variable(const std::string & name, const std::string & type,
-            Expression * construction_parameters, const std::string & scope, bool co = false,
-            bool st = false);
+            Expression * construction_parameters = nullptr, const std::string & scope = "", bool isConst = false,
+            bool isStatic = false);
 
     /**
      * @brief Destructor
@@ -69,7 +56,6 @@ public:
     virtual std::string preTranslate() const;
 
 private:
-    std::string constructionParameters() const
-    { return ( mConstructionParameters ? "("+ mConstructionParameters->translate() +")" : "" ); }
+    std::string constructionParameters() const;
 };
 #endif

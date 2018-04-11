@@ -177,7 +177,7 @@ int main(int argc, char ** argv) {
             
             //autres
             {"help",			no_argument,		0, 	'h'},
-            {"optimisation",		required_argument,	0, 	'O'},
+            {"optimisation",	required_argument,	0, 	'O'},
             {"warning",			no_argument,		0, 	'w'},
             {"output",			required_argument,	0, 	'o'},
             {0, 0, 0, 0}

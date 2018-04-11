@@ -39,19 +39,6 @@ public:
      * @return name of the procedure
      */
     const std::string & getProcedureName() const { return getDeclarationName(); }
-
-
-    /**
-     * @brief Getter for the argument's list
-     * @return List of arguments
-     */
-    const Node& getParameters() const { return *mParameters; }
-
-    /**
-     * @brief Setter of the list of arguments
-     * @param arguments : list of the arguments of the function
-     */
-    void setArguments(Parameter* params){ mParameters= params; }
     
     /**
      * @brief Translate the begining part of the Procedure

@@ -3,10 +3,10 @@
 using namespace std;
 
 Parameter::Parameter(const std::string & name, const std::string & type,
-        const Node* content, bool co):
-    CommonVar(name, type, "", content, co), mIsLastOneOfList(true)
+        Expression* content, bool isConst):
+    CommonVar(name, type, content, true, "", isConst), mIsLastOneOfList(true)
 {
-    debugNode("Parameter : "+ mType +"_"+ mName, AT);
+    debugNode("Parameter : "+ translateType() +"_"+ mName, AT);
 }
 
 

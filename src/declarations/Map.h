@@ -9,6 +9,9 @@
 
 class Map : public Container {
 	
+private:
+    std::string mKeyType;
+
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
@@ -21,7 +24,8 @@ public:
     * @param size: left son, expression defining the size of the container
      */
     Map(const std::string & nameC, const std::string & typeFirstE,
-        const std::string & typeSecondE, Expression* size = nullptr);
+        const std::string & typeSecondE, Expression* size = nullptr,
+        bool isParameter =false);
         
     /**
      * Constructor with parameters
@@ -38,10 +42,16 @@ public:
 
 
     /**
+     * @brief Translate the complete type of the map (with its element type)
+     * return C++ container type
+     */
+    std::string translateType() const;
+
+    /**
      * @brief Get the type of container (name in C++)
      * @return the type of the container. Defined at class creation
      */
-    virtual inline const std::string getType() const { return "map"; };
+    virtual inline const std::string getContainerType() const { return "map"; };
 
     /**
      * @brief Get the name of the node
