@@ -28,8 +28,8 @@ public:
      * 
      * Right son is set to null
      */
-    Function(Node * arguments, const std::string & name, Node * left,
-        const std::string & type);
+    Function(const std::string & name, Node * arguments, Node * instructions,
+        std::string type);
 
 
     /**

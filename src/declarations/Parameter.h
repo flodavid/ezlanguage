@@ -3,14 +3,13 @@
 #include "CommonVar.h"
 
 /**
- * @brief Represent the root node of the tree
+ * @brief Represent a parameter of a method declaration
  * 
  * @author Florian DAVID
  */
 class Parameter : public CommonVar {
 
 private:
-    std::string mType;
     // At construction, we suppose that it is true
     bool mIsLastOneOfList;
 
@@ -20,10 +19,10 @@ public:
 	 * @param name : name of the variable
 	 * @param type : type of the variable
 	 * @param content : the value that will be affected to the variable
-	 * @param co : if the variable is const
+	 * @param isConst : if the variable is const
 	 */
     Parameter(const std::string & name, const std::string & type,
-            const Node* content, bool co = false);
+            Expression* content = nullptr, bool isConst = false);
     
 
     /**

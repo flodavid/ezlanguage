@@ -4,13 +4,8 @@
 using namespace std;
 
 Variable::Variable(const std::string & name, const std::string & type,
-        const std::string & scope, const Node* content, bool co, bool st):
-    CommonVar(name, type, scope, content, co), isStatic(st), mConstructionParameters(nullptr)
-{ }
-
-Variable::Variable(const std::string & name, const std::string & type,
-        Expression * construction_parameters, const std::string & scope, bool co, bool st):
-    CommonVar(name, type, scope, nullptr, co), isStatic(st), mConstructionParameters(construction_parameters)
+        Expression* content, const std::string & scope, bool co, bool st):
+    CommonVar(name, type, content, false, scope, co), mIsStatic(st), mConstructionParameters(nullptr)
 { }
 
 Variable::~Variable()
@@ -21,14 +16,25 @@ Variable::~Variable()
 
 string Variable::preTranslate() const {
     string res = "";
-    if (isStatic) {
+    if (mIsStatic) {
         res += "static ";
     }
 
     res += CommonVar::preTranslate();
 
-    if(mAffect && mAffect->translate() != "") res+= constructionParameters();
+    // // If mAffect has an empty translation, we can try to translate construction parameters
+    // if(!mAffect || mAffect->translate() == "") // Removed, useless if class correctly constructed
+    res+= constructionParameters();
     
 	res += ";\n";
     return res;
+}
+
+string Variable::constructionParameters() const
+{
+    return (
+        mConstructionParameters
+        ? "("+ mConstructionParameters->translate() +")"
+        : ""
+    );
 }

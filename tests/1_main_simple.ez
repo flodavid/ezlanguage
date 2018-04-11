@@ -4,8 +4,8 @@ program main_simple
 include "sstream"
 
 parameters
-    argc is integer
-    argv is vector of string
+    mynumber is integer
+    mystring is string
 end
 
 class TestClass

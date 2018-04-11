@@ -5,44 +5,38 @@
 #include "../hash_table/VariableHashed.h"
 
 /** 
- * @brief Node of the tree which represent the declaration of a variable
+ * @brief Node of the tree which represent the common part for declaring any kind of variable
  * @author : GINISTY Valentin
  * 
  * exemple : my_great_variable is integer -> int my_great_variable;
  * TODO Handle hashed variable (VariableHashed class) association or merging
  */
 class CommonVar : public CommonDeclaration {
-	
-protected:
+
+private:
     std::string mType;
+
+protected:
     std::string mScope;
-    const Node* mAffect;
+    Expression* mAffect;
+    bool mIsInitList;
     VariableHashed* hashed;
-    bool isConst;
+    bool mIsConst;
 
 public:
 
     /**
-     * @brief Constructor with parameters
+     * @brief Constructor with parameters for variable construction
      * @param name : name of the variable
      * @param type : type of the variable
-     * @param scope : scope of the variable (locale or globale)
      * @param content : the value that will be affected to the variable
-     * @param co : if the variable is const
-     */
-    CommonVar(const std::string & name, const std::string & type,
-            const std::string & scope, const Node* content = nullptr, bool co = false);
-
-    /**
-     * @brief Constructor with parameters
-     * @param name : name of the variable
-     * @param type : type of the variable
+     * @param isInitList : flag that defines if affectation uses equal sign or parenthesis
      * @param scope : scope of the variable (locale or globale)
-     * @param co : if the variable is const
-     * @param st : if the variable is static
+     * @param isConst : if the variable is const
      */
     CommonVar(const std::string & name, const std::string & type,
-            const std::string & scope, bool co = false);
+            Expression* content = nullptr, bool isInitList = false,
+            const std::string & scope = "", bool isConst = false);
 
     /**
      * @brief Destructor
@@ -52,16 +46,22 @@ public:
 
 public:
     /**
-     * @brief Get the name of the node
-     * @return the name of the node. Defined at class creation
+     * @brief Getter for the name of the Node
+     * @return the name node inheriting CommonVar
      */
-    virtual inline const std::string getName() const { return "CommonVar declaration"; }
+    virtual const std::string getName() const =0;
 
     /**
      * @brief Getter for the variable's name
      * @return name of the variable
      */
-    const std::string & getVariableName() const { return getDeclarationName(); }
+    virtual const std::string & getVariableName() const { return getDeclarationName(); }
+
+    /**
+     * @brief Getter for the variable default value
+     * @return the expression affected to the variable
+     */
+    virtual const Expression* getAffectation() const { return mAffect; }
 
     /**
      * @brief Get the C++ type of the variable

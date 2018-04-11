@@ -97,3 +97,18 @@ string replace(const string &str, const string &to_replace, const string &replac
 bool contains(const string &str, const string &str2){
 	return str.find(str2)!=string::npos;
 }
+
+std::string translatePrimitiveType(const std::string & string_type)
+{
+    if(string_type == "integer"){
+        return "int";
+    }else if (string_type == "real"){
+        return "double";
+    }else if (string_type == "string"){
+        return "std::string";
+    }else if (string_type == "boolean"){
+        return "bool";
+    }else{
+        return "";
+    }
+}

@@ -2,19 +2,10 @@
 
 using namespace std;
 
-CommonVar::CommonVar(const std::string & name, const std::string & type,
-        const std::string & scope, const Node* content, bool co):
+CommonVar::CommonVar(const string & name, const string & type,
+        Expression* content, bool isInitList, const string & scope, bool isConst):
     CommonDeclaration(nullptr, name), mType(type), mScope(scope), mAffect(content),
-    isConst(co)
-{
-    // TODO create a hashed instance of the variable and store it in the hash table
-    hashed= new VariableHashed();
-}
-
-CommonVar::CommonVar(const std::string & name, const std::string & type,
-        const std::string & scope, bool co):
-    CommonDeclaration(nullptr, name), mType(type), mScope(scope), mAffect(nullptr),
-    isConst(co)
+    mIsInitList(isInitList), mIsConst(isConst)
 {
     // TODO create a hashed instance of the variable and store it in the hash table
     hashed= new VariableHashed();
@@ -28,28 +19,25 @@ CommonVar::~CommonVar()
 
 string CommonVar::translateType() const
 {
-    if(mType == "integer"){
-        return "int ";
-    }else if (mType == "real"){
-        return "double ";
-    }else if (mType == "string"){
-        return "std::string ";
-    }else if (mType == "boolean"){
-        return "bool ";
+    string trans_type= translatePrimitiveType(mType);
+
+    if(trans_type != ""){
+        return trans_type;
     }else{
         // Case of object
-        return mType + " ";
+        return mType;
     }
 }
 
-string CommonVar::preTranslate() const {
+string CommonVar::preTranslate() const
+{
     string res = "";
-    if(isConst){
-        res = res + "const ";
+    if(mIsConst){
+        res+= "const ";
     }
     // TODO Scope is not used ("local " or "global ")
 
-    res+= translateType();
+    res+= translateType() + " ";
     res+= getVariableName();
 
     if(mAffect) {
@@ -57,7 +45,8 @@ string CommonVar::preTranslate() const {
         if (affectStr != "") {
             // TODO check that we just need the string value of affect, not the Node
             // (or if we just need the HashedVariable)
-            res+= " = " + affectStr;
+            if (mIsInitList) res+= " = " + affectStr;
+            else res+= "( " + affectStr +" )";
         }
     }
     

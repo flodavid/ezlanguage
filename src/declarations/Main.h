@@ -1,17 +1,20 @@
 #pragma once
 
-#include "Procedure.h"
-#include "Parameter.h"
+#include "Function.h"
+#include "CommonVar.h"
 
 /**
- * @brief Allows the declaration of procedures
+ * @brief Allows the declaration of the main function (program entrance)
  *
- * usage : procedure Name_Main (arguments list)
- *              instruction(s);
- *         end procedure
+ * usage : Main_Name (argument list)
+ *              instruction-s;
+ *         end
  *  TODO correct main function check (main name is the program name, not mandatory "main")
  */
-class Main : public Procedure {
+class Main : public Function {
+
+private:
+    CommonVar * mMainOpts; // @see if it must be changed: Creation of a class dedicated to parameters ?
 
 public:
 
@@ -23,7 +26,7 @@ public:
      * 
      * Right son is set to null
      */
-    Main(Node * parameters, Node * left);
+    Main(CommonVar * parameters, Node * prgm_intructions);
     
 
 public:
@@ -37,7 +40,7 @@ public:
      * @brief Getter for the procedure's name
      * @return name of the procedure
      */
-    const std::string & getMainName() const { return getProcedureName(); }
+    const std::string & getMainName() const { return getFunctionName(); }
     
     /**
      * @brief Translate the begining part of the Main
@@ -56,5 +59,7 @@ public:
      * to their specifications, specificities and own values
      */
     virtual std::string postTranslate() const;
+
+    std::string createParsingParameterCode(std::string * input_arguments_summary) const;
 
 };

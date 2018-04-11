@@ -2,8 +2,8 @@
 
 using namespace std;
 
-List::List(const string & nameC, const string & typeE, Expression* size):
-	Container(nameC, typeE, size)
+List::List(const string & nameC, const string & typeE, Expression* size, bool isParameter):
+	Container(nameC, typeE, size, isParameter)
 { }
 
 List::List(const string & nameC, Expression* list, const string & typeE):
