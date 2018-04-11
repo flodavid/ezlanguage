@@ -3,8 +3,8 @@
 using namespace std;
 
 Map::Map(const string & nameC, const string & typeFirstE, const string & typeSecondE,
-		Expression* size):
-	Container(nameC, typeFirstE +", "+ typeSecondE, size)
+		Expression* size, bool isParameter):
+	Container(nameC, typeSecondE, size, isParameter), mKeyType(typeFirstE)
 { }
 
 Map::Map(const string & nameC, Expression* list, const string & typeE):
@@ -13,3 +13,8 @@ Map::Map(const string & nameC, Expression* list, const string & typeE):
 
 Map::~Map()
 { }
+
+string Map::translateType() const
+{
+    return "std::"+ getContainerType() +"<"+ translatePrimitiveType(mKeyType) +", "+ CommonVar::translateType() + ">";
+}

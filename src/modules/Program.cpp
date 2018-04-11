@@ -74,6 +74,5 @@ string Program::postTranslate() const {
 "\n"
 "void "+ INPUT_FUNC_NAME +"(std::string* input) {\n"
 "    std::cin >> *input;\n"
-"}\n"
-"\n";
+"}\n";
 }

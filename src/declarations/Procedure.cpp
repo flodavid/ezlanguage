@@ -2,25 +2,16 @@
 
 using namespace std;
 
-Procedure::Procedure(const string & name, Node * parameters, Node * left):
-	Method(name, parameters, left)
+Procedure::Procedure(const string & name, Node * parameters, Node * instructions):
+    Method(name, parameters, instructions)
 {}
 
 std::string Procedure::preTranslate() const {
-    std::string res = "";
-	
-	// TODO correct main function check (main name is the program name, not mandatory "main")
-	if (getProcedureName() == "main") res =
-		"int main(int argc, char ** argv";
+    std::string res = "void " + getProcedureName() + "(";
 
-	else {
-		res+= "void " + getProcedureName() + "(";
+	res+= translateParameters();
 
-		//translation of the parameters
-		res+= mParameters->translate();
-	}
-	res += ") {\n";
-
+    res += ") {\n";
     return res;
 }
 

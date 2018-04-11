@@ -14,9 +14,11 @@
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-#define AT TOSTRING(__FILE__) ":l" TOSTRING(__LINE__)
+#define AT __FILE__ ":" TOSTRING(__LINE__)
+#define ERROR( message ) error( message, AT )
 
 void error(const char *location, const char *msg);
+void info(const std::string& msg, const char *location);
 void debug(const std::string& msg, const char *location);
 void debugLex(const std::string& msg, const char *location);
 void debugYacc(const std::string& msg, const char *location);

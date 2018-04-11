@@ -17,5 +17,9 @@ TranslatedNode::TranslatedNode(const std::string& translated_content, Node* righ
 
 
 string TranslatedNode::preTranslate() const {
-    return content;
+	// TODO var type not check: Add VariableAccess class instead of TranslatedNode
+	string res= "";
+	if (isString) res+= "std::to_string("+ content +")";
+    else res+= content;
+    return res;
 }

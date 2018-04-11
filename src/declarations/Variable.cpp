@@ -4,61 +4,37 @@
 using namespace std;
 
 Variable::Variable(const std::string & name, const std::string & type,
-        const std::string & scope, const Node* content, bool co, bool st,
-        Expression * construction_parameters):
-    CommonDeclaration(nullptr, name), mType(type), mScope(scope), mAffect(content),
-    isConst(co), isStatic(st), mConstructionParameters(construction_parameters)
-{
-    // TODO create a hashed instance of the variable and store it in the hash table
-    hashed= new VariableHashed();
-}
+        Expression* content, const std::string & scope, bool co, bool st):
+    CommonVar(name, type, content, false, scope, co), mIsStatic(st), mConstructionParameters(nullptr)
+{ }
 
 Variable::~Variable()
 {
-    delete mAffect;
-    delete mConstructionParameters;
+    if(mConstructionParameters) delete mConstructionParameters;
 }
 
-
-string Variable::translateType() const
-{
-    if(mType == "integer"){
-        return "int ";
-    }else if (mType == "real"){
-        return "double ";
-    }else if (mType == "string"){
-        return "std::string ";
-    }else if (mType == "boolean"){
-        return "bool ";
-    }else{
-        // Case of object
-        return mType + " ";
-    }
-}
 
 string Variable::preTranslate() const {
     string res = "";
-    if (isStatic) {
-		res += "static ";
-	}
-    if(isConst){
-        res = res + "const ";
+    if (mIsStatic) {
+        res += "static ";
     }
-    // TODO Scope is not used ("local " or "global ")
 
-    res+= translateType();
-    res+= getVariableName();
-    const string& affectStr= mAffect->translate();
-    if ( affectStr != "") {
-        // TODO check that we just need the string value of affect, not the Node
-        // (or if we just need the HashedVariable)
-		res += " = " + affectStr;
-    } else if(mConstructionParameters) res += "("+ mConstructionParameters->translate() +")";
+    res += CommonVar::preTranslate();
+
+    // // If mAffect has an empty translation, we can try to translate construction parameters
+    // if(!mAffect || mAffect->translate() == "") // Removed, useless if class correctly constructed
+    res+= constructionParameters();
     
 	res += ";\n";
     return res;
 }
 
-const VariableHashed* Variable::getVariableHashed() const {
-    return hashed;
+string Variable::constructionParameters() const
+{
+    return (
+        mConstructionParameters
+        ? "("+ mConstructionParameters->translate() +")"
+        : ""
+    );
 }

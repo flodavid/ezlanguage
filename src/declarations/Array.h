@@ -1,23 +1,20 @@
 #pragma once
 
-#include "CommonDeclaration.h"
-#include "../modules/Expression.h"
+#include "CommonVar.h"
 
 /**
- * @brief Node of the tree which represent a condition else
+ * @brief Node of the tree which represent an array
+ * Cannot be set as parameter to a function
  */
-
-class Array : public CommonDeclaration {
+class Array : public CommonVar {
 
 protected:
-	std::string mTypeElement; // int, double, string etc ...
-	Expression* mListInit;
-    unsigned mSize; 
-	
+    unsigned mSize;
+    
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
-    * * * * * * * * */    
+    * * * * * * * * */
 
    /**
     * Constructor with size

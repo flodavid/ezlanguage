@@ -21,13 +21,13 @@ extern int yylineno;
 %}
 
 
-separators     	[ \t]+
-number         	[0-9]
+separators      [ \t]+
+number          [0-9]
 integer         {number}+
 
-reel			{integer}("."{integer})?
+reel            {integer}("."{integer})?
 
-mot 		    [A-z]+
+mot             [A-z]+
 
 quote ["]
 

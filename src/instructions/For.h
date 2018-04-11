@@ -3,6 +3,7 @@
 
 #include "../modules/Node.h"
 #include "../modules/Expression.h"
+#include "../declarations/Variable.h"
 
 /**
  * @brief Represent a node of the tree which will traduct a "for" loop
@@ -12,13 +13,12 @@
  * Use Declaration, Condition and Instruction
  */
 class For : public Node {
-	
+private:
+    Variable* mIterator;
+
 protected:
-	std::string mIteratorName;
-    const Node* mIndStart;
     const Node* mIndEnd;
     const Expression* mStep;
-    std::string mType;
     std::string mContainerName;
     
 public:
@@ -32,8 +32,8 @@ public:
 	* @param left : left son
 	* @param type : type of the indice
 	*/	
-    For(const std::string & iterator, const Expression* start, const Expression* end,
-        const Expression* step, Node * left, const std::string & type = "");
+    For(const std::string & iterator, Expression* start, const Expression* end,
+        const Expression* step, Node * instructions, const std::string & type = "");
     
     /**
      * @brief constructor with parameters
@@ -41,7 +41,7 @@ public:
      * @param name : name of the indice
      * @param container : name of the container to browse
      */
-     For (Node * left, const std::string & iterator, const std::string & container);
+     For (Node * instructions, const std::string & iterator, const std::string & container);
     
     /**
      * @brief destructor

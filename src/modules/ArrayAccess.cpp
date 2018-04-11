@@ -3,46 +3,50 @@
 using namespace std;
 
 ArrayAccess::ArrayAccess(const string & arrayN, int ind):
-	Expression(), mArrayName(arrayN), mIndex(ind), mExpression(nullptr)
+    Expression(), mArrayName(arrayN), mIndex(ind), mExpression(nullptr)
 {}
 
 ArrayAccess::ArrayAccess(const string & arrayN, Expression * expression):
-	Expression(), mArrayName(arrayN), mIndex(0), mExpression(expression)
+    Expression(), mArrayName(arrayN), mIndex(0), mExpression(expression)
 {}
 
 ArrayAccess::~ArrayAccess()
 {
-	delete mExpression;
+    delete mExpression;
 }
 
 
 const string &ArrayAccess::get_array() const {
-	return mArrayName;
+    return mArrayName;
 }
 
 int ArrayAccess::get_index() const{
-	return mIndex;
+    return mIndex;
 }
 
 void ArrayAccess::set_array(const string & a) {
-	mArrayName=a;
+    mArrayName=a;
 }
 
 void ArrayAccess::set_index(int i) {
-	mIndex=i;
+    mIndex=i;
 }
 
 string ArrayAccess::preTranslate() const {
-	string res= mArrayName +"[";
+    // TODO check array type to convert to string only if useful
+    string res= "";
+    if (isString) res+= "std::to_string(";
+    res+= mArrayName +"[";
 
-	if (nullptr != mExpression) {
-		res+= mExpression->translate();
-	} else {
-		res+= to_string(mIndex);
-	}
+    if (nullptr != mExpression) {
+        res+= mExpression->translate();
+    } else {
+        res+= to_string(mIndex);
+    }
 
-	res+= "]";
+    res+= "]";
+    if (isString) res+= ")";
 
-	return res;
+    return res;
 }
 

@@ -94,4 +94,13 @@ std::string replace(const std::string &str, const std::string &to_replace, const
 * @author Ismail ELFAQIR
 */
 bool contains(const std::string &str, const std::string &str2);
+
+/**
+* @brief Get the C++ type from an EZ primitive type
+* @param string_type : name of the EZ type
+* @return the C++ equivalent type. Empty string if none coresponding
+* @author Florian DAVID
+*/
+std::string translatePrimitiveType(const std::string & string_type);
+
 #endif

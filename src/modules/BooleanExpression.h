@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../addons/String_addon.h"
+#include "ArrayAccess.h"
 #include "ConditionalExpression.h"
 #include "Expression.h"
 #include "Operator.h"
@@ -18,17 +19,17 @@ class BooleanExpression : public ConditionalExpression {
 
 private:
     Operator* mOperator;
-    std::string value;
+    const Expression* value;
     // The nodes should be a ConditionalExpression or expression (as string in TranslatedNode)
     const Node * left_part; 
     const Node * right_part;
 
 public:
     /**
-     * @brief Variable constructor
+     * @brief Boolean from variable or array access
      * @param operande : name of the variable
      */
-    BooleanExpression(const std::string & operande);
+    BooleanExpression(const Expression * operande);
 
     /**
      * @brief Unary operation constructor

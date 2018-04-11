@@ -3,10 +3,17 @@
 
 using namespace std;
 
-Operator::Operator(const string & ope):
-    Node(nullptr, nullptr), mOpeChars(ope)
+Operator::Operator(const string & ope, Expression * right_operande):
+    Node(nullptr, right_operande), mOpeChars(ope)
 { }
 
+bool Operator::setAsAffectation()
+{
+    if (mOpeChars.length() == 1) {
+        mOpeChars+= "=";
+        return true;
+    } else return false;
+}
 
 string Operator::preTranslate() const {
     return mOpeChars + " ";

@@ -19,7 +19,7 @@ Node::~Node()
 }
 
 void Node::setLeftSon(Node *left) {
-    left_son = left; // TODO replace by reference
+    left_son= left;
 }
 
 void Node::setRightSon(Node* son) {
@@ -27,7 +27,7 @@ void Node::setRightSon(Node* son) {
 }
 
 void Node::addRightChild(Node* child) {
-    // debug("addRightChildCall:"+ getName(), AT);
+    // debugNode("addRightChildCall:"+ getName(), AT);
     // Right son recursive definition
     if (right_son == nullptr) {
         right_son= child;
@@ -44,17 +44,17 @@ string Node::postTranslate() const
 
 string Node::translate() const {
     if (left_son) {
-        if (right_son) debug(""+ getName() +"--translate(), has left and right sons", AT);
-        else debug(""+ getName() +"--translate(), has left son", AT);
-    } else if (right_son) debug(""+ getName() +"--translate(), has right son", AT);
-        else debug(""+ getName() +"--translate(), no sons", AT);
+        if (right_son) debugNode(""+ getName() +"--translate(), has left and right sons", AT);
+        else debugNode(""+ getName() +"--translate(), has left son", AT);
+    } else if (right_son) debugNode(""+ getName() +"--translate(), has right son", AT);
+        else debugNode(""+ getName() +"--translate(), no sons", AT);
 
     string left_translate= "";
     string right_translate= "";
-    if (left_son != nullptr)	left_translate+= left_son->translate();
+    if (left_son != nullptr)    left_translate+= left_son->translate();
     if (left_translate == "\n") left_translate= "\n\n";
     if (left_translate != "")   right_translate+= '\n';
-    if (right_son != nullptr)	right_translate+= right_son->translate();
+    if (right_son != nullptr)   right_translate+= right_son->translate();
     // std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
     return preTranslate() + left_translate + postTranslate() + right_translate;
 }

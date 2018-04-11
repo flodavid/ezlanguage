@@ -8,7 +8,7 @@
  */
 class Method : public CommonDeclaration {
 
-protected:
+private:
     Node* mParameters;
 
 public:
@@ -20,7 +20,7 @@ public:
      * 
      * Right son is set to null
      */
-    Method(const std::string & name, Node * parameters, Node * left);
+    Method(const std::string & name, Node * parameters, Node * instructions);
 
 public:
 
@@ -28,12 +28,14 @@ public:
      * @brief Getter for the argument's list
      * @return List of arguments
      */
-    const Node& getParameters() const { return *mParameters; }
+    const Node* getParameters() const;
 
     /**
-     * @brief Setter of the list of arguments
+     * @brief Add a parameter or list of parameters to the method
      * @param arguments : list of the arguments of the function
      */
-    void setArguments(Parameter* params){ mParameters= params; }
+    void addParameters(Parameter* params){ mParameters->addRightChild(params); }
+
+    std::string translateParameters() const;
 
 };

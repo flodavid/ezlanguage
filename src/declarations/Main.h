@@ -1,18 +1,20 @@
-#ifndef DECLARATION_PROCEDURE_H
-#define DECLARATION_PROCEDURE_H
+#pragma once
 
-#include "Method.h"
-#include "Parameter.h"
+#include "Function.h"
+#include "CommonVar.h"
 
 /**
- * @brief Allows the declaration of procedures
- * @author : GARNIER Antoine
+ * @brief Allows the declaration of the main function (program entrance)
  *
- * usage : procedure Name_Procedure (arguments list)
- *              instruction(s);
- *         end procedure
+ * usage : Main_Name (argument list)
+ *              instruction-s;
+ *         end
+ *  TODO correct main function check (main name is the program name, not mandatory "main")
  */
-class Procedure : public Method {
+class Main : public Function {
+
+private:
+    CommonVar * mMainOpts; // @see if it must be changed: Creation of a class dedicated to parameters ?
 
 public:
 
@@ -24,7 +26,7 @@ public:
      * 
      * Right son is set to null
      */
-    Procedure(const std::string & name, Node * parameters, Node * instructions);
+    Main(CommonVar * parameters, Node * prgm_intructions);
     
 
 public:
@@ -32,16 +34,16 @@ public:
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Procedure declaration"; }
+    virtual inline const std::string getName() const { return "Main declaration"; }
 
     /**
      * @brief Getter for the procedure's name
      * @return name of the procedure
      */
-    const std::string & getProcedureName() const { return getDeclarationName(); }
+    const std::string & getMainName() const { return getFunctionName(); }
     
     /**
-     * @brief Translate the begining part of the Procedure
+     * @brief Translate the begining part of the Main
      * @return a string containing the C++ code of the instruction
      *
      * All subclasses, should reimplement this method so that the translation corresponds
@@ -50,7 +52,7 @@ public:
     virtual std::string preTranslate() const;
     
     /**
-     * @brief Translate the end part of the Procedure
+     * @brief Translate the end part of the Main
      * @return a string containing the C++ code of the instruction
      *
      * All subclasses, should reimplement this method so that the translation corresponds
@@ -58,7 +60,6 @@ public:
      */
     virtual std::string postTranslate() const;
 
+    std::string createParsingParameterCode(std::string * input_arguments_summary) const;
+
 };
-
-
-#endif

@@ -5,20 +5,20 @@
 
 using namespace std;
 
-For::For(const string & iterator, const Expression* start, const Expression* end,
-        const Expression* step, Node * left, const string & type):
-    Node(left, nullptr), mIteratorName(iterator), mIndStart(start), mIndEnd(end), mStep(step),
-	mType(type), mContainerName("")
+For::For(const string & iterator, Expression* start, const Expression* end,
+        const Expression* step, Node * instructions, const string & type):
+    Node(instructions, nullptr), mIterator(new Variable(iterator, type, start)), mIndEnd(end), mStep(step),
+	mContainerName("")
 {}
 
-For::For (Node * left, const string & iterator, const string & container):
-    Node(left, nullptr), mIteratorName(iterator), mIndStart(nullptr), mIndEnd(nullptr),
-	mStep(nullptr), mType(""), mContainerName(container)
+For::For (Node * instructions, const string & iterator, const string & container):
+    Node(instructions, nullptr), mIterator(new Variable(iterator, "auto")), mIndEnd(nullptr),
+	mStep(nullptr), mContainerName(container)
 {}
 
 For::~For()
 {	
-    delete mIndStart;
+    delete mIterator;
     delete mIndEnd;
     delete mStep;
 }
@@ -27,21 +27,16 @@ For::~For()
 string For::preTranslate() const
 {
 	ostringstream oss;
-	const string& start= mIndStart->translate();
 	const string& end= mIndEnd->translate();
 	const string& step= mStep->translate();
 
 	string res = "for (";
 	if (mContainerName.empty()) {
-		// Type definition
-		if (!mType.empty()) oss << mType;
-		else oss << "auto";
-
-	    oss << " " << mIteratorName << " = " << start << "; " << mIteratorName << " <= " << end << "; "
-            << mIteratorName << " += "<< step;
+	    oss << " " << mIterator->translate() << mIterator->getVariableName() << " <= " << end << "; "
+            << mIterator->getVariableName() << " += "<< step;
 	}
 	else {
-		oss << "auto " << mIteratorName << " : " << mContainerName;
+		oss << mIterator->translate() << " : " << mContainerName;
 	}
 
     res+= oss.str() + ") {\n";

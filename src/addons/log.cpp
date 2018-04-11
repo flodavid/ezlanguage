@@ -4,15 +4,24 @@
 
 extern "C" void yyprint(const std::string&);
 
-void error(const char *location, const char *msg)
+void error(const char *msg, const char *location)
 {
     std::cerr << "Error at "<< location<< " : "<< msg<< std::endl;
+}
+
+void info(const std::string &msg, const char *location)
+{
+#if INFO == 1
+    std::clog << "<>"  << msg << " at : " << location << std::endl;
+#endif
 }
 
 void debug(const std::string &msg, const char *location)
 {
 #if DEBUG == 1
-    std::clog << "<>"  << msg << " at : " << location << std::endl;
+    std::ostringstream oss;
+    oss << "  <>"  << msg << " at : " << location;
+    yyprint(oss.str());
 #endif
 }
 
