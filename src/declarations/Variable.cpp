@@ -5,7 +5,14 @@ using namespace std;
 
 Variable::Variable(const std::string & name, const std::string & type,
         Expression* content, const std::string & scope, bool co, bool st):
-    CommonVar(name, type, content, false, scope, co), mIsStatic(st), mConstructionParameters(nullptr)
+    CommonVar(name, type, content, false, scope, co), mIsInstruction(true), mIsStatic(st),
+    mConstructionParameters(nullptr)
+{ }
+
+Variable::Variable(bool co, const std::string & name, const std::string & type,
+        Expression* content):
+    CommonVar(name, type, content, false, "", co), mIsInstruction(false), mIsStatic(false),
+    mConstructionParameters(nullptr)
 { }
 
 Variable::~Variable()
@@ -15,7 +22,7 @@ Variable::~Variable()
 
 
 string Variable::preTranslate() const {
-    string res = "";
+    string res = getIndentation();
     if (mIsStatic) {
         res += "static ";
     }
@@ -26,7 +33,8 @@ string Variable::preTranslate() const {
     // if(!mAffect || mAffect->translate() == "") // Removed, useless if class correctly constructed
     res+= constructionParameters();
     
-	res += ";\n";
+	res += ";";
+    if (mIsInstruction) res+= '\n';
     return res;
 }
 

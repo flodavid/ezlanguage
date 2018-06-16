@@ -3,7 +3,7 @@
 using namespace std;
 
 Function::Function(const string & name, Node * parameters, Node * instructions,
-                string type):
+                const string & type):
     Method(name, parameters, instructions), return_type(type)
 { }
 

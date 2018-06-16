@@ -30,7 +30,7 @@ MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpr
 MOD_CPP += ArrayAccess.cpp Operator.cpp
 
 # Instructions
-INSTR_CPP = If.cpp Else.cpp
+INSTR_CPP = Instruction.cpp If.cpp Else.cpp
 INSTR_CPP += For.cpp Repeat.cpp While.cpp
 INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp
 

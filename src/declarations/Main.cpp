@@ -116,7 +116,7 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
 
         // Finalize arguments_summary function
         arguments_summary+= "    std::cout << std::endl;\n}\n\n";
-        arguments_intro+= arguments_summary;  // TODO correct arguments_summary and uncomment
+        arguments_intro+= arguments_summary;
 
         if (nb_to_initialize > 0) {
             check_all_initialized= "\n"+ check_all_initialized +") {\n"
