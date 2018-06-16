@@ -22,11 +22,15 @@ procedure hello_world()
 print "Hello World !"
 end
 
-procedure checkTrueness(b is boolean)
+function checkTrueness(b is boolean) returns boolean
+    boolean result
     if b
     then print "value is true"
+        result = true
     else print "value is false"
+        result = false
     end if
+    return result
 end
 
 main_simple

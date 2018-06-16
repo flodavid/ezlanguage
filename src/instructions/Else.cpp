@@ -3,17 +3,21 @@
 using namespace std;
 
 Else::Else(Node * left):
-	Node(left, nullptr)
+    Instruction(left)
 { }
 
 string Else::preTranslate() const
 {
-    string res="else {\n";
+    // We put indentation text, because it has been chosen to put all else on another line
+    //  as the closing bracket of its corresponding if instruction
+    string res= indentationText() +"else {\n";
 
+    Instruction::indent();
     return res;
 }
 
 string Else::postTranslate() const
 {
-    return "}\n";
+    Instruction::unindent();
+    return indentationText() +"}\n";
 }

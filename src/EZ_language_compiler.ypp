@@ -41,6 +41,7 @@
 #include "../src/instructions/Else.h"
 #include "../src/instructions/For.h"
 #include "../src/instructions/FunctionCall.h"
+#include "../src/instructions/Print.h"
 #include "../src/instructions/Repeat.h"
 #include "../src/instructions/While.h"
 
@@ -161,7 +162,7 @@ int yycolumn = 1;
 
 // Non basic elements
 %type<text> objectDotOperator
-%type<tree> function_string statement_sequence .statement_sequence .streamedExpressions .argumentsSeparated
+%type<tree> function_string statement_sequence .statement_sequence streamedExpressions .argumentsSeparated
 %type<expr> .affect
 %type<var> class.variables
 %type<method> class.methods
@@ -455,6 +456,18 @@ method:
 // TODO function scope handling
 function:
   FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
+  statement_sequence function.return BACK_LINE END endfunction
+  {
+		// symbolTable.decScope();
+		debugYacc("fonction declaration: "+ $2, AT);
+    // Right son of last instruction is return statement
+    $7->addRightChild($7);
+
+		Function *func = new Function($2,$3,$6,$4);
+		$$ = func;
+	}
+/*
+  FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
   begin statement_sequence function.return BACK_LINE END endfunction
   {
 		// symbolTable.decScope();
@@ -465,6 +478,7 @@ function:
 		Function *func = new Function($2,$3,$7,$4);
 		$$ = func;
 	}
+|*/
 // | FUNCTION NAME method.parameters IS EXTERN NAME
 //   {
 //     /* TODO extern function declaration logic @see hash table, but not no function creation ? */
@@ -797,9 +811,9 @@ input:
 ;
 
 printing:
-  PRINT .streamedExpressions BACK_LINE {
+  PRINT streamedExpressions BACK_LINE {
     debugYacc("print "+ $2->translate(), AT);
-    $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
+    $$ = new Print($2->translate());
     delete $2;
   }
 ;
@@ -956,14 +970,12 @@ containerAccess:
  *    EXPRESSIONS   *
  * ******************/
 
-.streamedExpressions:
+streamedExpressions:
   streamedExpressions.element {
     Operator* streamOperator= new Operator("<< ", $1);
     $$ = streamOperator;
   }
-//   /* empty */
-//   { $$ = new EmptyNode; }
-| .streamedExpressions streamedExpressions.element {
+| streamedExpressions streamedExpressions.element {
     Operator* streamOperator= new Operator("<< ", $2);
 
     $1->addRightChild(streamOperator);

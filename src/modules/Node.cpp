@@ -55,6 +55,6 @@ string Node::translate() const {
     if (left_translate == "\n") left_translate= "\n\n";
     if (left_translate != "")   right_translate+= '\n';
     if (right_son != nullptr)   right_translate+= right_son->translate();
-    // std::cout << "[traduction noeud--translate() Node.cpp l.43]" << std::endl;
+    debugNode("[translation node--translate()]", AT);
     return preTranslate() + left_translate + postTranslate() + right_translate;
 }

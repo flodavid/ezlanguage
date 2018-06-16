@@ -2,7 +2,7 @@
 #define REPEAT_H
 
 //special files no to forget to import
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/ConditionalExpression.h"
 
 /**
@@ -18,10 +18,10 @@
  * 
  * @author Antoine GARNIER
  */
-class Repeat : public Node {
-	
+class Repeat : public Instruction {
+    
 protected:
-	ConditionalExpression * mCondition;
+    ConditionalExpression * mCondition;
 
 public:
     
@@ -31,7 +31,7 @@ public:
      * @param right : right son
      * @param cond : condition of the loop
      */
-    Repeat(Node * left, ConditionalExpression * cond);
+    Repeat(Node * instructions, ConditionalExpression * cond);
      
     /**
      * @brief destructor

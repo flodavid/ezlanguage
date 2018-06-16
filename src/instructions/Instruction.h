@@ -4,6 +4,13 @@
 
 /**
  * @brief Generic declaration of any instruction
+ * 
+ * All subclasses must implement preTranslate() method and may implement postTranslate() method.
+ * Use of the indentationText() method before each line of the translation is advised
+ * 
+ * If your subclasse contains instructions that should be over-indented, use the indent() method
+ * at the end of your preTranslate() definition, use unindent() at the beginning of your
+ * postTranslate() definition.
  */
 class Instruction : public Node {
 
@@ -16,11 +23,11 @@ public:
     /**
      * @brief : Constructor
      * @param left : left son
-     * @param indent : number of space of the instruction
+     * @param right : right son
      * 
-     * Right son is set to null
+     * Right son is set to null by default
      */
-    Instruction(Node * left);
+    Instruction(Node * left, Node * right = nullptr);
 
 
     /**
@@ -41,7 +48,7 @@ public:
     
 protected:
     /**
-     * Remove one indentation level to the instruction indentation (4 spaces by default)
+     * Get text containing the spaces corresponding to the current indentation level
      */
-    std::string getIndentation() const;
+    std::string indentationText() const;
 };

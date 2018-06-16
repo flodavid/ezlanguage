@@ -2,11 +2,11 @@
 
 using namespace std;
 
-Instruction::Instruction(Node * left):
-    Node(left, nullptr)
+Instruction::Instruction(Node * left, Node * right):
+    Node(left, right)
 { }
 
-std::string Instruction::getIndentation() const
+std::string Instruction::indentationText() const
 {
     string res= "";
     for (unsigned i= 0; i < sIndentation; ++i) {

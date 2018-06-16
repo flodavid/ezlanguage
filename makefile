@@ -32,7 +32,7 @@ MOD_CPP += ArrayAccess.cpp Operator.cpp
 # Instructions
 INSTR_CPP = Instruction.cpp If.cpp Else.cpp
 INSTR_CPP += For.cpp Repeat.cpp While.cpp
-INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp
+INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp Print.cpp
 
 # Declarations
 DEC_CPP = CommonDeclaration.cpp CommonVar.cpp

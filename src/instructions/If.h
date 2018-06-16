@@ -1,19 +1,18 @@
-#ifndef IF_H
-#define IF_H
+#pragma once
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/ConditionalExpression.h"
 
 /**
- * @brief Node of the tree which represent a condition else
+ * @brief Node of the tree which represent a If: branching on condition
  */
 
-class If : public Node {
+class If : public Instruction {
 
 protected:
-	ConditionalExpression * mCondition;
+    ConditionalExpression * mCondition;
     bool mHasElse;
-	
+
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
@@ -24,7 +23,7 @@ public:
      * @param left : left son
      * @param condition : the condition of the if
      */
-    If(Node * left, Node * elseNode, ConditionalExpression * condition);
+    If(Node * instructions, Node * elseNode, ConditionalExpression * condition);
 
     /**
      * Constructor of if without else
@@ -68,4 +67,3 @@ public:
     virtual std::string postTranslate() const;
 
 };
-#endif

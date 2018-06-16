@@ -1,17 +1,16 @@
-#ifndef ELSE_H
-#define ELSE_H
+#pragma once
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 
 /**
  * @brief Node of the tree which represent a condition if
  * else is another node, can be passed as right node
  */
 
-class Else : public Node {
-		
+class Else : public Instruction {
+        
 protected:
-	
+    
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
@@ -49,4 +48,3 @@ public:
     virtual std::string postTranslate() const;
 
 };
-#endif

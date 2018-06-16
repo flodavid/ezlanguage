@@ -22,7 +22,7 @@ Variable::~Variable()
 
 
 string Variable::preTranslate() const {
-    string res = getIndentation();
+    string res = indentationText();
     if (mIsStatic) {
         res += "static ";
     }
