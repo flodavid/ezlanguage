@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/Expression.h"
 
 /**
  * @brief Node of the tree which represent a condition else
  */
 
-class Return : public Node {
+class Return : public Instruction {
 
 protected:
 	Expression * mExpression;

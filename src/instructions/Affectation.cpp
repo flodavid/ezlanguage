@@ -3,7 +3,7 @@
 using namespace std;
 
 Affectation::Affectation(string & varName, Operator* ope, Expression* value):
-	Node(nullptr, nullptr), mTarget(varName), mOperator(ope), mAffectedValue(value)
+	Instruction(nullptr, nullptr), mTarget(varName), mOperator(ope), mAffectedValue(value)
 { }
 
 Affectation::~Affectation()
@@ -15,5 +15,5 @@ Affectation::~Affectation()
 
 string Affectation::preTranslate() const
 {
-    return mTarget + mOperator->translate() + mAffectedValue->translate() + ";\n";
+    return indentationText() + mOperator->translate() + mAffectedValue->translate() + ";\n";
 }

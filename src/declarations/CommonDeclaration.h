@@ -4,6 +4,8 @@
 
 /**
  * @brief Generic declaration of any variable
+ * 
+ * @see may be an instruction or just a simple declaration (as parameter). Maybe we should create a class that encapsulate declarations used as instructions (same thing for function call)
  */
 class CommonDeclaration : public Instruction {
 

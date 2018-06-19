@@ -3,10 +3,10 @@
 #include "../modules/Expression.h"
 
 /**
- * @brief Node of the tree which represent a condition else
+ * @brief Node of the tree which represent the call to a function
  * The call is done without object, on another function call, or an object given its name
+ * @see can be an instruction or not (expression, so a module), should we create to classes ? One as expression, that is an instruction. (If so, should all instruction automatically end with ";\n" ?)
  */
-
 class FunctionCall : public Expression {
 
 protected:

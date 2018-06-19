@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/Expression.h"
 #include "../modules/Operator.h"
 
@@ -8,7 +8,7 @@
  * @brief Node of the tree which represent a condition else
  */
 
-class Affectation : public Node {
+class Affectation : public Instruction {
 
 protected:
     std::string mTarget;

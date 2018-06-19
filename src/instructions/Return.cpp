@@ -3,7 +3,7 @@
 using namespace std;
 
 Return::Return(Expression * expression):
-	Node(nullptr, nullptr), mExpression(expression)
+	Instruction(nullptr, nullptr), mExpression(expression)
 { }
 
 Return::~Return()
@@ -14,5 +14,5 @@ Return::~Return()
 
 string Return::preTranslate() const
 {
-    return "return "+ mExpression->translate();
+    return indentationText() +"return "+ mExpression->translate();
 }   
