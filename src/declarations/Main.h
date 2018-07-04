@@ -26,7 +26,7 @@ public:
      * 
      * Right son is set to null
      */
-    Main(CommonVar * parameters, Node * prgm_intructions);
+    Main(CommonVar * parameters, Instruction * prgm_intructions);
     
 
 public:

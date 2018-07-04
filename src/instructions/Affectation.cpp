@@ -15,5 +15,5 @@ Affectation::~Affectation()
 
 string Affectation::preTranslate() const
 {
-    return indentationText() + mOperator->translate() + mAffectedValue->translate() + ";\n";
+    return indentationText() + mTarget + mOperator->translate() + mAffectedValue->translate() + ";\n";
 }

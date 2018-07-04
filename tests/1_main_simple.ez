@@ -23,7 +23,7 @@ print "Hello World !"
 end
 
 function checkTrueness(b is boolean) returns boolean
-    boolean result
+    result is boolean
     if b
     then print "value is true"
         result = true

@@ -1,19 +1,16 @@
 #pragma once
 
 #include "Instruction.h"
-#include "../modules/Expression.h"
-#include "../modules/Operator.h"
 
 /**
- * @brief Node of the tree which represent an affectation on a variable
+ * @brief Node of the tree which represent the inclusion of C++ code into an
+ * ezlanguage file
  */
 
-class Affectation : public Instruction {
+class CppCode : public Instruction {
 
 protected:
-    std::string mTarget;
-    Operator* mOperator;
-    Expression* mAffectedValue;
+    std::string mTextCppCode;
 	
 public:
     /* * * * * * * * *
@@ -21,21 +18,15 @@ public:
     * * * * * * * * */
 
     /**
-     * Constructor with parameters
+     * Constructor with content
      */
-    Affectation(std::string & varName, Operator* ope, Expression* value);
-        
-    /**
-     * @brief destructor
-     */
-    virtual ~Affectation();
-
+    CppCode(std::string & textCppCode);
 
     /**
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Affectation"; }
+    virtual inline const std::string getName() const { return "CppCode"; }
 
     /* * * * * * * *
      * Translation *

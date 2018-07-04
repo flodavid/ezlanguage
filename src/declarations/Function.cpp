@@ -2,22 +2,24 @@
 
 using namespace std;
 
-Function::Function(const string & name, Node * parameters, Node * instructions,
+Function::Function(const string & name, Node * parameters, Instruction * instructions,
                 const string & type):
-    Method(name, parameters, instructions), return_type(type)
+    Method(name, parameters, instructions), mReturnType(type)
 { }
 
 string Function::preTranslate() const {
-    string res= return_type + " " + getFunctionName() + "(";
+    string res= indentationText() + translatePrimitiveType(mReturnType) + " " + getFunctionName() + "(";
 
     res+= translateParameters();
 
     res+= ") {\n";
 
+    Instruction::indent();
     return res;
 }
 
 string Function::postTranslate() const
 {
+    Instruction::unindent();
     return "}\n";
 }

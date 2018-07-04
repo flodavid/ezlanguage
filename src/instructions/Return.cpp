@@ -14,5 +14,5 @@ Return::~Return()
 
 string Return::preTranslate() const
 {
-    return indentationText() +"return "+ mExpression->translate();
+    return indentationText() +"return "+ mExpression->translate() +";\n";
 }   

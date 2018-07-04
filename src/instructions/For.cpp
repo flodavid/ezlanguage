@@ -26,12 +26,11 @@ For::~For()
 //forall i in 1..10 (step X)
 string For::preTranslate() const
 {
-
     ostringstream oss;
+    string res = indentationText() +"for (";
+
     const string& end= mIndEnd->translate();
     const string& step= mStep->translate();
-
-    string res = indentationText() +"for (";
 
     // Using variable iteration
     if (mContainerName.empty()) {
@@ -44,9 +43,10 @@ string For::preTranslate() const
     }
 
     res+= oss.str() + ") {\n";
+
     // Increment indentation of all instructions
     Instruction::indent();
-    
+        
     return res;
 }
 

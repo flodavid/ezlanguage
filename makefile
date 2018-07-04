@@ -23,16 +23,16 @@ YACC_FLAGS = -t --verbose
 # --- FAIRE UN FICHIER CPP POUR CHAQUE FICHIER H S'IL Y A UNE CLASSE DEDANS ---
 
 # Core
-MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp
+MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp ConvertNode.cpp
 # Conditional expression
 MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpression.cpp
 # Divers
-MOD_CPP += ArrayAccess.cpp Operator.cpp
+MOD_CPP += ArrayAccess.cpp Operator.cpp FunctionCall.cpp FunctionCallExpression.cpp
 
 # Instructions
 INSTR_CPP = Instruction.cpp If.cpp Else.cpp
 INSTR_CPP += For.cpp Repeat.cpp While.cpp
-INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp Print.cpp
+INSTR_CPP += Return.cpp FunctionCallInstruction.cpp Affectation.cpp Print.cpp CppCode.cpp
 
 # Declarations
 DEC_CPP = CommonDeclaration.cpp CommonVar.cpp

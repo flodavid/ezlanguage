@@ -2,6 +2,10 @@
 
 using namespace std;
 
+// Default indentation sequence
+string Instruction::indent_sequence = "    ";
+int Instruction::sIndentation= 0;
+
 Instruction::Instruction(Node * left, Node * right):
     Node(left, right)
 { }
@@ -9,13 +13,10 @@ Instruction::Instruction(Node * left, Node * right):
 std::string Instruction::indentationText() const
 {
     string res= "";
-    for (unsigned i= 0; i < sIndentation; ++i) {
+    debug("Indentation of "+ getName() + ": "+ to_string(sIndentation), AT);
+    for (int i= 0; i < sIndentation; ++i) {
         res+= indent_sequence;
     }
 
     return res;
 }
-
-// Default indentation sequence
-string Instruction::indent_sequence = "    ";
-unsigned Instruction::sIndentation= 2;

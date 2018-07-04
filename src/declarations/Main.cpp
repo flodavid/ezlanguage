@@ -5,8 +5,8 @@
 
 using namespace std;
 
-Main::Main(CommonVar * parameters, Node * prgm_intructions):
-    Function("main", new Parameter("argc", "int"), prgm_intructions, "int"),
+Main::Main(CommonVar * parameters, Instruction * prgm_intructions):
+    Function("main", new Parameter("argc", "int"), prgm_intructions, "integer"),
     mMainOpts(parameters)
 {
     addParameters(new Parameter("argv", "char **"));
@@ -17,7 +17,7 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
     // Create each element
     if (mMainOpts != nullptr) {
         // Create program parameters
-        string prgm_parameters= mMainOpts->translate();
+        string prgm_parameters= indentationText() + mMainOpts->translate();
         string opts_flags= "";
         // Initialize arguments_summary function
         string arguments_summary= "void arguments_summary("+ prgm_parameters +") {\n";
@@ -165,11 +165,10 @@ string Main::preTranslate() const {
     res+= createParsingParameterCode(&arguments_intro);
 
     res= arguments_intro + res;
-    
     return res;
 }
 
 string Main::postTranslate() const
 {
-    return "}\n";
+    return Function::postTranslate();
 }

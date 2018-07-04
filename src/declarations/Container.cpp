@@ -27,7 +27,7 @@ string Container::translateType() const
 
 string Container::preTranslate() const
 {
-    string res=  translateType() +" "+ getVariableName();
+    string res= indentationText() + translateType() +" "+ getVariableName();
     
     if (!mIsParameter) {
         if (mSize != nullptr) {
@@ -35,11 +35,13 @@ string Container::preTranslate() const
         } else res+= "= { ";
     }
 
+    Instruction::indent();
     return res;
 }
 
 string Container::postTranslate() const
 {
+    Instruction::unindent();
     string res;
 
     if (!mIsParameter) {

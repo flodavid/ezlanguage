@@ -98,6 +98,7 @@ bool contains(const string &str, const string &str2){
 	return str.find(str2)!=string::npos;
 }
 
+// We should not use this function, but create a Type class instead
 std::string translatePrimitiveType(const std::string & string_type)
 {
     if(string_type == "integer"){

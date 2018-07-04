@@ -2,11 +2,11 @@
 
 using namespace std;
 
-If::If(Node * instructions, Node * elseNode, ConditionalExpression * condition):
+If::If(Instruction * instructions, Else * elseNode, ConditionalExpression * condition):
     Instruction(instructions, elseNode), mCondition(condition), mHasElse(true)
 { }
 
-If::If(Node * instructions, ConditionalExpression * condition):
+If::If(Instruction * instructions, ConditionalExpression * condition):
     Instruction(instructions), mCondition(condition), mHasElse(false)
 { }
 
@@ -18,7 +18,7 @@ If::~If()
 
 string If::preTranslate() const
 {
-    string res= indentationText() + "if " + mCondition->translate() + " {\n";
+    string res= Instruction::indentationText() + "if " + mCondition->translate() + " {\n";
     
     // the instructions are in the left_son (the first one IS the left son)
     
@@ -30,7 +30,7 @@ string If::preTranslate() const
 string If::postTranslate() const
 {
     Instruction::unindent();
-    string res= indentationText() + "}";
+    string res= Instruction::indentationText() + "}";
     if (!mHasElse) res+= "\n";
 
     return res;

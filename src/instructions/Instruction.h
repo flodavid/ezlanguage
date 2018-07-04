@@ -15,7 +15,7 @@
 class Instruction : public Node {
 
 private:
-    static unsigned sIndentation;
+    static int sIndentation;
     static std::string indent_sequence;
 
 public:
@@ -33,12 +33,12 @@ public:
     /**
      * Add one indentation level to the instruction indentation (4 spaces by default)
      */
-    void indent() const { ++sIndentation; }
+    static void indent() { ++sIndentation; }
     
     /**
      * Remove one indentation level to the instruction indentation (4 spaces by default)
      */
-    void unindent() const { --sIndentation; }
+    static void unindent() { --sIndentation; }
 
     /**
      * @brief Get some details about the node

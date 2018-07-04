@@ -1,20 +1,20 @@
 #pragma once
 
-#include "../modules/Expression.h"
+#include "Node.h"
+#include "Expression.h"
 
 /**
  * @brief Node of the tree which represent the call to a function
  * The call is done without object, on another function call, or an object given its name
  * @see can be an instruction or not (expression, so a module), should we create to classes ? One as expression, that is an instruction. (If so, should all instruction automatically end with ";\n" ?)
  */
-class FunctionCall : public Expression {
+class FunctionCall : public Node {
 
 protected:
     std::string mObjectName;
     std::string mFunctionName;
     Expression* mArguments;
     bool mHasAnOtherFunctionCall;
-    bool mIsInstruction;
 	
 public:
     /* * * * * * * * *
@@ -22,15 +22,16 @@ public:
     * * * * * * * * */
 
     /**
-     * Constructor with object name
+     * Constructor with facultative object name
      */
-    FunctionCall(const std::string & functionName, Expression * arguments);
+    FunctionCall(const std::string & functionName, Expression * arguments,
+            const std::string & objectName = "");
 
     /**
-     * Constructor with an object
+     * Copy constructor. Other class is deleted in the process
      */
-    FunctionCall(const std::string & objectName, const std::string & functionName, 
-                Expression * arguments);
+    FunctionCall(FunctionCall * other);
+
     
     /**
      * @brief destructor
@@ -55,18 +56,13 @@ public:
      */
     void addFunctionCall(FunctionCall* otherFunctionCall);
 
-    /**
-     * @brief Define the instruction as not an instruction, but simple expression
-     */
-    inline void setAsNotInstruction() { mIsInstruction= false; }
-
     /* * * * * * * *
      * Translation *
      * * * * * * * */
     
     /**
-     * @brief Translate the begining part of the If
-     * @return a string containing the C++ code of the If
+     * @brief Translate the begining part of the function call
+     * @return a string containing the C++ code of the function call
      *
      * All subclasses, should reimplement this method so that the translation corresponds
      * to their specifications, specificities and own values
