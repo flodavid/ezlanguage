@@ -55,7 +55,6 @@ string Node::translate() const {
     if (left_son != nullptr)    left_translate+= left_son->translate();
     if (left_translate == "\n") left_translate= "\n\n";
     string postTranslateText= postTranslate(); // We must call it here for indentation
-    if (left_translate != "")   right_translate+= '\n';
     if (right_son != nullptr)   right_translate+= right_son->translate();
     debugNode("[translation node--translate()]", AT);
     return preTranslateText + left_translate + postTranslateText + right_translate;

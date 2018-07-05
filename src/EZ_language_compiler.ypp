@@ -229,8 +229,12 @@ program:
     delete racine;
 
     // debug log
-    info("\n      TRANSLATION\n======================>>>>>\n"+ translation +
-        "\n<<<<<======================\n        END TRANSLATION\n", AT);
+    info(
+"\n        TRANSLATION\n"
+"======================>>>>>\n"
++ translation +
+"\n<<<<<======================\n"
+"      END TRANSLATION\n", AT);
     // output the translation in the output file (should result a valid cpp file)
     fputs(translation.c_str(), yyout);
     
@@ -1129,7 +1133,7 @@ stringExpressions:
     $$ = $1;
   }
 | stringExpressions runtimeValue {
-    debug("Concatenation of two string expressions", AT);
+    debug("Concatenation of a string expression and a litteral: ", AT);
     ConvertNode* expressionToString= new ConvertNode("std::to_string", $2);
     Operator* concat = new Operator(" + ", expressionToString);
 
@@ -1413,7 +1417,7 @@ arrayDeclaration:
     $$ = new Array($1, $2, $3);
   }
 // | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type
-//   { printf("array declaration with lower and upper bound\n"); }
+//   { printf("array declaration with lower and upper bound"); }
 ;
 
 //    --------------------------standard containers declaration--------------------------

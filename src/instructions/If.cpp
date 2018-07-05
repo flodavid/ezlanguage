@@ -3,7 +3,7 @@
 using namespace std;
 
 If::If(Instruction * instructions, Else * elseNode, ConditionalExpression * condition):
-    Instruction(instructions, elseNode), mCondition(condition), mHasElse(true)
+    Instruction(instructions, elseNode), mCondition(condition), mHasElse(elseNode != nullptr)
 { }
 
 If::If(Instruction * instructions, ConditionalExpression * condition):

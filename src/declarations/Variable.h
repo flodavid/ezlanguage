@@ -17,7 +17,6 @@ private:
 
 protected:
     bool mIsStatic;
-    Expression* mConstructionParameters;
 
 public:
 
@@ -67,8 +66,5 @@ public:
      * @return a string containing the C++ code of the declaration
      */
     virtual std::string preTranslate() const;
-
-private:
-    std::string constructionParameters() const;
 };
 #endif

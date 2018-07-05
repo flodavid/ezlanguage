@@ -13,7 +13,6 @@ Instruction::Instruction(Node * left, Node * right):
 std::string Instruction::indentationText() const
 {
     string res= "";
-    debug("Indentation of "+ getName() + ": "+ to_string(sIndentation), AT);
     for (int i= 0; i < sIndentation; ++i) {
         res+= indent_sequence;
     }
