@@ -41,6 +41,7 @@
 #include "../src/instructions/Affectation.h"
 #include "../src/instructions/CppCode.h"
 #include "../src/instructions/If.h"
+#include "../src/instructions/Input.h"
 #include "../src/instructions/Else.h"
 #include "../src/instructions/For.h"
 #include "../src/instructions/FunctionCallInstruction.h"
@@ -48,12 +49,12 @@
 #include "../src/instructions/Repeat.h"
 #include "../src/instructions/Return.h"
 #include "../src/instructions/While.h"
+#include "../src/libraries/StringFunction.h"
 
 #include "../src/global.h"
 
 bool existing_parsing_error= false;
 
-extern std::string INPUT_FUNC_NAME;
 extern FILE* yyin;
 
 using namespace std;
@@ -142,7 +143,7 @@ int yycolumn = 1;
 %type<param> program.parameters parameter_sequence parameter .parameters parameters
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
-%type<tree> destruct  input // TODO overloading
+%type<tree> destruct // TODO overloading
 %type<affectation> affectation
 %type<ifNode> if
 %type<elseNode> .else
@@ -153,13 +154,13 @@ int yycolumn = 1;
 %type<genericCont> containerDeclaration
 %type<var>  simpleVariable variable variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator equalityOperator
-%type<functionCall> simpleFunction functionCall 
+%type<functionCall> simpleFunction functionCall stringFunction
 %type<functionCallExpr> functionCallExpr
-%type<functionCallInstr> functionCallInstr functionCallNoParenthesis
+%type<instr> functionCallInstr functionCallNoParenthesis
 %type<code> code
 %type<method> method function procedure
 %type<expr> arguments .argumentsList argumentElement
-%type<instr> printing repeat for while // when
+%type<instr> printing input repeat for while // when
 %type<instr> statement statement_sequence .statement_sequence
 %type<tree> import
 %type<text> type .scope // TODO constancy
@@ -170,7 +171,7 @@ int yycolumn = 1;
 
 // Non basic elements
 %type<text> objectDotOperator
-%type<tree> function_string streamedExpressions .argumentsSeparated
+%type<tree> streamedExpressions .argumentsSeparated
 %type<expr> .affect
 %type<var> class.variables
 %type<method> class.methods
@@ -591,7 +592,6 @@ parameters:
  * ******************/
 
 statement:
-  // BACK_LINE { $$ = new EmptyNode; }
   BACK_LINE { $$ = nullptr; }
 | if        { $$ = $1; }
 | while     { $$ = $1; }
@@ -601,12 +601,11 @@ statement:
 | affectation           { $$ = $1; }
 | functionCallInstr     { $$ = $1; }
 | functionCallNoParenthesis { $$ = $1; }
-// | function_string       { $$ = $1;} TODO finish StringFunction class
 // | destruct  { $$ = $1; } TODO
 | printing  { $$ = $1; }
-// | input     { $$ = $1; } // TODO finish Input class
+| input     { $$ = $1; }
 // | overloading { $$ = $1; }
-| code      { $$ = $1; } // TODO create CppCode class
+| code      { $$ = $1; }
 // TODO add when implementation ?
 // | when      { $$ = $1; }
 ;
@@ -817,12 +816,11 @@ destruct:
   }
 ;
 
-// TODO create a function call cpp class, for input, string funcs and generics (and printing)
-// TODO create a class for inputs (Instruction)
+// TODO modify input class, for string, funcs and generics (and printing, for asking input to user)
 input:
   INPUT IN NAME BACK_LINE {
     debugYacc("input in "+ $3, AT);
-    $$ = new TranslatedNode(INPUT_FUNC_NAME +"(&"+ $3 + ");\n", "Get input (stdin)");
+    $$ = new Input($3);
   }
 ;
 
@@ -876,6 +874,9 @@ functionCall:
 | objectDotOperator simpleFunction {
     $2->addObject($1);
     $$ = $2;
+  }
+| stringFunction {
+    $$ = $1;
   }
 | simpleFunction {
     $$ = $1;
@@ -1374,20 +1375,33 @@ endparameters:
 // ;
 
 //    -----------------------------STRING METHODS----------------------------------------
-function_string:
-  objectDotOperator LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
-| objectDotOperator TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
-| objectDotOperator TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
-| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
-| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression COMMA integerExpression RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| objectDotOperator SPLIT LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("SPLIT(\"str\") called \n"); }
-| objectDotOperator STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("strip() called \n"); }
-| objectDotOperator STRIP LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("strip(\"str\") called \n"); }
-| objectDotOperator REPLACE LEFT_PARENTHESIS STRING COMMA STRING RIGHT_PARENTHESIS { printf("replace(\"str\",\"str\") called \n"); }
-| objectDotOperator CONTAINS LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("contain(\"str\") called \n"); }
-| objectDotOperator FIND LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("find(\"str\") called \n"); }
-| objectDotOperator FINDFIRSTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
-| objectDotOperator FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
+stringFunction:
+  objectDotOperator LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_LENGTH); }
+| objectDotOperator TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_TOUPPERCASE); }
+| objectDotOperator TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_TOLOWERCASE); }
+| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_SUBSTRING, $4); }
+| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression COMMA integerExpression RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_SUBSTRING, $4, $6); }
+| objectDotOperator SPLIT LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_SPLIT, $4); }
+| objectDotOperator STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_STRIP); }
+| objectDotOperator STRIP LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_STRIP, $4); }
+| objectDotOperator REPLACE LEFT_PARENTHESIS string COMMA string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_REPLACE, $4, $6); }
+| objectDotOperator CONTAINS LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_CONTAINS, $4); }
+| objectDotOperator FIND LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_FIND, $4); }
+| objectDotOperator FINDFIRSTOF LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_FINDFIRSTOF, $4); }
+| objectDotOperator FINDLASTOF LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_FINDLASTOF, $4); }
 ;
 
 /* ***************************

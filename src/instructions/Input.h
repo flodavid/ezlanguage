@@ -1,26 +1,43 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include <string>
+#include "Instruction.h"
+extern std::string INPUT_FUNC_NAME;
 
 /**
  * @brief Statement to ask an input for the user
  */
 class Input : public Instruction {
 
+private:
+    std::string mVarName;
+
 public:
 
     /**
      * @brief : Constructor
-     * @param left : left son
-     * @param right : right son
      * 
      * Right son is set to null by default
      */
-    Input(Node * left, Node * right = nullptr);
+    Input(const std::string & varName);
     
-protected:
+    
     /**
-     * Get text containing the spaces corresponding to the current indentation level
+     * @brief Get the name of the node
+     * @return the name of the node. Defined at class creation
      */
-    std::string indentationText() const;
+    virtual const std::string getName() const { return "Text Input"; };
+    
+    /* * * * * * * *
+     * Translation *
+     * * * * * * * */
+    
+    /**
+     * @brief Translate the begining part of the text input
+     * @return a string containing the C++ code of the Input
+     *
+     * All subclasses, should reimplement this method so that the translation corresponds
+     * to their specifications, specificities and own values
+     */
+    virtual std::string preTranslate() const;
 };

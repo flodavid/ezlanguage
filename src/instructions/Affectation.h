@@ -42,8 +42,8 @@ public:
      * * * * * * * */
     
     /**
-     * @brief Translate the begining part of the If
-     * @return a string containing the C++ code of the If
+     * @brief Translate the begining part of the affectation
+     * @return a string containing the C++ code of the Affectation
      *
      * All subclasses, should reimplement this method so that the translation corresponds
      * to their specifications, specificities and own values

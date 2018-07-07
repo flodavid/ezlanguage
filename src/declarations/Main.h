@@ -41,6 +41,8 @@ public:
      * @return name of the procedure
      */
     const std::string & getMainName() const { return getFunctionName(); }
+
+    unsigned argumentsNumber() const;
     
     /**
      * @brief Translate the begining part of the Main

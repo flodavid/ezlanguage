@@ -1,5 +1,5 @@
 program main_simple
-//+ test commentaires
+// Execution example: `./1_main_simple.run --mynumber=35 --mystring="test"`
 
 include "sstream"
 
@@ -40,11 +40,6 @@ this is
 a multiple lines comment
 
 */
-
-    if (argc-1) < 1
-    then print "There has not any argument"
-    end
-
     for i is integer in 1..argc-1 do
         out is string = "" i
         if i == 1
@@ -68,7 +63,7 @@ a multiple lines comment
     hello_world
 
     //this is a test
-    print "Second one"
+    print "Second one : length of the string " mystring ": " mystring.length()
 
     a is integer = 4
     b is boolean
@@ -86,6 +81,9 @@ a multiple lines comment
         print "a : " a
     end while
 
+    // Commented because it would prevent travis from executing all tests
+    // print "Enter the boolean value"
+    // input in b
     checkTrueness(b)
 
     if b or true
@@ -95,7 +93,6 @@ a multiple lines comment
 
     vect is vector of integer
     vect.push_back(3)
-
     
     print "value of vect[" 0 "]: " vect[0]
     print "value of vect.at(" 0 "): " vect.at(0)
