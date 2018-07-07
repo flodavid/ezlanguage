@@ -3,8 +3,8 @@
 
 using namespace std;
 
-While::While(ConditionalExpression * cond, Node * left):
-    Node(left, nullptr), mCondition(cond)
+While::While(ConditionalExpression * cond, Node * instructions):
+    Instruction(instructions), mCondition(cond)
 {}
 
 While::~While()
@@ -14,11 +14,14 @@ While::~While()
 
 
 string While::preTranslate() const {
-    return "while " + mCondition->translate() + " {\n";
+    string res= indentationText() +"while " + mCondition->translate() + " {\n";
+    Instruction::indent();
+    return res;
 }
 
 string While::postTranslate() const
 {
+    Instruction::unindent();
     //    The instructions have been translated, the loop closes
-    return "}\n";
+    return indentationText() +"}\n";
 }

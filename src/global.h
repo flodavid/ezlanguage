@@ -6,6 +6,8 @@
 #include "./modules/ArrayAccess.h"
 #include "./modules/ConditionalExpression.h"
 #include "./modules/Expression.h"
+#include "./modules/FunctionCall.h"
+#include "./modules/FunctionCallExpression.h"
 #include "./modules/Operator.h"
 #include "./modules/TranslatedNode.h"
 
@@ -17,10 +19,12 @@
 #include "./declarations/Method.h"
 #include "./declarations/Variable.h"
 
+#include "./instructions/Instruction.h"
 #include "./instructions/Affectation.h"
+#include "./instructions/CppCode.h"
 #include "./instructions/Else.h"
 #include "./instructions/If.h"
-#include "./instructions/FunctionCall.h"
+#include "./instructions/FunctionCallInstruction.h"
 #include "./instructions/Return.h"
 #include "./hash_table/VariableHashed.h"
 #include "./hash_table/ScopeHashTable.h"
@@ -42,6 +46,8 @@ typedef struct s_node_types {
     ArrayAccess* arrayAccess;
     ConditionalExpression* condExpr;
     Expression* expr;
+    FunctionCall* functionCall;
+    FunctionCallExpression* functionCallExpr;
     Operator* opeNode;
     TranslatedNode* transNode;
     // Declarations
@@ -55,10 +61,12 @@ typedef struct s_node_types {
     CommonVar* genericCont;
     Variable* var;
     // Instructions
+    Instruction* instr;
     Affectation* affectation;
+    CppCode* code;
     Else* elseNode;
+    FunctionCallInstruction* functionCallInstr;
     If* ifNode;
-    FunctionCall* functionCall;
     Return* returnNode;
 } node_types;
 

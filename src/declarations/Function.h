@@ -1,5 +1,4 @@
-#ifndef DECLARATION_FUNCTION_H
-#define DECLARATION_FUNCTION_H
+#pragma once
 
 #include "Method.h"
 
@@ -16,7 +15,7 @@
 class Function : public Method {
 
 protected:
-    std::string return_type;
+    std::string mReturnType;
 
 public:
     /**
@@ -28,8 +27,8 @@ public:
      * 
      * Right son is set to null
      */
-    Function(const std::string & name, Node * arguments, Node * instructions,
-        std::string type);
+    Function(const std::string & name, Node * arguments, Instruction * instructions,
+        const std::string & type);
 
 
     /**
@@ -49,7 +48,7 @@ public:
      * @brief Getter for the return's type
      * @return return's type
      */
-    const std::string & getReturnType() const {return return_type;}
+    const std::string & getReturnType() const {return mReturnType;}
     
     /**
      * @brief Translate the begining part of the Function
@@ -70,6 +69,3 @@ public:
     virtual std::string postTranslate() const;
 
 };
-
-
-#endif

@@ -1,7 +1,7 @@
 #ifndef WHILE_H
 #define WHILE_H
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/ConditionalExpression.h"
 
 /**
@@ -16,20 +16,20 @@
  * 
  * @author Antoine GARNIER
  */
-class While : public Node {
-	
+class While : public Instruction {
+    
 protected:
-	ConditionalExpression * mCondition;
-	
+    ConditionalExpression * mCondition;
+    
 public:
     
-	/**
+    /**
      * @brief constructor with parameters
      * @param left : left son
      * @param right : right son
      * @param cond : condition of the loop
      */
-    While(ConditionalExpression * cond, Node * left);
+    While(ConditionalExpression * cond, Node * instructions);
 
     /**
      * @brief destructor

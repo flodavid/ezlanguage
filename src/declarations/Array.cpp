@@ -22,7 +22,7 @@ Array::~Array()
 
 string Array::preTranslate() const
 {
-    string res= translateType() + " " + getDeclarationName() + "[";
+    string res= indentationText() + translateType() + " " + getDeclarationName() + "[";
     if (mSize == 0) {
         res+= "] = {";;
     }

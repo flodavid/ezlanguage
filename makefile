@@ -23,16 +23,18 @@ YACC_FLAGS = -t --verbose
 # --- FAIRE UN FICHIER CPP POUR CHAQUE FICHIER H S'IL Y A UNE CLASSE DEDANS ---
 
 # Core
-MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp
+MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp ConvertNode.cpp
 # Conditional expression
 MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpression.cpp
 # Divers
-MOD_CPP += ArrayAccess.cpp Operator.cpp
+MOD_CPP += ArrayAccess.cpp Operator.cpp FunctionCall.cpp FunctionCallExpression.cpp
 
 # Instructions
-INSTR_CPP = If.cpp Else.cpp
-INSTR_CPP += For.cpp Repeat.cpp While.cpp
-INSTR_CPP += Return.cpp FunctionCall.cpp Affectation.cpp
+INSTR_CPP = Instruction.cpp If.cpp Else.cpp
+INSTR_CPP += For.cpp Repeat.cpp While.cpp Return.cpp 
+INSTR_CPP += FunctionCallInstruction.cpp Affectation.cpp Print.cpp CppCode.cpp Input.cpp
+
+LIBS_CPP = StringFunction.cpp
 
 # Declarations
 DEC_CPP = CommonDeclaration.cpp CommonVar.cpp
@@ -48,16 +50,17 @@ HT_CPP = HashElement.cpp HashTable.cpp ScopeHashTable.cpp ClassHashTable.cpp
 # Hash elements corresponding to declarations
 HT_CPP += ClassHashed.cpp FunctionHashed.cpp VariableHashed.cpp
 
-ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${ADDONS_CPP} ${HT_CPP}
+ALL_CPP = ${MOD_CPP} ${DEC_CPP} ${INSTR_CPP} ${LIBS_CPP} ${ADDONS_CPP} ${HT_CPP}
 
 # Object files
 MOD_OBJ = $(MOD_CPP:%.cpp=obj/%.o)
 DEC_OBJ = $(DEC_CPP:%.cpp=obj/%.o)
 INSTR_OBJ = $(INSTR_CPP:%.cpp=obj/%.o)
+LIBS_OBJ = $(LIBS_CPP:%.cpp=obj/%.o)
 ADDONS_OBJ = $(ADDONS_CPP:%.cpp=obj/%.o)
 HT_OBJ = $(HT_CPP:%.cpp=obj/%.o)
 
-ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${INSTR_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
+ALL_OBJ = ${MOD_OBJ} ${DEC_OBJ} ${INSTR_OBJ} ${LIBS_OBJ} ${ADDONS_OBJ} ${HT_OBJ}
 
 # Dependency files
 ALL_DPDCY = $(ALL_OBJ:%.o=%.d)
@@ -70,7 +73,7 @@ EXEC = EZ_language_compiler
 #compiler
 all: $(EXEC)
 
-EZ_language_compiler: obj/lex.yy.c obj/EZ_language_compiler.tab.cpp obj/EZ_language_compiler.tab.hpp $(ALL_OBJ) 
+EZ_language_compiler: obj/lex.yy.c obj/EZ_language_compiler.tab.cpp obj/EZ_language_compiler.tab.hpp $(ALL_OBJ)
 	@echo -e "\033[1;33mCréation du compilateur en compilant les sources\033[0m"
 	$(CC) -o bin/$@ obj/EZ_language_compiler.tab.cpp obj/lex.yy.c $(ALL_OBJ) -lfl $(CC_FLAGS)
 
@@ -92,6 +95,11 @@ obj/%.d: src/declarations/%.cpp
 	@echo ""
 
 obj/%.d: src/instructions/%.cpp
+	@echo -e "\033[1;33mDépendance pour le fichier $< créée : \033[0m"
+	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
+	@echo ""
+
+obj/%.d: src/libraries/%.cpp
 	@echo -e "\033[1;33mDépendance pour le fichier $< créée : \033[0m"
 	$(CC) $< -MT $@ -MT obj/$*.o -o $@ $(CC_MOD_FLAGS)
 	@echo ""
@@ -121,6 +129,12 @@ obj/%.o: src/declarations/%.cpp
 	@echo ""
 
 obj/%.o: src/instructions/%.cpp
+	@echo -e "\033[1;33mFichier objet pour le fichier $< créé : \033[0m"
+	$(CC) -c $< -o $@ $(CC_FLAGS)
+	@echo ""
+	
+
+obj/%.o: src/libraries/%.cpp
 	@echo -e "\033[1;33mFichier objet pour le fichier $< créé : \033[0m"
 	$(CC) -c $< -o $@ $(CC_FLAGS)
 	@echo ""

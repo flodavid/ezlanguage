@@ -3,7 +3,7 @@
 
 using namespace std;
 
-Method::Method(const string & name, Node * parameters, Node * instructions):
+Method::Method(const string & name, Node * parameters, Instruction * instructions):
     CommonDeclaration(instructions, name), mParameters(parameters)
 { }
 

@@ -1,16 +1,13 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include "../instructions/Instruction.h"
 
 /**
- * @brief Allows the declaration of procedures
- * @author : GARNIER Antoine
- *
- * usage : procedure Name_Procedure (arguments list)
- *              instruction(s);
- *         end procedure
+ * @brief Generic declaration of any variable
+ * 
+ * @see may be an instruction or just a simple declaration (as parameter). Maybe we should create a class that encapsulate declarations used as instructions (same thing for function call)
  */
-class CommonDeclaration : public Node {
+class CommonDeclaration : public Instruction {
 
 protected:
     std::string mName;
@@ -31,7 +28,7 @@ public:
      * @brief Get some details about the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string details() const { return "'"+ mName +"'"; }
+    virtual inline const std::string details() const { return Instruction::details()+";'"+ mName +"'"; }
 
     /**
      * @brief Getter for the procedure's name

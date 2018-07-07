@@ -35,7 +35,6 @@ void ArrayAccess::set_index(int i) {
 string ArrayAccess::preTranslate() const {
     // TODO check array type to convert to string only if useful
     string res= "";
-    if (isString) res+= "std::to_string(";
     res+= mArrayName +"[";
 
     if (nullptr != mExpression) {
@@ -45,7 +44,6 @@ string ArrayAccess::preTranslate() const {
     }
 
     res+= "]";
-    if (isString) res+= ")";
 
     return res;
 }

@@ -11,7 +11,6 @@
 /**
  * @brief An hash table which can contains any type of element that contain the operator operator==
  * @author Johan Defaye
- * 
  */
 template <typename T>
 class HashTable : public std::vector<std::list<T>> {
@@ -19,11 +18,9 @@ class HashTable : public std::vector<std::list<T>> {
 public:
 
 
-
   /* * * * * * * * *
    * CONSTRUCTORS  *
    * * * * * * * * */
-
 
   /**
    * Default constructor
