@@ -1,5 +1,4 @@
-#ifndef NODE_H
-#define NODE_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -118,5 +117,3 @@ public:
     virtual std::string translate() const final;
 
 };
-
-#endif //NODE_H

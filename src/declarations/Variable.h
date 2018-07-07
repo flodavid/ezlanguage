@@ -12,14 +12,16 @@
  */
 class Variable : public CommonVar {
 	
+private:
+    bool mIsInstruction;
+
 protected:
     bool mIsStatic;
-    Expression* mConstructionParameters;
 
 public:
 
     /**
-     * @brief Constructor for class construction
+     * @brief Constructor for standard variable declaration as instruction
      * @param name : name of the variable
      * @param type : type of the variable
      * @param construction_parameters : parameters used to construct the class
@@ -30,6 +32,16 @@ public:
     Variable(const std::string & name, const std::string & type,
             Expression * construction_parameters = nullptr, const std::string & scope = "", bool isConst = false,
             bool isStatic = false);
+
+    /**
+     * @brief Constructor for variable not as instruction
+     * @param isConst : if the variable is const
+     * @param name : name of the variable
+     * @param type : type of the variable
+     * @param construction_parameters : parameters used to construct the class
+     */
+    Variable(bool isConst, const std::string & name, const std::string & type,
+            Expression * construction_parameters = nullptr);
 
     /**
      * @brief Destructor
@@ -54,8 +66,5 @@ public:
      * @return a string containing the C++ code of the declaration
      */
     virtual std::string preTranslate() const;
-
-private:
-    std::string constructionParameters() const;
 };
 #endif

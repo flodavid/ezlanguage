@@ -1,5 +1,4 @@
-#ifndef DECLARATION_PROCEDURE_H
-#define DECLARATION_PROCEDURE_H
+#pragma once
 
 #include "Method.h"
 #include "Parameter.h"
@@ -24,7 +23,7 @@ public:
      * 
      * Right son is set to null
      */
-    Procedure(const std::string & name, Node * parameters, Node * instructions);
+    Procedure(const std::string & name, Node * parameters, Instruction * instructions);
     
 
 public:
@@ -59,6 +58,3 @@ public:
     virtual std::string postTranslate() const;
 
 };
-
-
-#endif

@@ -26,7 +26,7 @@ public:
      * 
      * Right son is set to null
      */
-    Main(CommonVar * parameters, Node * prgm_intructions);
+    Main(CommonVar * parameters, Instruction * prgm_intructions);
     
 
 public:
@@ -41,6 +41,8 @@ public:
      * @return name of the procedure
      */
     const std::string & getMainName() const { return getFunctionName(); }
+
+    unsigned argumentsNumber() const;
     
     /**
      * @brief Translate the begining part of the Main

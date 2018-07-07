@@ -9,20 +9,12 @@
  */
 class Expression : public Node {
 
-protected:
-    bool isString = false;
-
 public:
     /**
      * @brief Default constructor
      * @param operande : value of the expression
      */
     Expression();
-
-    /**
-     * The expression will be converted as a string at translation
-     */
-    void interpretAsString() { isString= true; }
     
     /**
      * @brief Constructor

@@ -1,4 +1,3 @@
-
 language: cpp
 sudo: required
 dist: trusty
@@ -22,13 +21,13 @@ addons:
       # gcc/g++ repository
       - ubuntu-toolchain-r-test
     packages:
-      - g++-5
+      # - g++-5
       - g++-7
 
 install:
 # g++ install
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-4.9"; fi
-  - alias g++="g++-5"
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-7" CC="gcc-4.9"; fi
+  - alias g++="g++-7"
   - g++ --version
   - echo -e "================="
   - $CXX --version
@@ -42,7 +41,9 @@ script:
 
 after_success:
 # Launch other tests
-  - bash full_tests.sh && echo -e "\nResults\n =======\n" && ./*.run ; rm -f *.run ; echo -e "\n =======\n"
+  - bash full_tests.sh && echo -e "\nResults\n =======\n"
+  - ./1_main_simple.run --mynumber 5 --mystring="hello" && rm -rf ./1_main_simple.run
+  - ./*.run ; rm -f *.run ; echo -e "\n =======\n"
   - cd ../examples
   - bash valid_tests.sh && echo -e "\nResults\n =======\n" && ./*.run ; rm -f *.run ; echo -e "\n =======\n"
   - bash unvalid_tests.sh && echo -e "\nResults\n =======\n" && ./*.run ; rm -f *.run ; echo -e "\n =======\n"

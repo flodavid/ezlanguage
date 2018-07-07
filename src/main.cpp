@@ -121,7 +121,7 @@ void display(vector<char*> fic_ezl){
  * @param gpp_command commande gpp execute
  * @param output_name nom de l'output
  */
-int exec_cpp(std::string & gpp_command, std::string & output_name){
+int exec_cpp(std::string & gpp_command, std::string & output_name, const std::string & args){
     //cout << "commande cpp: " << gpp_command << endl;
     int system_return= EXIT_SUCCESS;
     if(help != 1){
@@ -134,13 +134,13 @@ int exec_cpp(std::string & gpp_command, std::string & output_name){
             
             // Compilation success is independant of execution success
             if(no_execution != 1){
+                string tmp_output= "./";
                 if(output_name != ""){
-                    string tmp_output= "./" + output_name;
-                    system(tmp_output.c_str());
+                    tmp_output+= output_name;
                 } else {
-                    string tmp_output= "./a.run";
-                    system(tmp_output.c_str());
+                    tmp_output+= "a.run";
                 }
+                system((tmp_output +" "+ args).c_str());
             }
         }
         cout << "\033[1;36mCompilation ended.\033[0m" << endl;
@@ -157,6 +157,7 @@ int exec_cpp(std::string & gpp_command, std::string & output_name){
 int main(int argc, char ** argv) {
     bool no_options = true;
     string output_name = "";
+    string exec_args= "";
 
     // Ligne de commande g++
     string gpp_command = GPP_EXE " -std=c++11";
@@ -180,6 +181,7 @@ int main(int argc, char ** argv) {
             {"optimisation",	required_argument,	0, 	'O'},
             {"warning",			no_argument,		0, 	'w'},
             {"output",			required_argument,	0, 	'o'},
+            {"args",			required_argument,	0, 	'a'},
             {0, 0, 0, 0}
         };
         
@@ -236,7 +238,6 @@ int main(int argc, char ** argv) {
                 no_options = false;
                 gpp_command += " -Wall";
                 break;
-
             // Ajoute l'option -o(1..3) au compilateur g++
             case 'O':
                 no_options = false;
@@ -244,6 +245,11 @@ int main(int argc, char ** argv) {
                 if(atoi(optarg) >= 1 && atoi(optarg) <= 3){
                     gpp_command += " -O"+string(optarg); 
                 }
+                break;
+            // Défini les arguments passés au programme lors de l'exécution
+            case 'a':
+                no_options = false;
+                exec_args = string(optarg);
                 break;
             // Option inconnue, s'il y a une option avec un tiret ou deux, c'est forcement autre chose qu'un fichier donc erreur
             case '?':
@@ -299,7 +305,7 @@ int main(int argc, char ** argv) {
         // If we did not encountered any error(s) at this point, success depends on final
         // compilation
 
-        int return_code= exec_cpp(gpp_command, output_name);
+        int return_code= exec_cpp(gpp_command, output_name, exec_args);
         if (return_code != 0) {
             cerr << "\nParsing to C++ succeeded, but compilation failed. Report the problem."
             "\nHINT: Maybe you used undeclared variable of function, or do not have the correct"

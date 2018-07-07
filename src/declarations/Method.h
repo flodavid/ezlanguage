@@ -20,7 +20,7 @@ public:
      * 
      * Right son is set to null
      */
-    Method(const std::string & name, Node * parameters, Node * instructions);
+    Method(const std::string & name, Node * parameters, Instruction * instructions);
 
 public:
 

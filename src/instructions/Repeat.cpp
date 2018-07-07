@@ -3,8 +3,8 @@
 
 using namespace std;
 
-Repeat::Repeat(Node * left, ConditionalExpression * cond):
-    Node(left, nullptr), mCondition(cond)
+Repeat::Repeat(Node * instructions, ConditionalExpression * cond):
+    Instruction(instructions), mCondition(cond)
 {}
 
 Repeat::~Repeat()
@@ -14,10 +14,13 @@ Repeat::~Repeat()
 
 string Repeat::preTranslate() const
 {
-    return "do {\n";
+    string res= indentationText() +"do {\n";
+    Instruction::indent();
+    return res;
 }
 
 string Repeat::postTranslate() const
 {
-    return "} while " + mCondition->translate() + ";\n";
+    Instruction::unindent();
+    return indentationText() +"} while " + mCondition->translate() + ";\n";
 }

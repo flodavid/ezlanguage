@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/Expression.h"
 #include "../modules/Operator.h"
 
 /**
- * @brief Node of the tree which represent a condition else
+ * @brief Node of the tree which represent an affectation on a variable
  */
 
-class Affectation : public Node {
+class Affectation : public Instruction {
 
 protected:
     std::string mTarget;
@@ -42,8 +42,8 @@ public:
      * * * * * * * */
     
     /**
-     * @brief Translate the begining part of the If
-     * @return a string containing the C++ code of the If
+     * @brief Translate the begining part of the affectation
+     * @return a string containing the C++ code of the Affectation
      *
      * All subclasses, should reimplement this method so that the translation corresponds
      * to their specifications, specificities and own values

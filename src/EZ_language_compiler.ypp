@@ -33,22 +33,28 @@
 #include "../src/modules/ArrayAccess.h"
 #include "../src/modules/BooleanExpression.h"
 #include "../src/modules/BooleanValue.h"
+#include "../src/modules/ConvertNode.h"
+#include "../src/modules/FunctionCallExpression.h"
 #include "../src/modules/Operator.h"
 #include "../src/modules/Program.h"
 #include "../src/modules/TranslatedNode.h"
 #include "../src/instructions/Affectation.h"
+#include "../src/instructions/CppCode.h"
 #include "../src/instructions/If.h"
+#include "../src/instructions/Input.h"
 #include "../src/instructions/Else.h"
 #include "../src/instructions/For.h"
-#include "../src/instructions/FunctionCall.h"
+#include "../src/instructions/FunctionCallInstruction.h"
+#include "../src/instructions/Print.h"
 #include "../src/instructions/Repeat.h"
+#include "../src/instructions/Return.h"
 #include "../src/instructions/While.h"
+#include "../src/libraries/StringFunction.h"
 
 #include "../src/global.h"
 
 bool existing_parsing_error= false;
 
-extern std::string INPUT_FUNC_NAME;
 extern FILE* yyin;
 
 using namespace std;
@@ -131,13 +137,13 @@ int yycolumn = 1;
 
 // Basic elements
 %type<tree> program
-%type<tree> program.imports program.classes program.variables program.methods
+%type<tree> program.imports program.classes program.variables  program.methods
+// %type<method> program.methods
 %type<declaration> method.parameters
 %type<param> program.parameters parameter_sequence parameter .parameters parameters
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
-%type<tree> destruct printing input // TODO overloading
-%type<tree> while repeat for // when
+%type<tree> destruct // TODO overloading
 %type<affectation> affectation
 %type<ifNode> if
 %type<elseNode> .else
@@ -148,11 +154,15 @@ int yycolumn = 1;
 %type<genericCont> containerDeclaration
 %type<var>  simpleVariable variable variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator equalityOperator
-%type<functionCall> simpleFunction functionCall functionCallNoParenthesis
-%type<transNode> code
+%type<functionCall> simpleFunction functionCall stringFunction
+%type<functionCallExpr> functionCallExpr
+%type<instr> functionCallInstr functionCallNoParenthesis
+%type<code> code
 %type<method> method function procedure
 %type<expr> arguments .argumentsList argumentElement
-%type<tree> statement import
+%type<instr> printing input repeat for while // when
+%type<instr> statement statement_sequence .statement_sequence
+%type<tree> import
 %type<text> type .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression stringExpressions stringExpression integerExpression numericExpression basicExpressions basicExpression
@@ -161,7 +171,7 @@ int yycolumn = 1;
 
 // Non basic elements
 %type<text> objectDotOperator
-%type<tree> function_string statement_sequence .statement_sequence .streamedExpressions .argumentsSeparated
+%type<tree> streamedExpressions .argumentsSeparated
 %type<expr> .affect
 %type<var> class.variables
 %type<method> class.methods
@@ -202,8 +212,9 @@ program:
     CommonVar* p_decl_parameters = $6;
     Node* p_decl_classes = $7;
     Node* p_decl_vars = $8;
-    Node* p_decl_methods = $9;
-    Node* p_prog_instr = $12;
+    // Method* p_decl_methods = $9;
+    Node* p_decl_methods = $9; // TODO replace
+    Instruction* p_prog_instr = $12;
     /* TODO add program parameters logic */
     Main* main= new Main(p_decl_parameters, p_prog_instr);
 
@@ -219,8 +230,12 @@ program:
     delete racine;
 
     // debug log
-    info("\n      TRANSLATION\n======================>>>>>\n"+ translation +
-        "\n<<<<<======================\n        END TRANSLATION\n", AT);
+    info(
+"\n        TRANSLATION\n"
+"======================>>>>>\n"
++ translation +
+"\n<<<<<======================\n"
+"      END TRANSLATION\n", AT);
     // output the translation in the output file (should result a valid cpp file)
     fputs(translation.c_str(), yyout);
     
@@ -331,7 +346,7 @@ program.variables:
 /* declarations_list */
 program.methods:
   /* empty */
-  { $$ = new EmptyNode; }
+  { $$ = new EmptyNode; } // TODO use nullptr instead of EmptyNode
 | program.methods method .jump
 	{
 		$1->addRightChild($2);
@@ -361,10 +376,9 @@ parameter_sequence:
 
 .statement_sequence:
   /* empty */
-// @see if it is possible not to use EmptyNode, but nullptr
   {
     debug("no more statements", AT);
-    $$ = new EmptyNode;
+    $$ = nullptr;
   }
 | statement_sequence { $$ = $1; }
 ;
@@ -372,10 +386,12 @@ parameter_sequence:
 statement_sequence:
   statement { $$ = $1; }
 | statement_sequence statement {
-    debug("statement: "+ $2->getName(), AT);
+    if ($2) debug("statement: "+ $2->getName(), AT);
     
-    $1->addRightChild($2);
-    $$ = $1;
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    } else $$ = $2;
   }
 ;
 
@@ -455,6 +471,18 @@ method:
 // TODO function scope handling
 function:
   FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
+  statement_sequence function.return BACK_LINE END endfunction
+  {
+		// symbolTable.decScope();
+		debugYacc("fonction declaration: "+ $2, AT);
+    // Right son of last instruction is return statement
+    $6->addRightChild($7);
+
+		Function *func = new Function($2,$3,$6,$4);
+		$$ = func;
+	}
+/*
+  FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
   begin statement_sequence function.return BACK_LINE END endfunction
   {
 		// symbolTable.decScope();
@@ -465,6 +493,7 @@ function:
 		Function *func = new Function($2,$3,$7,$4);
 		$$ = func;
 	}
+|*/
 // | FUNCTION NAME method.parameters IS EXTERN NAME
 //   {
 //     /* TODO extern function declaration logic @see hash table, but not no function creation ? */
@@ -517,8 +546,8 @@ procedure:
 function.returnedType:
   RETURNS type
   {
-    // TODO function.returnedType logic
-    // $$= new Type($2);
+    // @see if we should use a Type class instead of raw string ?
+    $$ = $2;
   }
 ;
 
@@ -563,17 +592,16 @@ parameters:
  * ******************/
 
 statement:
-  BACK_LINE { $$ = new EmptyNode; }
+  BACK_LINE { $$ = nullptr; }
 | if        { $$ = $1; }
 | while     { $$ = $1; }
 | repeat    { $$ = $1; }
 | for       { $$ = $1; }
 | declaration           { $$ = $1; }
 | affectation           { $$ = $1; }
-| functionCall          { $$ = $1; }
+| functionCallInstr     { $$ = $1; }
 | functionCallNoParenthesis { $$ = $1; }
-| function_string       { $$ = $1;}
-| destruct  { $$ = $1; }
+// | destruct  { $$ = $1; } TODO
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
 // | overloading { $$ = $1; }
@@ -670,22 +698,34 @@ for:
   for.decl for.rangeStart for.rangeEnd for.body {
     debugYacc("FOR  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
-    $$ = new For($1,$2,$3,simpleStep,$4);
+    symbolTable.incScope();
+    For* forNode= new For($1,$2,$3,simpleStep,$4);
+    symbolTable.decScope();
+    $$ = forNode;
   }
 | for.decl for.rangeStart for.rangeEnd for.step for.body {
     debugYacc("FOR  IN .. STEP ...", AT);
-    $$ = new For($1,$2,$3,$4,$5);
+    // symbolTable.incScope();
+    For* forNode= new For($1,$2,$3,$4,$5);
+    // symbolTable.decScope();
+    $$ = forNode;
   }
 | for.decl for.type for.rangeStart for.rangeEnd for.body {
     /* TODO 'for a is TYPE in b .. c' logic */
     debugYacc("FOR type  IN .. ...", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
-    $$ = new For($1,$3,$4,simpleStep,$5,$2);
+    // symbolTable.incScope();
+    For* forNode= new For($1,$3,$4,simpleStep,$5, $2);
+    // symbolTable.decScope();
+    $$ = forNode;
   }
 | for.decl for.type for.rangeStart for.rangeEnd for.step for.body {
     /* TODO 'for a is TYPE in b .. c step x' logic */
     debugYacc("FOR [Type]  IN .. STEP ...", AT);
-    $$ = new For($1,$3,$4,$5,$6,$2);
+    // symbolTable.incScope();
+    For* forNode= new For($1,$3,$4,$5,$6, $2);
+    // symbolTable.decScope();
+    $$ = forNode;
   }
 ;
 
@@ -776,18 +816,18 @@ destruct:
   }
 ;
 
-// TODO create a function call cpp class, for input, string funcs and generics (and printing)
+// TODO modify input class, for string, funcs and generics (and printing, for asking input to user)
 input:
   INPUT IN NAME BACK_LINE {
     debugYacc("input in "+ $3, AT);
-    $$ = new TranslatedNode(INPUT_FUNC_NAME +"(&"+ $3 + ");\n", "Get input (stdin)");
+    $$ = new Input($3);
   }
 ;
 
 printing:
-  PRINT .streamedExpressions BACK_LINE {
+  PRINT streamedExpressions BACK_LINE {
     debugYacc("print "+ $2->translate(), AT);
-    $$ = new TranslatedNode("std::cout"+ $2->translate() + "<< std::endl;\n", "Print (stdout)");
+    $$ = new Print($2->translate());
     delete $2;
   }
 ;
@@ -808,12 +848,23 @@ printing:
 
 code:
   CODE_TEXT END lineend {
-    TranslatedNode* cpp_instructions= new TranslatedNode($1+"\n");
+    CppCode* cpp_instructions= new CppCode($1);
     $$ = cpp_instructions;
   }
 ;
 
-// TODO function call
+functionCallInstr:
+  functionCall {
+    $$ = new FunctionCallInstruction($1);
+  }
+;
+
+functionCallExpr:
+  functionCall {
+    $$ = new FunctionCallExpression($1);
+  }
+;
+
 functionCall:
   // objectDotOperator simpleFunction {}
   functionCall SIMPLE_DOT simpleFunction {
@@ -823,6 +874,9 @@ functionCall:
 | objectDotOperator simpleFunction {
     $2->addObject($1);
     $$ = $2;
+  }
+| stringFunction {
+    $$ = $1;
   }
 | simpleFunction {
     $$ = $1;
@@ -837,7 +891,7 @@ functionCallNoParenthesis:
   NAME .argumentsList {
     debugYacc("Call of function (no parenthesis) '"+ $1 +"'", AT);
 
-    $$ = new FunctionCall($1, $2);
+    $$ = new FunctionCallInstruction($1, $2);
   }
 ;
 
@@ -896,8 +950,7 @@ argumentElement:
 ;
 
 runtimeValue:
-  functionCall {
-    $1->setAsNotInstruction();
+  functionCallExpr {
     $$ = $1;
   }
 | containerAccess { $$ = $1; }
@@ -944,14 +997,12 @@ containerAccess:
  *    EXPRESSIONS   *
  * ******************/
 
-.streamedExpressions:
+streamedExpressions:
   streamedExpressions.element {
     Operator* streamOperator= new Operator("<< ", $1);
     $$ = streamOperator;
   }
-//   /* empty */
-//   { $$ = new EmptyNode; }
-| .streamedExpressions streamedExpressions.element {
+| streamedExpressions streamedExpressions.element {
     Operator* streamOperator= new Operator("<< ", $2);
 
     $1->addRightChild(streamOperator);
@@ -1075,17 +1126,17 @@ stringExpressions:
   string { $$ = $1; }
 | stringExpressions stringExpression {
     debug("Concatenation of two string expressions", AT);
-    $2->interpretAsString();
+    ConvertNode* expressionToString= new ConvertNode("std::to_string", $2);
     Operator* concat = new Operator(" + ");
 
     $1->addRightChild(concat);
-    concat->addRightChild($2);
+    concat->addRightChild(expressionToString);
     $$ = $1;
   }
 | stringExpressions runtimeValue {
-    debug("Concatenation of two string expressions", AT);
-    $2->interpretAsString();
-    Operator* concat = new Operator(" + ", $2);
+    debug("Concatenation of a string expression and a litteral: ", AT);
+    ConvertNode* expressionToString= new ConvertNode("std::to_string", $2);
+    Operator* concat = new Operator(" + ", expressionToString);
 
     $1->addRightChild(concat);
     $$ = $1;
@@ -1324,20 +1375,33 @@ endparameters:
 // ;
 
 //    -----------------------------STRING METHODS----------------------------------------
-function_string:
-  objectDotOperator LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("lENGTH() called \n"); }
-| objectDotOperator TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toUpperCase() called \n"); }
-| objectDotOperator TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("toLowerCase() called \n"); }
-| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression RIGHT_PARENTHESIS { printf("SUBSTRING(int) called \n"); }
-| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression COMMA integerExpression RIGHT_PARENTHESIS { printf("SUBSTRING(int,int) called \n"); }
-| objectDotOperator SPLIT LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("SPLIT(\"str\") called \n"); }
-| objectDotOperator STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS { printf("strip() called \n"); }
-| objectDotOperator STRIP LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("strip(\"str\") called \n"); }
-| objectDotOperator REPLACE LEFT_PARENTHESIS STRING COMMA STRING RIGHT_PARENTHESIS { printf("replace(\"str\",\"str\") called \n"); }
-| objectDotOperator CONTAINS LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("contain(\"str\") called \n"); }
-| objectDotOperator FIND LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("find(\"str\") called \n"); }
-| objectDotOperator FINDFIRSTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
-| objectDotOperator FINDLASTOF LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS { printf("findFirstOF(\"str\") called \n"); }
+stringFunction:
+  objectDotOperator LENGTH LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_LENGTH); }
+| objectDotOperator TOUPPERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_TOUPPERCASE); }
+| objectDotOperator TOLOWERCASE LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_TOLOWERCASE); }
+| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_SUBSTRING, $4); }
+| objectDotOperator SUBSTRING LEFT_PARENTHESIS integerExpression COMMA integerExpression RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_SUBSTRING, $4, $6); }
+| objectDotOperator SPLIT LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_SPLIT, $4); }
+| objectDotOperator STRIP LEFT_PARENTHESIS RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_STRIP); }
+| objectDotOperator STRIP LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_STRIP, $4); }
+| objectDotOperator REPLACE LEFT_PARENTHESIS string COMMA string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_REPLACE, $4, $6); }
+| objectDotOperator CONTAINS LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_CONTAINS, $4); }
+| objectDotOperator FIND LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_FIND, $4); }
+| objectDotOperator FINDFIRSTOF LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_FINDFIRSTOF, $4); }
+| objectDotOperator FINDLASTOF LEFT_PARENTHESIS string RIGHT_PARENTHESIS
+  { $$ = new StringFunction($1, FUNC_FINDLASTOF, $4); }
 ;
 
 /* ***************************
@@ -1367,7 +1431,7 @@ arrayDeclaration:
     $$ = new Array($1, $2, $3);
   }
 // | scope array.decl DOUBLE_DOT intOrName RIGHT_BRACKET array.type
-//   { printf("array declaration with lower and upper bound\n"); }
+//   { printf("array declaration with lower and upper bound"); }
 ;
 
 //    --------------------------standard containers declaration--------------------------

@@ -1,24 +1,23 @@
-#ifndef FOR_H
-#define FOR_H
+#pragma once
 
-#include "../modules/Node.h"
+#include "Instruction.h"
 #include "../modules/Expression.h"
 #include "../declarations/Variable.h"
 
 /**
- * @brief Represent a node of the tree which will traduct a "for" loop
+ * @brief Represent a Instruction of the tree which will traduct a "for" loop
  * @author : GINISTY Valentin && DAVID Florian
  * 
  * example : forall i in 1..10 step 2 (step is optionnal)
  * Use Declaration, Condition and Instruction
  */
-class For : public Node {
+class For : public Instruction {
 private:
     Variable* mIterator;
 
 protected:
-    const Node* mIndEnd;
-    const Expression* mStep;
+    Expression* mIndEnd;
+    Expression* mStep;
     std::string mContainerName;
     
 public:
@@ -32,8 +31,8 @@ public:
 	* @param left : left son
 	* @param type : type of the indice
 	*/	
-    For(const std::string & iterator, Expression* start, const Expression* end,
-        const Expression* step, Node * instructions, const std::string & type = "");
+    For(const std::string & iterator, Expression* start, Expression* end,
+        Expression* step, Node * instructions, const std::string & type = "");
     
     /**
      * @brief constructor with parameters
@@ -50,14 +49,14 @@ public:
 
 
     /**
-     * @brief Get the name of the node
-     * @return the name of the node. Defined at class creation
+     * @brief Get the name of the Instruction
+     * @return the name of the Instruction. Defined at class creation
      */
     virtual inline const std::string getName() const { return "For"; }
 
     /**
      * @brief Translate the begining part of the Forall
-     * @return a string containing the C++ code of the node
+     * @return a string containing the C++ code of the Instruction
      *
      * All subclasses, should reimplement this method so that the translation corresponds
      * to their specifications, specificities and own values
@@ -73,5 +72,3 @@ public:
      */
     virtual std::string postTranslate() const;
 };
-
-#endif
