@@ -3,7 +3,7 @@
 using namespace std;
 
 Import::Import(const std::string & importName, ImportType importType):
-	Node(nullptr, nullptr), mHeaderName(importName), mImportType(importType)
+    Node(nullptr, nullptr), mHeaderName(importName), mImportType(importType)
 { }
 
 Import::~Import()

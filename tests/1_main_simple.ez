@@ -67,7 +67,7 @@ a multiple lines comment
 
     a is integer = 4
     b is boolean
-    c is array[] of integer =  { 1, 2, 12 }
+    c is array[] of integer = { 1, 2, 12 }
     name is string
 
     for i is integer in 0..2 step 1 do

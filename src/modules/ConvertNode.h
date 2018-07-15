@@ -23,7 +23,7 @@ public:
      * @param functionName : complete name (std, ...) of the function that will convert the node
      * @param expressionToConvert : expression to be converted by the function
      */
-    ConvertNode(std::string functionName, Expression* expressionToConvert);
+    ConvertNode(const std::string & functionName, Expression* expressionToConvert);
     
 
     /**

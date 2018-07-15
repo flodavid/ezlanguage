@@ -23,7 +23,7 @@ public:
      * Constructor with paremeters. For no parenthesis function calls
      */
     FunctionCallInstruction(const std::string & functionName, Expression * arguments,
-            const std::string & objectName = "");
+            Expression* objectExpression = nullptr);
 
     /**
      * @brief Get the name of the node

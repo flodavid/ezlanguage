@@ -6,9 +6,8 @@
  * @brief Node of the tree which represent a vector
  * Translation part is already made in Container class
  */
-
 class Vector : public Container {
-	
+
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *

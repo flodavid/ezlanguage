@@ -8,7 +8,7 @@
  */
 
 class Set : public Container {
-	
+
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *

@@ -11,7 +11,7 @@ enum ImportType { EXTERNAL_LIBRARY, LOCAL_FILE };
 class Import : public Node {
 
 protected:
-	std::string mHeaderName;
+    std::string mHeaderName;
     ImportType mImportType;
 
 public:

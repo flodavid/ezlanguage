@@ -2,16 +2,16 @@
 
 using namespace std;
 
-StringFunction::StringFunction(const string & objectName, StringFunctionName functionName):
-    FunctionCall(StringFunctionNameStrings[functionName], nullptr, objectName)
+StringFunction::StringFunction(Expression* objectExpression, StringFunctionName functionName):
+    FunctionCall(StringFunctionNameStrings[functionName], nullptr, objectExpression)
 { }
 
-StringFunction::StringFunction(const string & objectName, StringFunctionName functionName, Expression* arg):
-    FunctionCall(StringFunctionNameStrings[functionName], arg, objectName)
+StringFunction::StringFunction(Expression* objectExpression, StringFunctionName functionName, Expression* arg):
+    FunctionCall(StringFunctionNameStrings[functionName], arg, objectExpression)
 { }
 
-StringFunction::StringFunction(const string & objectName, StringFunctionName functionName, Expression* firstArg, Expression* secondArg):
-    FunctionCall(StringFunctionNameStrings[functionName], firstArg, objectName)
+StringFunction::StringFunction(Expression* objectExpression, StringFunctionName functionName, Expression* firstArg, Expression* secondArg):
+    FunctionCall(StringFunctionNameStrings[functionName], firstArg, objectExpression)
 {
     firstArg->addRightChild(secondArg);
 }

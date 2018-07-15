@@ -11,7 +11,7 @@
  * TODO Handle hashed variable (VariableHashed class) association or merging
  */
 class Variable : public CommonVar {
-	
+
 private:
     bool mIsInstruction;
 

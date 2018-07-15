@@ -114,7 +114,7 @@ int yycolumn = 1;
 %token OPERATOR                     // Overloading
 %token BEGINN END PROGRAM      // can not use 'BEGIN'
 %token END_OF_FILE
-%token CLASS  DESTRUCT			        //class
+%token CLASS  DESTRUCT			        // classes
 %token PARAMETERS AS							  // program arguments	
 %token REGEX SEARCH MATCH 					// Regular expression
 
@@ -137,13 +137,12 @@ int yycolumn = 1;
 
 // Basic elements
 %type<tree> program
-%type<tree> program.imports program.classes program.variables  program.methods
-// %type<method> program.methods
+%type<tree> program.imports program.classes program.variables
+%type<method> program.methods
 %type<declaration> method.parameters
 %type<param> program.parameters parameter_sequence parameter .parameters parameters
 %type<array> arrayDeclaration
 %type<cont> stdContainerDeclaration
-%type<tree> destruct // TODO overloading
 %type<affectation> affectation
 %type<ifNode> if
 %type<elseNode> .else
@@ -170,7 +169,7 @@ int yycolumn = 1;
 %type<arrayAccess> containerAccess
 
 // Non basic elements
-%type<text> objectDotOperator
+%type<expr> objectDotOperator
 %type<tree> streamedExpressions .argumentsSeparated
 %type<expr> .affect
 %type<var> class.variables
@@ -212,18 +211,20 @@ program:
     CommonVar* p_decl_parameters = $6;
     Node* p_decl_classes = $7;
     Node* p_decl_vars = $8;
-    // Method* p_decl_methods = $9;
-    Node* p_decl_methods = $9; // TODO replace
+    Method* p_decl_methods = $9;
     Instruction* p_prog_instr = $12;
-    /* TODO add program parameters logic */
     Main* main= new Main(p_decl_parameters, p_prog_instr);
 
     // Progam declaration and nodes relations
     Program *racine = new Program($2, p_imports, p_decl_classes);
     
     p_decl_classes->addRightChild(p_decl_vars);
+    if (p_decl_methods) {
     p_decl_vars->addRightChild(p_decl_methods);
     p_decl_methods->addRightChild(main);
+    } else {
+        p_decl_vars->addRightChild(main);
+    }
 
     // Translation
     const std::string & translation= racine->translate();
@@ -265,8 +266,6 @@ program.imports:
   .jump
   { $$= new EmptyNode; }
 | program.imports import {
-    /* TODO import logic */
-    debug("import", AT);
     $1->addRightChild($2);
     $$ = $1;
   }
@@ -277,7 +276,6 @@ program.parameters:
   /* empty */
   { $$ = nullptr; }
 | PARAMETERS BACK_LINE parameter_sequence END endparameters {
-    /* TODO arguements declaration logic */
     debug("parameters declaration", AT);
     $$ = $3;
   }
@@ -346,11 +344,13 @@ program.variables:
 /* declarations_list */
 program.methods:
   /* empty */
-  { $$ = new EmptyNode; } // TODO use nullptr instead of EmptyNode
+  { $$ = nullptr; }
 | program.methods method .jump
 	{
+    if ($1) {
 		$1->addRightChild($2);
 		$$ = $1;
+    } else $$ = $2;
 	}
 ;
 
@@ -470,30 +470,17 @@ method:
 
 // TODO function scope handling
 function:
-  FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
+  FUNCTION NAME method.parameters function.returnedType beginOrJump // { symbolTable.incScope(); }
   statement_sequence function.return BACK_LINE END endfunction
   {
-		// symbolTable.decScope();
-		debugYacc("fonction declaration: "+ $2, AT);
+    // symbolTable.decScope();
+    debugYacc("fonction declaration: "+ $2, AT);
     // Right son of last instruction is return statement
     $6->addRightChild($7);
 
-		Function *func = new Function($2,$3,$6,$4);
-		$$ = func;
-	}
-/*
-  FUNCTION NAME method.parameters function.returnedType BACK_LINE // { symbolTable.incScope(); }
-  begin statement_sequence function.return BACK_LINE END endfunction
-  {
-		// symbolTable.decScope();
-		debugYacc("fonction declaration: "+ $2, AT);
-    // Right son of last instruction is return statement
-    $7->addRightChild($8);
-
-		Function *func = new Function($2,$3,$7,$4);
-		$$ = func;
-	}
-|*/
+    Function *func = new Function($2,$3,$6,$4);
+    $$ = func;
+  }
 // | FUNCTION NAME method.parameters IS EXTERN NAME
 //   {
 //     /* TODO extern function declaration logic @see hash table, but not no function creation ? */
@@ -512,34 +499,29 @@ function:
 //    symbolTable.incScope();
 // TODO Add procedure shared/not shared operator
 procedure:
-  PROCEDURE NAME method.parameters BACK_LINE statement_sequence END endprocedure
+  PROCEDURE NAME method.parameters beginOrJump statement_sequence END endprocedure
   {
     /* TODO procedure creation logic 1 */
     debugYacc("Procedure declaration : "+ $2, AT);
     Procedure *proc = new Procedure($2,$3,$5);
-		$$ = proc;
-		// symbolTable.decScope();
+    $$ = proc;
+    // symbolTable.decScope();
   }
-  // TODO print overloading
+  // TODO print overloading by user
 // | PROCEDURE PRINT LEFT_PARENTHESIS RIGHT_PARENTHESIS BACK_LINE
 //   begin statement_sequence END endprocedure
 //   {
 //     /* TODO print overloading logic 1 */
 //     cout << "Surcharge de la methode d'affichage \"print\" "  << endl;
 //     $$ = new Procedure(); // = f
-// 		// symbolTable.decScope();
+//     // symbolTable.decScope();
 //   }
 //     /* TODO shared procedure declaration logic */
 // | SHARED procedureDecl BACK_LINE statement_sequence END endprocedure {
 //     /* TODO procedure creation logic 2 */
 //     debugYacc("Procedure creation ", AT);
 //     // Procedure *f = new Procedure($1,$4,$4);
-// 		$$ = nullptr; // = f
-//   }
-// | SHARED PROCEDURE PRINT LEFT_PARENTHESIS  RIGHT_PARENTHESIS BACK_LINE begin statement_sequence END endprocedure {
-//     /* TODO print overloading logic 2 (factorize) */
-//     cout << "Surcharge de la methode d'affichage \"print\" "  << endl;
-//     $$ = nullptr;
+//     $$ = nullptr; // = f
 //   }
 ;
 
@@ -580,7 +562,7 @@ parameters:
     $1->addRightChild($3);
     $$ = $1;
  	}
-// | names ARE type { /* TODO parameters logic */ }
+// | names ARE type { /* TODO multiple parameters logic */ }
 // TODO handle SHARED parameters
 // | names ARE SHARED type affect
 // 	{
@@ -601,7 +583,6 @@ statement:
 | affectation           { $$ = $1; }
 | functionCallInstr     { $$ = $1; }
 | functionCallNoParenthesis { $$ = $1; }
-// | destruct  { $$ = $1; } TODO
 | printing  { $$ = $1; }
 | input     { $$ = $1; }
 // | overloading { $$ = $1; }
@@ -694,9 +675,11 @@ for.body:
 ;
 
 // TODO Add 'for' logics that handle going through containers
+  // symbolTable.incScope();
+  // symbolTable.decScope();
 for:
   for.decl for.rangeStart for.rangeEnd for.body {
-    debugYacc("FOR  IN .. ...", AT);
+    debugYacc("FOR  IN .. {...}", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
     symbolTable.incScope();
     For* forNode= new For($1,$2,$3,simpleStep,$4);
@@ -704,27 +687,21 @@ for:
     $$ = forNode;
   }
 | for.decl for.rangeStart for.rangeEnd for.step for.body {
-    debugYacc("FOR  IN .. STEP ...", AT);
-    // symbolTable.incScope();
+    debugYacc("FOR  IN .. STEP {...}", AT);
     For* forNode= new For($1,$2,$3,$4,$5);
-    // symbolTable.decScope();
     $$ = forNode;
   }
+/* 'for a is TYPE in b .. c' */
 | for.decl for.type for.rangeStart for.rangeEnd for.body {
-    /* TODO 'for a is TYPE in b .. c' logic */
-    debugYacc("FOR type  IN .. ...", AT);
+    debugYacc("FOR type  IN .. {...}", AT);
     TranslatedNode* simpleStep= new TranslatedNode("1");
-    // symbolTable.incScope();
     For* forNode= new For($1,$3,$4,simpleStep,$5, $2);
-    // symbolTable.decScope();
     $$ = forNode;
   }
+/* 'for a is TYPE in b .. c step x' */
 | for.decl for.type for.rangeStart for.rangeEnd for.step for.body {
-    /* TODO 'for a is TYPE in b .. c step x' logic */
-    debugYacc("FOR [Type]  IN .. STEP ...", AT);
-    // symbolTable.incScope();
+    debugYacc("FOR [Type]  IN .. STEP {...}", AT);
     For* forNode= new For($1,$3,$4,$5,$6, $2);
-    // symbolTable.decScope();
     $$ = forNode;
   }
 ;
@@ -735,16 +712,11 @@ for:
 declaration:
   variable             { $$ = $1; }
 | containerDeclaration { $$ = $1; }
-//| class                 { $$ = $1; }
 ;
 
-// TODO Add other container declarations
 containerDeclaration:
   arrayDeclaration        { $$ = $1; }
 | stdContainerDeclaration { $$ = $1; }
-// | map_declaration     { $$ = $1; }
-// | list_declaration    { $$ = $1; }
-// | set_declaration     { $$ = $1; }
 ;
 
 // TODO Avoid shift/reduce by factorising shared/not shared
@@ -758,7 +730,7 @@ variable:
   }
 ;
 
-// TODO add scope, constancy and staticity to variable constructions
+// TODO add scope, constancy and staticity and SHARED to variable constructions
 simpleVariable:
   var.decl type .affect
   {
@@ -779,14 +751,12 @@ simpleVariable:
 //     /* TODO multiple variables declaration logic 1 */
 // 		debugYacc("Variable declaration: "+ $1, AT);
 // 	}
-//     // TODO Handle SHARED
 // | var.decl SHARED type affect BACK_LINE
 // 	{
 // 		VariableHashed v($1,$3);
 // 		symbolTable.addElement(v);
 // 		// $$ = new Variable($2,$4,$1,true);
 // 	}
-//     // TODO Handle SHARED
 // | names ARE SHARED type BACK_LINE
 // 	{
 //     /* TODO multiple variables declaration logic 2 */
@@ -808,15 +778,16 @@ affectation:
 // | MINUS MINUS NAME  { cout << "-- Affectation " <<  endl;  }
 ;
 
-destruct:
-  // TODO reword destruction definition
-  DESTRUCT BACK_LINE statement_sequence END enddestruct {
-    /* TODO destructions logic */
-    debugYacc("destructeur (not implemented yet)", AT);
-  }
-;
+// Handle destruction if we implement pointers
+// destruct:
+//   // @see reword destruction definition
+//   DESTRUCT BACK_LINE statement_sequence END enddestruct {
+//     /* destructions logic needed */
+//     debugYacc("destructeur (not implemented yet)", AT);
+//   }
+// ;
 
-// TODO modify input class, for string, funcs and generics (and printing, for asking input to user)
+// TODO modify input for string, funcs and generics (and printing, to ask input to user)
 input:
   INPUT IN NAME BACK_LINE {
     debugYacc("input in "+ $3, AT);
@@ -836,13 +807,6 @@ printing:
 //   OPERATOR operator LEFT_PARENTHESIS  var.decl NAME RIGHT_PARENTHESIS RETURN type BACK_LINE begin statement_sequence END BACK_LINE {
 //     /* TODO overloading operator logic */
 //     cout << "operateur " <<  $2 << endl;
-//   }
-// ;
-
-// code:
-//   CODE begin ANYTHING endcode {
-//     TranslatedNode* cpp_instructions= new TranslatedNode($3);
-//     $$ = cpp_instructions;
 //   }
 // ;
 
@@ -866,13 +830,12 @@ functionCallExpr:
 ;
 
 functionCall:
-  // objectDotOperator simpleFunction {}
   functionCall SIMPLE_DOT simpleFunction {
     $1->addRightChild($3);
     $$ = $1;
   }
 | objectDotOperator simpleFunction {
-    $2->addObject($1);
+    $2->setObject($1);
     $$ = $2;
   }
 | stringFunction {
@@ -1052,11 +1015,6 @@ expression:
     debug("expression from integerExpression", AT);
     $$ = $1;
   }
-// | expression expression {
-//     $1->addRightChild($2);
-//     $$ = $1;
-//   }
-// | runtimeValue { $$ = $1; }
 ;
 
 // @see There is no type checking :(
@@ -1073,13 +1031,12 @@ conditionalExpression:
     BooleanExpression* negation= new BooleanExpression(new Operator("!"), $2);
     $$ = negation;
   }
-  // NAME should be boolean
 // TODO add type checking on all of container accesses
-// | containerAccess {
-//     BooleanExpression* expr= new BooleanExpression($1);
-//     $$ = expr;
-//   }
-
+| containerAccess {
+    debugYacc("BooleanExpression from containerAccess "+ $1->getDetails(), AT);
+    BooleanExpression* expr= new BooleanExpression($1);
+    $$ = expr;
+  }
 | runtimeValue {
     debugYacc("BooleanExpression from variable or literal "+ $1->translate(), AT);
     $$ = new BooleanExpression($1);
@@ -1090,7 +1047,7 @@ conditionalExpression:
 
     $$ = comparison;
   }
-| numeric relationalOperator numeric {
+| numericExpression relationalOperator numericExpression {
     debugYacc("conditionalExpression by comparison", AT);
     BooleanExpression* comparison= new BooleanExpression($2,new BooleanExpression($1),new BooleanExpression($3));
 
@@ -1111,21 +1068,12 @@ conditionalExpression:
 
 //     $$ = comparison;
 //   }
-// | runtimeValue arithmeticOperator numericExpression relationalOperator numericExpression {
-//     debugYacc("conditionalExpression by comparison", AT);
-
-//     $1->addRightChild($2);
-//     $2->addRightChild($3);
-//     BooleanExpression* comparison= new BooleanExpression($4,$1,$5);
-
-//     $$ = comparison;
-//   }
-;
+// ;
 
 stringExpressions:
   string { $$ = $1; }
 | stringExpressions stringExpression {
-    debug("Concatenation of two string expressions", AT);
+    debugYacc("Concatenation of two string expressions", AT);
     ConvertNode* expressionToString= new ConvertNode("std::to_string", $2);
     Operator* concat = new Operator(" + ");
 
@@ -1134,7 +1082,7 @@ stringExpressions:
     $$ = $1;
   }
 | stringExpressions runtimeValue {
-    debug("Concatenation of a string expression and a litteral: ", AT);
+    debugYacc("Concatenation of a string expression and a litteral: ", AT);
     ConvertNode* expressionToString= new ConvertNode("std::to_string", $2);
     Operator* concat = new Operator(" + ", expressionToString);
 
@@ -1163,6 +1111,7 @@ number:
 numericExpression:
   real { $$ = $1; }
 | integerExpression { $$ = $1; }
+// | runtimeValue { $$ = $1; } No need for now, because integer already has runtimeValue with no type checking
   /* TODO check that there is no other operators */
 | numericExpression arithmeticOperator numericExpression {
     debug("Operation between two numeric expressions", AT);
@@ -1171,11 +1120,18 @@ numericExpression:
     $2->addRightChild($3);
     $$ = $1;
   }
+| numericExpression POW numericExpression {
+    debugYacc("Power of one numeric expressions to another", AT);
+    $1->addRightChild($3);
+    FunctionCall* power = new FunctionCall("pow", $1);
+    FunctionCallExpression* powerExpression = new FunctionCallExpression(power);
+    $$ = $1;
+  }
 ;
 
-// @see There is no type checking :(
 integerExpression:
   integer { $$ = $1; }
+// @see There is no type checking :( If there was one, we would need to had runtimeValue into numericExpression
 | runtimeValue { $$ = $1; }
   /* TODO check that there is no other operators */
 | integerExpression arithmeticOperator integerExpression {
@@ -1213,6 +1169,11 @@ begin:
 | BEGINN BACK_LINE  { }
 ;
 
+beginOrJump:
+  BACK_LINE         { }
+| BACK_LINE BEGINN BACK_LINE  { }
+;
+
 // @see can it just be a translated Node (var name don't change) or a Node (Var or value)
 .affect:
   /* empty */
@@ -1221,8 +1182,6 @@ begin:
     debug("Affectation value: "+ $2->translate(), AT);
     $$ = $2;
   }
-// | EQUALS expression { $$ = $2; } // TODO use expression ?
-// | EQUALS string   { $$ = $2; }
 ;
 
 type:
@@ -1298,9 +1257,14 @@ equalityOperator:
 ;
 
 objectDotOperator:
-  NAME SIMPLE_DOT { $$ = $1; }
-  // TODO add dot operator on more complex structures ( "a.getPos().getX()" )
+  NAME SIMPLE_DOT
+  {
+    debugYacc("Use of object variable: "+ $1, AT);
+    $$ = new TranslatedNode($1);
+  }
+  // TODO add dot operator on more complex structures ( "a.getPos().getX()" ). Handled at functionCall level for now
   // @see Define "object" rule ?
+| containerAccess SIMPLE_DOT { $$ = $1; }
 ;
 
 /* *********************
@@ -1346,11 +1310,6 @@ endfor:
   lineend
 | FOR lineend {}
 ;
-
-// endcode:
-//   lineend
-// | CODE lineend {}
-// ;
 
 enddestruct:
   lineend

@@ -38,7 +38,7 @@ public:
      * @brief Get the name of the node
      * @return the name of the node. Defined at class creation
      */
-    virtual inline const std::string getName() const { return "Already translated Node"; }
+    virtual inline const std::string getName() const { return "Litteral Node"; }
 
     /**
      * @brief Translate the begining part of the Operator

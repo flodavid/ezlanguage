@@ -2,6 +2,7 @@
 
 #include "Node.h"
 #include "Expression.h"
+#include "TranslatedNode.h"
 
 /**
  * @brief Node of the tree which represent the call to a function
@@ -11,11 +12,11 @@
 class FunctionCall : public Node {
 
 protected:
-    std::string mObjectName;
+    Expression* mObjectExpression;
     std::string mFunctionName;
     Expression* mArguments;
     bool mHasAnOtherFunctionCall;
-	
+
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *
@@ -25,7 +26,7 @@ public:
      * Constructor with facultative object name
      */
     FunctionCall(const std::string & functionName, Expression * arguments,
-            const std::string & objectName = "");
+            Expression* objectExpression = nullptr);
 
     /**
      * Copy constructor. Other class is deleted in the process
@@ -46,9 +47,9 @@ public:
     virtual inline const std::string getName() const { return "Function call"; }
 
     /**
-     * @brief Add the object on which the function is called
+     * @brief Set the object on which the function is called
      */
-    inline void addObject(const std::string & objectName) { mObjectName= objectName; }
+    void setObject(Expression* objectExpression);
 
     /**
      * @brief Juxtapose another function call after the current

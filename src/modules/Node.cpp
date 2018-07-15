@@ -44,10 +44,10 @@ string Node::postTranslate() const
 
 string Node::translate() const {
     if (left_son) {
-        if (right_son) debugNode(""+ getName() +"--translate(), has left and right sons", AT);
-        else debugNode(""+ getName() +"--translate(), has left son", AT);
-    } else if (right_son) debugNode(""+ getName() +"--translate(), has right son", AT);
-        else debugNode(""+ getName() +"--translate(), no sons", AT);
+        if (right_son) debugTranslation(""+ getName() +"--translate(), has left and right sons", AT);
+        else debugTranslation(""+ getName() +"--translate(), has left son", AT);
+    } else if (right_son) debugTranslation(""+ getName() +"--translate(), has right son", AT);
+        else debugTranslation(""+ getName() +"--translate(), no sons", AT);
 
     string preTranslateText= preTranslate(); // We must call it here for indentation
     string left_translate= "";
@@ -56,6 +56,6 @@ string Node::translate() const {
     if (left_translate == "\n") left_translate= "\n\n";
     string postTranslateText= postTranslate(); // We must call it here for indentation
     if (right_son != nullptr)   right_translate+= right_son->translate();
-    debugNode("[translation node--translate()]", AT);
+    debugTranslation("[translation node--translate()]", AT);
     return preTranslateText + left_translate + postTranslateText + right_translate;
 }

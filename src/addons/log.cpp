@@ -55,3 +55,10 @@ void debugNode(const std::string &msg, const char *location)
     std::clog << ">" << msg << " at : " << location << std::endl;
 #endif
 }
+
+void debugTranslation(const std::string &msg, const char *location)
+{
+#if DEBUGTRANSLATION == 1
+    std::clog << ">" << msg << " at : " << location << std::endl;
+#endif
+}

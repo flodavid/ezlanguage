@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Print::Print(string textStream):
+Print::Print(const string & textStream):
     Instruction(nullptr), mText(textStream)
 { }
 

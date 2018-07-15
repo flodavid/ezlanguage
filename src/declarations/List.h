@@ -8,7 +8,7 @@
  */
 
 class List : public Container {
-	
+
 public:
     /* * * * * * * * *
     * CONSTRUCTORS  *

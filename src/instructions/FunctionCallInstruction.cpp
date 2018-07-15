@@ -7,8 +7,8 @@ FunctionCallInstruction::FunctionCallInstruction(FunctionCall* callToTransform):
 { }
 
 FunctionCallInstruction::FunctionCallInstruction(const std::string & functionName, Expression * arguments,
-            const std::string & objectName):
-	FunctionCall(functionName, arguments, objectName), Instruction(nullptr)
+            Expression* objectExpression):
+	FunctionCall(functionName, arguments, objectExpression), Instruction(nullptr)
 { }
 
 

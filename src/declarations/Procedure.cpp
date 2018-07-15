@@ -9,7 +9,7 @@ Procedure::Procedure(const string & name, Node * parameters, Instruction * instr
 std::string Procedure::preTranslate() const {
     std::string res = "void " + getProcedureName() + "(";
 
-	res+= translateParameters();
+    res+= translateParameters();
 
     res += ") {\n";
 

@@ -15,16 +15,21 @@
 #define DEBUGLEX            0
 #define DEBUGYACC           1
 #define DEBUGNODE           0
+#define DEBUGTRANSLATION    0
 
 
 #if DEBUG_ALL
     #define DEBUG               1
     #define DEBUGLEX            1
     #define DEBUGYACC           1
+    #define DEBUGNODE           1
+    #define DEBUGTRANSLATION    1
 #endif
 
 #if NO_DEBUG
     #define DEBUG               0
     #define DEBUGLEX            0
     #define DEBUGYACC           0
+    #define DEBUGNODE           0
+    #define DEBUGTRANSLATION    0
 #endif

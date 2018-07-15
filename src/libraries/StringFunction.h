@@ -29,17 +29,17 @@ public:
     /**
      * Constructor for zero parameters functions
      */
-    StringFunction(const std::string & objectName, StringFunctionName functionName);
+    StringFunction(Expression* objectExpression, StringFunctionName functionName);
     
     /**
      * Constructor for one integer parameter functions
      */
-    StringFunction(const std::string & objectName, StringFunctionName functionName, Expression* arg);
+    StringFunction(Expression* objectExpression, StringFunctionName functionName, Expression* arg);
     
     /**
      * Constructor for two integer parameters functions
      */
-    StringFunction(const std::string & objectName, StringFunctionName functionName, Expression* firstArg, Expression* secondArg);
+    StringFunction(Expression* objectExpression, StringFunctionName functionName, Expression* firstArg, Expression* secondArg);
 
     
     /**

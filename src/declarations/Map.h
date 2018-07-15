@@ -8,7 +8,7 @@
  */
 
 class Map : public Container {
-	
+
 private:
     std::string mKeyType;
 

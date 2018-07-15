@@ -15,7 +15,7 @@ Si vous souhaitez :
 * ajouter des options de compilation au LEX : via la variable *LEX_FLAGS*
 * ajouter des options lors de la compilation : via la variable *CC_FLAGS*
 * ajouter des fichiers de modules : via la variable *MOD_CPP*
-	
+
 Pour avoir une aide et les commandes disponibles sur le make, tapez : `make help`
 
 

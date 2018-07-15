@@ -2,7 +2,7 @@
 
 using namespace std;
 
-ConvertNode::ConvertNode(string functionName, Expression* expressionToConvert):
+ConvertNode::ConvertNode(const string & functionName, Expression* expressionToConvert):
     Expression(expressionToConvert, nullptr), mFunctionName(functionName)
 { }
 

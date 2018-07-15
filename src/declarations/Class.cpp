@@ -46,7 +46,7 @@ void Class::addMethod(Method *function) {
 }
 
 // void Class::add_static_function(Method *function) {
-// 	addRightChild(function);
+//    addRightChild(function);
 // }
 
 void Class::addVariable(Variable * variable){
@@ -54,38 +54,25 @@ void Class::addVariable(Variable * variable){
 }
 
 // bool Class::is_in_class(Method * function){
-    
-// 	for(unsigned int i=0;i<public_functions.size();i++){
-// 		if(public_functions[i]==function) return true;
-// 	}
-// 	for(unsigned int i=0;i<static_functions.size();i++){
-// 		if(static_functions[i]==function) return true;
-// 	}
-// 	return false;
+//     return false;
 // }
 
 // bool Class::is_in_class(Variable * variable){
-
-// 	for(unsigned int i=0;i<public_variables.size();i++){
-// 		if(public_variables[i]==variable) return true;
-// 	}
-// 	return false;
+//     return false;
 // }
 
 // string Class::getDefaultConstructParams() const
 // {
-            
-//         //     const VariableHashed* var= public_variables[i]->getVariableHashed();
-// 		// 	// Add construtor parameters
-// 		// 	buf_params_constructor+= var->get_type()+" arg_"+to_string(i);
-// 		// 	// Add attribute initilization
-// 		// 	buf_attribute_init+=var->get_id()+"(arg_"+to_string(i)+")";
+//     const VariableHashed* var= public_variables[i]->getVariableHashed();
+//     // Add construtor parameters
+//     buf_params_constructor+= var->get_type()+" arg_"+to_string(i);
+//     // Add attribute initilization
+//     buf_attribute_init+=var->get_id()+"(arg_"+to_string(i)+")";
 
-// 		// 	if(i+1<public_variables.size()-1) {
-// 		// 	    buf_params_constructor+=",";
-//         //         buf_attribute_init+=",";
-// 		// 	}
-// 		// }
+//     if(i+1<public_variables.size()-1) {
+//         buf_params_constructor+=",";
+//         buf_attribute_init+=",";
+//     }
 // }
 
 string Class::preTranslate() const
@@ -144,18 +131,6 @@ string Class::preTranslate() const
     // The Destructor
     res+= "\t~"+mClass->get_id()+"()";
     res+= "\n\t{}\n";
-    
-        // the static functions
-        // for(unsigned int i=0;i<static_functions.size();i++) {
-        // 	res+="\t\t";
-        // 	res+="static "+static_functions[i]->translate()+"\n";
-        // }
-
-        // functions
-        // for(unsigned int i=0;i<public_functions.size();i++) {
-        // 	res+="\t\t";
-        // 	res+=public_functions[i]->translate()+"\n";
-        // }
 
     return res;
 }

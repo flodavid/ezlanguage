@@ -22,7 +22,7 @@ public:
      * Constructor with parameters
      * @param text: text to print
      */
-    Print(std::string textStream = "");
+    Print(const std::string & textStream = "");
 
 
     /**
