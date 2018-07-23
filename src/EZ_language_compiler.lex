@@ -17,7 +17,6 @@ using namespace std;
 extern "C" int yylex(void);
 extern int yylineno;
 
-
 %}
 
 
@@ -156,6 +155,7 @@ code code
 
 (class|CLASS)       return(CLASS);
 (program|PROGRAM)   return(PROGRAM);
+(module|MODULE)     return(MODULE);
 (destruct|DESTRUCT) return(DESTRUCT);
 
 

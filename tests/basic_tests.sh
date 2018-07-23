@@ -22,8 +22,8 @@ done
 # Execute tests
 echo "Test 1 : main_simple"
 if [ "$debug" = true ]
-then run_test_traces 1_main_simple.ez
-else run_test 1_main_simple.ez
+then run_test_traces 1_main_simple.ez 4_display_module.ez
+else run_test 1_main_simple.ez 4_display_module.ez
 fi
 
 echo "Test 2 : procedure_vide"

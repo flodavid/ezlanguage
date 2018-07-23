@@ -1,4 +1,3 @@
-//@author Ismail ELFAQIR
 #include "Class.h"
 #include "../addons/String_addon.h"
 #include <iostream>
@@ -91,8 +90,8 @@ string Class::preTranslate() const
      * with parameters are required ) **/
 
     /* Default constructor */
-    res+= "\t"+mClass->get_id()+"()";
-    res+= "\n\t{}\n\n";
+    res+= "    "+mClass->get_id()+"()\n";
+    res+= "    {}\n\n";
 
     // Constructor parameters
     if (mVariables != nullptr) {
@@ -122,18 +121,18 @@ string Class::preTranslate() const
         } while(!lastVariable);
 
         // Constructor signature
-        res+= "\t"+mClass->get_id()+"("+ constructor_params +"):";
+        res+= "    "+mClass->get_id()+"("+ constructor_params +"):\n";
 
         // Put constructor parameters buffer into output
-        res+= "\n\t\t"+ initialization_list;
+        res+= "        "+ initialization_list;
         
         // Empty definition
-        res+= "\n\t{}\n\n";
+        res+= "\n    {}\n\n";
     }
 
     // The Destructor
-    res+= "\t~"+mClass->get_id()+"()";
-    res+= "\n\t{}\n";
+    res+= "    ~"+mClass->get_id()+"()\n";
+    res+= "    {}\n";
 
     return res;
 }

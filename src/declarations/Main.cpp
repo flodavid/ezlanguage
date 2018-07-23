@@ -35,10 +35,10 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
     if (mMainOpts != nullptr) {
 
         // Create program parameters
-        string prgm_parameters= indentationText() + mMainOpts->translate();
+        string prgm_parameters= mMainOpts->translate();
         string opts_flags= "";
         // Initialize arguments_summary function
-        string arguments_summary_decl= "void arguments_summary("+ prgm_parameters;
+        string arguments_summary_decl= "void arguments_summary(";
         string arguments_summary= "{\n";
         // Initialize opts_parsing
         string opts_parsing= 
@@ -47,7 +47,6 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
         string &arguments_intro= *input_arguments_summary;
         // Initialize call_arguments_summary
         string call_arguments_summary= "    arguments_summary(";
-        string call_arguments_summary_flags= "";
         string check_all_initialized= "    if (";
 
         // Add parameters parsing
@@ -67,7 +66,6 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
 
         // Browse all parameters to create arguments_summary and opts_parsing
         const CommonVar* opt= mMainOpts;
-        
         string switch_opts_parsing= "";
         string opts_short_names= "";
         int nb_to_initialize= 0; // Number of parameters that are mandatory
@@ -79,30 +77,32 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
             string opt_name= opt->getDeclarationName();
             const string & opt_type= opt->translateType();
             bool hasDefault= opt->getAffectation() != nullptr;
-
-            arguments_summary_decl+= ", bool "+ opt_name+ "_flag";
-            arguments_summary+=
-            "    std::cout << \""+ opt_name +" = \";\n"
-            "    if("+ opt_name +"_flag) std::cout <<"+ opt_name + ";\n"
-            "    std::cout << std::endl;\n";
+            
+            arguments_summary_decl+= opt_type +" "+ opt_name;
+            arguments_summary+= "    std::cout << \""+ opt_name +" = \"";
+            call_arguments_summary+= opt_name;
 
             // Define parameters which we must check they have been initialized, with flags
             if (!hasDefault) {
+                arguments_summary_decl+= ", bool "+ opt_name+ "_flag";
+                arguments_summary+= ";\n"
+                "    if("+ opt_name +"_flag) std::cout << "+ opt_name + " << std::endl;\n"
+                "    std::cout";
+                call_arguments_summary+= ", "+ opt_name +"_flag";
                 if (nb_to_initialize > 0) check_all_initialized+= " || ";
                 opts_flags+= "    bool "+ opt_name +"_flag= false;\n";
                 check_all_initialized+= "!"+ opt_name +"_flag";
                 ++nb_to_initialize;
-            }
+            } else arguments_summary+= " << "+ opt_name;
+            arguments_summary+= " << std::endl;\n";
 
             opts_parsing+=
             "        {\""+ opt_name +"\",\trequired_argument, 0, "+ to_string(ind) +"}";
-
-            call_arguments_summary+= opt_name;
-            call_arguments_summary_flags+= ", "+ opt_name +"_flag";
             
 
-            // Add the short name for all options in a string
-            opts_short_names+= to_string(ind);
+            // Add the short name for all options in a string (alphabet letters)
+            opts_short_names+= 'a'+ ind -1;
+            if (opt_type != "bool") opts_short_names+= ":";
 
             // Switch in loop parsing of options
             switch_opts_parsing+=
@@ -130,6 +130,7 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
             // Add commas where needed
             if (opt != nullptr) {
                 opts_parsing+= ", ";
+                arguments_summary_decl+= ", ";
                 call_arguments_summary+= ", ";
             }
 
@@ -176,7 +177,7 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
         "    } while (opt != -1);\n";
 
         // Finalize call_arguments_summary
-        call_arguments_summary+= call_arguments_summary_flags +");\n";
+        call_arguments_summary+= ");\n";
 
         return prgm_parameters + opts_flags +"\n"+ opts_parsing + call_arguments_summary + check_all_initialized;
     }

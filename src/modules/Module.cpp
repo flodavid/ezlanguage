@@ -80,5 +80,6 @@ string Module::postTranslate() const {
 "void "+ INPUT_FUNC_NAME +"(std::string* input) {\n"
 "    std::cin >> *input;\n"
 "}\n"
-"\#endif COMMON_FUNCTIONS\n";
+"\#endif\n"
+"\n";
 }

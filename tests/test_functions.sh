@@ -3,7 +3,10 @@
 error_encountered=0
 function run_test {
         output=$(echo "${1//.ez/.run}")
-        $(dirname $0)/../bin/EZ_language_compiler --warning --noexec $(dirname $0)/$1 -o $output
+        base_dir=$(pwd)
+        cd $(dirname $0)
+        ./../bin/EZ_language_compiler --warning --noexec $@ -o $base_dir/$output
+        cd $base_dir
         if [ $? -ne 0 ]
         then echo -e "\n\n    \033[1;31mTest failed \e[0m\n"; error_encountered=1
         else echo -e "\n\n    \033[1;32mTest succeeded !\e[0m\n"
@@ -11,7 +14,10 @@ function run_test {
 }
 function run_test_traces {
         output=$(echo "${1//.ez/.run}")
-        $(dirname $0)/../bin/EZ_language_compiler --warning --noexec -v $(dirname $0)/$1 -o $output
+        base_dir=$(pwd)
+        cd $(dirname $0)
+        ./../bin/EZ_language_compiler --warning --noexec -v $@ -o $base_dir/$output
+        cd $base_dir
         if [ $? -ne 0 ]
         then echo -e "\n\n    \033[1;31mTest failed \e[0m\n"; error_encountered=1
         else echo -e "\n\n    \033[1;32mTest succeeded !\e[0m\n"

@@ -1,7 +1,7 @@
-program Print
+module Print
 
 procedure printVar()
-    variable m is string = "print variable OK"
+    m is string = "print variable OK"
     print m
 end procedure
 
@@ -9,8 +9,7 @@ procedure printValue()
     print "print valeur OK"
 end procedure
 
-procedure Print()
-   printVar()
-   printValue()
+procedure PrintAll()
+    printVar()
+    printValue()
 end procedure
-

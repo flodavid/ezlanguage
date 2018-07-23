@@ -26,7 +26,7 @@ obj/*
 .vscode/*
 
 # Output files (generated cpp)
-tests/*.cpp
+tests/*.*pp
 *_*.cpp
 *.out
 **.run

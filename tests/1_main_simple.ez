@@ -2,10 +2,11 @@ program main_simple
 // Execution example: `./1_main_simple.run --mynumber=35 --mystring="test"`
 
 include "sstream"
+import Print
 
 parameters
     mynumber is integer
-    mystring is string
+    mystring is string = "test"
 end
 
 class TestClass
@@ -54,6 +55,8 @@ a multiple lines comment
         end
         print out " argument: " argv[i]
     end for
+
+    PrintAll()
 
     myClass is TestClass(3)
     myClass.hello()

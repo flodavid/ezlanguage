@@ -18,7 +18,7 @@ string Import::preTranslate() const
     
     mImportType == EXTERNAL_LIBRARY ? res+= "<" : res+= "\"";
     res+= mHeaderName;
-    mImportType == EXTERNAL_LIBRARY ? res+= ">" : res+= ".h\"";
+    mImportType == EXTERNAL_LIBRARY ? res+= ">" : res+= ".hpp\"";
     res+= "\n";
 
     return res;

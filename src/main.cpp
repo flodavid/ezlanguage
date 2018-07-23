@@ -66,31 +66,71 @@ bool file_test_exists(string filename){
     return exists;
 }
 
+vector<pair<char*,string>>* orderFilesCompilation(vector<char*> ezlFiles, string & programName)
+{
+    vector<pair<char*,string>>* compiled_files = new vector<pair<char*,string>>;
+    char* main_input;
+    string main_output = "";
+    for(char* filename : ezlFiles) {
+        debug("File to compile: "+ string(filename),AT);
+        ifstream infile(filename);
+        string first_line;
+        if (infile.good()) getline(infile, first_line);
+        infile.close();
+
+        // Output cpp filename defined by the name of the program        
+        string output_file = first_line.substr(first_line.find_last_of(" ")+1);
+        
+        if (first_line[0] == 'p') {
+            if (main_output == "") {
+                cout << "Main: "<< output_file << endl;
+                main_input = filename;
+                main_output = output_file +".cpp";
+                // If program name is not set, set a default value
+                if (programName == "") programName= output_file +".run";
+            } else {
+                cerr << "You cannot compile two programs together, you must execute"
+                " a disctinct compilation for each one";
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            cout << "Module: "<< output_file << endl;
+            compiled_files->push_back(make_pair(filename,output_file +".hpp"));
+        }
+    }
+    if (main_output != "") {
+        compiled_files->push_back(make_pair(main_input,main_output));
+    } else {
+        cerr << "Not any of the given files is a 'program' file";
+        exit(EXIT_FAILURE);
+    }
+    return compiled_files;
+}
+
 /**
- * Parse tous les fichiers ez contenus dans fic_ez en fichier cpp et les ajoute dans input_files 
+ * Parse EZ files from input to cpp files and add them as output file
  * @brief parse_to_cpp
- * @param fic_ezl
- * @param input_files
+ * @param fic_ezl: EZ files to be parsed
+ * @param input_files: output
  */
-bool parse_to_cpp(vector<char*> fic_ezl, string &input_files){
-    for(unsigned int i=0; i<fic_ezl.size(); ++i) {
-        cout << "\033[1;36mFile parsing : \033[1;37m" << fic_ezl[i] << endl;
+bool parse_to_cpp(const vector<char*> & fic_ezl, string &outputFiles, string & exeName)
+{
+    vector<pair<char*,string>>& compiled_files = *orderFilesCompilation(fic_ezl, exeName);
+
+    for(pair<char*,string> output_file : compiled_files) {
+        cout << "\033[1;36mFile parsing : \033[1;37m" << output_file.first << endl;
         cout << "\033[1;36m=====================================\033[0m" << endl;
-        yyin = fopen(fic_ezl[i], "r");
+        yyin = fopen(output_file.first, "r");
 
         if(!yyin){
-            cerr <<  fic_ezl[i] << ": file opening failed." << endl;
+            cerr << output_file.first << ": file opening failed." << endl;
         } else {
-            // creation des fichiers cpp
-            string tmp_file = string(fic_ezl[i]);
+            // Translation and Cpp files creation
+            FILE * cpp_file = fopen(output_file.second.c_str(), "w");
 
-            tmp_file = tmp_file.substr(tmp_file.find_last_of("/")+1, tmp_file.find_last_of(".") - tmp_file.find_last_of("/"));
-            tmp_file +="cpp";
-            FILE * cpp_file = fopen(tmp_file.c_str(), "w");
-
-            // cas où la création du fichier échoue
+            // if file creation fails
             if(cpp_file == NULL) {
-                cerr << tmp_file << ": creation failed;" << endl;
+                cerr << output_file.second << ": creation failed;" << endl;
                 return false;
             }
 
@@ -100,12 +140,13 @@ bool parse_to_cpp(vector<char*> fic_ezl, string &input_files){
 
             // fermerture du fichier cpp
             fclose(cpp_file);
-            input_files+= tmp_file + " ";
+            outputFiles+= output_file.second + " ";
 
-            cout << "\033[1;36m ====== Parsing of *"+ tmp_file +"* ended. ======\033[0m" << endl;
+            cout << "\033[1;36m ====== Parsing of *"+ output_file.second +"* ended. ======\033[0m" << endl;
             cout << endl;
         }
     }
+    delete &compiled_files;
     return true;
 }
 
@@ -117,29 +158,25 @@ void display(vector<char*> fic_ezl){
 
 /**
  * Compile les fichiers cpp générés
- * @brief exec_cpp
- * @param gpp_command commande gpp execute
- * @param output_name nom de l'output
+ * @brief Run the generated program
+ * @param gppCommand commande gpp execute
+ * @param outputName nom de l'output
  */
-int exec_cpp(std::string & gpp_command, std::string & output_name, const std::string & args){
-    //cout << "commande cpp: " << gpp_command << endl;
+int exec_cpp(std::string & gppCommand, std::string & outputName, const std::string & args){
+    //cout << "commande cpp: " << gppCommand << endl;
+    gppCommand+= " -o "+ outputName;
     int system_return= EXIT_SUCCESS;
     if(help != 1){
         if(directinput != 1){
-            cout << gpp_command << endl;
-            system_return= system(gpp_command.c_str());
+            cout << gppCommand << endl;
+            system_return= system(gppCommand.c_str());
             if (system_return != 0) {
-                cerr << "Return of system command * " << gpp_command.c_str()  <<"* : " << system_return<< endl;
+                cerr << "Return of system command * " << gppCommand.c_str()  <<"* : " << system_return<< endl;
             }
             
             // Compilation success is independant of execution success
             if(no_execution != 1){
-                string tmp_output= "./";
-                if(output_name != ""){
-                    tmp_output+= output_name;
-                } else {
-                    tmp_output+= "a.run";
-                }
+                string tmp_output= "./"+ outputName;
                 system((tmp_output +" "+ args).c_str());
             }
         }
@@ -174,7 +211,7 @@ int main(int argc, char ** argv) {
             {"brief",			no_argument,	&verbose_flag, 	0},
             {"noexec",			no_argument,	&no_execution, 	1},
             {"nocpp",			no_argument,	&no_cpp, 	1},
-            {"directinput",			no_argument,	&directinput,	1},
+            {"directinput",		no_argument,	&directinput,	1},
             
             //autres
             {"help",			no_argument,		0, 	'h'},
@@ -225,7 +262,6 @@ int main(int argc, char ** argv) {
             case 'o':
                 no_options = false;
                 //cout << "Indicates the name of the output file" << endl;
-                gpp_command += " -o "+ string(optarg);
                 output_name = string(optarg);
                 break;
             case 'v':
@@ -264,7 +300,7 @@ int main(int argc, char ** argv) {
 
     // tableaux des extensions des fichiers a traiter
     int nb_ext = 2;
-    const string ext_ez[nb_ext] = {".ez", ".ezl"};
+    const string ext_ez[] = {".ez", ".ezl"};
 
     //ajout des fichiers a parser
     for(int i = 0; i < nb_ext; ++i){
@@ -287,7 +323,7 @@ int main(int argc, char ** argv) {
     if(!directinput) {
         string input_files = "";
         // If parsing from EZ to CPP fails, we stop the program
-       if (!parse_to_cpp(fic_ezl, input_files) || existing_parsing_error) {
+       if (!parse_to_cpp(fic_ezl, input_files, output_name) || existing_parsing_error) {
             cerr<< "Error encountered during compilation, correct them, then re-run";
             exit(EXIT_FAILURE);
         }

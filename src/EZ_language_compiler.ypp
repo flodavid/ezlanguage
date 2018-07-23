@@ -54,7 +54,7 @@
 
 bool existing_parsing_error= false;
 
-extern FILE* yyin;
+extern FILE* output_file;
 
 using namespace std;
 
@@ -103,19 +103,19 @@ int yycolumn = 1;
 %token<text> CONST VARIABLE SHARED LOCAL GLOBAL IS ARE           // variables declaration
 %token IMPORT INCLUDE LIBRARY EXTERN						                  // module import - c++ code
 %token IF THEN ELSE   						  // if else 
-%token WHEN CASE DEFAULT ENDWHEN	  // switch case ...
-%token WHILE ENDWHILE							  // while .. do ...
-%token REPEAT UNTIL ENDREPEAT 			// do .. while ...functions
+%token WHEN CASE DEFAULT ENDWHEN    // switch case ...
+%token WHILE ENDWHILE               // while .. do ...
+%token REPEAT UNTIL ENDREPEAT       // do .. while ...functions
 %token FOR IN DO STEP 
 %token RETURN FALSE TRUE            // words
 %token FUNCTION PROCEDURE RETURNS	 	// functions
 %token PRINT INPUT                  // Print and get input text 
 %token OPERATOR                     // Overloading
-%token BEGINN END PROGRAM      // can not use 'BEGIN'
+%token BEGINN END PROGRAM MODULE    // can not use 'BEGIN'
 %token END_OF_FILE
-%token CLASS  DESTRUCT			        // classes
-%token PARAMETERS AS							  // program arguments	
-%token REGEX SEARCH MATCH 					// Regular expression
+%token CLASS  DESTRUCT              // classes
+%token PARAMETERS AS                // program arguments	
+%token REGEX SEARCH MATCH           // Regular expression
 
 %token LENGTH TOUPPERCASE TOLOWERCASE
 %token SUBSTRING SPLIT STRIP
@@ -135,7 +135,8 @@ int yycolumn = 1;
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS		// Operators
 
 // Basic elements
-%type<tree> program
+%type<tree> module
+%type<text> module.decl
 %type<import> program.imports import
 %type<classNode> program.classes class
 %type<var>  program.variables variable
@@ -151,7 +152,7 @@ int yycolumn = 1;
 %type<text> function.returnedType
 %type<declaration> declaration
 %type<genericCont> containerDeclaration
-%type<var>  simpleVariable variable_construct
+%type<var>  simpleVariable
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator equalityOperator
 %type<functionCall> simpleFunction functionCall stringFunction
 %type<functionCallExpr> functionCallExpr
@@ -185,10 +186,8 @@ int yycolumn = 1;
 %debug
 %error-verbose
 
-%start program
+%start module
 %%
-
-// TODO add modules (replace "program" by "module")
 
 // baseROOT:
 //   PROGRAM NAME next_line imports declaration_arguments program.classes program.variables // 7 emt
@@ -196,28 +195,27 @@ int yycolumn = 1;
 
 //   }
 // ;
-
-program:
-  PROGRAM NAME next_line program.imports .jump program.parameters program.classes program.variables // 8 emt
+module:
+  module.decl program.imports .jump program.parameters program.classes program.variables // 8 emt
   // baseROOT
   program.methods NAME BACK_LINE .statement_sequence END lineend END_OF_FILE
-	{
-    if ($10 != $2) {
+  {
+    if ($8 != $1) {
         cerr<< "Program and main procedure should have same names"<< endl;
         exit(EXIT_FAILURE);
     }
 
     // Symbols naming
-    Import* p_imports = $4;
-    CommonVar* p_decl_parameters = $6;
-    Class* p_decl_classes = $7;
-    Variable* p_decl_vars = $8;
-    Method* p_decl_methods = $9;
-    Instruction* p_prog_instr = $12;
+    Import* p_imports = $2;
+    CommonVar* p_decl_parameters = $4;
+    Class* p_decl_classes = $5;
+    Variable* p_decl_vars = $6;
+    Method* p_decl_methods = $7;
+    Instruction* p_prog_instr = $10;
+    
+    // Progam and Main declaration
     Main* main= new Main(p_decl_parameters, p_prog_instr);
-
-    // Progam declaration and nodes relations
-    Program *racine = new Program($2, p_imports, p_decl_classes, p_decl_vars,
+    Program *racine = new Program($1, p_imports, p_decl_classes, p_decl_vars,
         p_decl_methods, main);
 
     // Translation
@@ -226,11 +224,11 @@ program:
 
     // debug log
     info(
-"\n        TRANSLATION\n"
-"======================>>>>>\n"
-+ translation +
-"\n<<<<<======================\n"
-"      END TRANSLATION\n", AT);
+    "\n        TRANSLATION\n"
+    "======================>>>>>\n"
+    + translation +
+    "\n<<<<<======================\n"
+    "      END TRANSLATION\n", AT);
     // output the translation in the output file (should result a valid cpp file)
     fputs(translation.c_str(), yyout);
     
@@ -238,6 +236,46 @@ program:
     // return 0; // other file
   }
   // | baseROOT NAME BACK_LINE statement_sequence END lineend END_OF_FILE
+| module.decl program.imports .jump program.classes program.variables // 6 emt
+  // baseROOT
+  program.methods END_OF_FILE
+  {
+    // Symbols naming
+    Import* p_imports = $2;
+    Class* p_decl_classes = $4;
+    Variable* p_decl_vars = $5;
+    Method* p_decl_methods = $6;
+
+    // Progam declaration and nodes relations
+    Module *root = new Module($1, p_imports, p_decl_classes, p_decl_vars,
+        p_decl_methods);
+
+    // Translation
+    const std::string & translation= root->translate();
+    delete root;
+
+    // debug log
+    info(
+    "\n        TRANSLATION\n"
+    "======================>>>>>\n"
+    + translation +
+    "\n<<<<<======================\n"
+    "      END TRANSLATION\n", AT);
+    // output the translation in the output file (should result a valid cpp file)
+    fputs(translation.c_str(), yyout);
+    
+    // return 1; // No other file
+    return 0; // other file
+  }
+;
+
+module.decl:
+  PROGRAM NAME next_line {
+    $$ = $2;
+  }
+| MODULE NAME next_line {
+    $$ = $2;
+  }
 ;
 
 .jump:
@@ -553,17 +591,17 @@ method.parameters:
   /* empty */
   { $$ = nullptr; }
 | parameters 
- 	{ $$ = $1; }
+   { $$ = $1; }
 ;
 
 parameters:
   parameter
- 	{ $$ = $1; }
+   { $$ = $1; }
 | parameter COMMA parameters
- 	{
+   {
     $1->addRightChild($3);
     $$ = $1;
- 	}
+   }
 // | names ARE type { /* TODO multiple parameters logic */ }
 // TODO handle SHARED parameters
 // | names ARE SHARED type affect
@@ -1130,7 +1168,7 @@ numericExpression:
     $1->addRightChild($3);
     FunctionCall* power = new FunctionCall("pow", $1);
     FunctionCallExpression* powerExpression = new FunctionCallExpression(power);
-    $$ = $1;
+    $$ = powerExpression;
   }
 ;
 

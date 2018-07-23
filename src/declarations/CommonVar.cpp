@@ -32,7 +32,7 @@ string CommonVar::translateType() const
 
 string CommonVar::preTranslate() const
 {
-    string res = "";
+    string res = indentationText();
     if(mIsConst){
         res+= "const ";
     }
