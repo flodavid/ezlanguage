@@ -23,7 +23,7 @@ YACC_FLAGS = -t --verbose
 # --- FAIRE UN FICHIER CPP POUR CHAQUE FICHIER H S'IL Y A UNE CLASSE DEDANS ---
 
 # Core
-MOD_CPP = Node.cpp Program.cpp TranslatedNode.cpp EmptyNode.cpp ConvertNode.cpp
+MOD_CPP = Node.cpp Module.cpp Program.cpp TranslatedNode.cpp ConvertNode.cpp
 # Conditional expression
 MOD_CPP += Expression.cpp BooleanExpression.cpp BooleanValue.cpp ConditionalExpression.cpp
 # Divers
@@ -194,8 +194,11 @@ full_tests: all
 	bash tests/full_tests.sh
 
 debug: all
-	valgrind bin/EZ_language_compiler tests/1_main_simple.ez -o 1_main_simple.run
- 	
+	valgrind bin/EZ_language_compiler tests/1_main_simple.ez -o 1_main_simple.run --args="--mynumber=4 --mystring=\"test\""
+
+leaks: all
+	valgrind --leak-check=full bin/EZ_language_compiler tests/1_main_simple.ez -o 1_main_simple.run --args="--mynumber=3 --mystring=\"hell\""
+
 doc:
 	doxygen Doxyfile
 	@echo -e "\n\033[1;33mOuverture de la documentation ...\033[0m"

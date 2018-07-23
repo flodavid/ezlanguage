@@ -2,7 +2,6 @@
 #define CLASS_H
 
 #include "CommonDeclaration.h"
-#include "../modules/EmptyNode.h"
 #include "../hash_table/ClassHashed.h"
 #include "Method.h"
 #include "Variable.h"

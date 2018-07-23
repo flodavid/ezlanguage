@@ -28,6 +28,7 @@ public:
      */
     Main(CommonVar * parameters, Instruction * prgm_intructions);
     
+    ~Main();
 
 public:
     /**

@@ -12,6 +12,12 @@ Main::Main(CommonVar * parameters, Instruction * prgm_intructions):
     addParameters(new Parameter("argv", "char **"));
 }
 
+Main::~Main()
+{
+    if (mMainOpts) delete mMainOpts;
+}
+
+
 unsigned Main::argumentsNumber() const
 {
     const Node* currentParam= mMainOpts;
@@ -172,7 +178,7 @@ string Main::createParsingParameterCode(string * input_arguments_summary) const
         // Finalize call_arguments_summary
         call_arguments_summary+= call_arguments_summary_flags +");\n";
 
-        return prgm_parameters + opts_flags +"\n"+ opts_parsing + call_arguments_summary + check_all_initialized; // TODO correct arguments_summary and uncomment
+        return prgm_parameters + opts_flags +"\n"+ opts_parsing + call_arguments_summary + check_all_initialized;
     }
     else return "";
 }

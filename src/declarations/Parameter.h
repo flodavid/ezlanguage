@@ -14,13 +14,13 @@ private:
     bool mIsLastOneOfList;
 
 public:
-	/**
-	 * @brief Constructor with parameters
-	 * @param name : name of the variable
-	 * @param type : type of the variable
-	 * @param content : the value that will be affected to the variable
-	 * @param isConst : if the variable is const
-	 */
+    /**
+     * @brief Constructor with parameters
+     * @param name : name of the variable
+     * @param type : type of the variable
+     * @param content : the value that will be affected to the variable
+     * @param isConst : if the variable is const
+     */
     Parameter(const std::string & name, const std::string & type,
             Expression* content = nullptr, bool isConst = false);
     

@@ -15,6 +15,7 @@
 #include "./declarations/Array.h"
 #include "./declarations/Class.h"
 #include "./declarations/Container.h"
+#include "./declarations/Import.h"
 #include "./declarations/Parameter.h"
 #include "./declarations/Method.h"
 #include "./declarations/Variable.h"
@@ -55,6 +56,7 @@ typedef struct s_node_types {
     Array* array;
     Class* classNode;
     Container* cont;
+    Import* import;
     Method* method;
     // Parameter* param; TODO define an abstract class that is inherited by parameters classes ?
     CommonVar* param;

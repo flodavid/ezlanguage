@@ -1,11 +1,16 @@
 #include "Method.h"
-#include "../modules/EmptyNode.h"
 
 using namespace std;
 
 Method::Method(const string & name, Node * parameters, Instruction * instructions):
     CommonDeclaration(instructions, name), mParameters(parameters)
 { }
+
+Method::~Method()
+{
+    if (mParameters) delete mParameters;
+}
+
 
 const Node* Method::getParameters() const
 {

@@ -11,16 +11,16 @@ For::For(const string & iterator, Expression* start, Expression* end,
     mIndEnd(end), mStep(step), mContainerName("")
 {}
 
-For::For (Node * instructions, const string & iterator, const string & container):
+For::For(Node * instructions, const string & iterator, const string & container):
     Instruction(instructions), mIterator(new Variable(false, iterator, "auto")),
     mIndEnd(nullptr), mStep(nullptr), mContainerName(container)
 {}
 
 For::~For()
-{	
+{
     delete mIterator;
-    delete mIndEnd;
-    delete mStep;
+    if (mIndEnd) delete mIndEnd;
+    if (mStep) delete mStep;
 }
 
 //forall i in 1..10 (step X)

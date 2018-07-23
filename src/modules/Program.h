@@ -1,28 +1,30 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
+#pragma once
 
-//special files no to forget to import
-#include "Node.h"
+#include "Module.h"
+#include "../declarations/Class.h"
+#include "../declarations/Import.h"
+#include "../declarations/Variable.h"
+#include "../declarations/Method.h"
+#include "../declarations/Main.h"
 
 /**
  * @brief Represent the root node of the tree
  * 
  * @author Florian DAVID
  */
-class Program : public Node {
-
-private:
-    std::string mName;
+class Program : public Module {
 
 public:
     
     /**
      * @brief constructor with parameters
-     * @param right : right son
-     * @param prg_name : name of the program
-     * TODO construct program as cpp 'main' (instead of particular procedure, should inherit)
+     * @param name: Name of the program
+     * @param import: Imports used by the program
+     * @param right: Diverse declarations
+     * @param main: Main function of the program (starting point)
      */
-    Program(std::string & name, Node* imports, Node* right);
+    Program(std::string & name, Import* imports, Class* classes, Variable* vars,
+        Method* methods, Main* main);
     
 
     /**
@@ -30,22 +32,5 @@ public:
      * @return the name of the node. Defined at class creation
      */
     virtual inline const std::string getName() const { return "Program"; }
-    
-    /**
-     * @brief Translate the begining part of the Repeat
-     * @return a string containing the C++ code of the instruction
-     * 
-     * Defines program imports and functions definitions
-     */
-    virtual std::string preTranslate() const;
-
-    /**
-     * @brief Translate the begining part of the Repeat
-     * @return a string containing the C++ code of the instruction
-     * 
-     * Defines program imports and functions definitions
-     */
-    virtual std::string postTranslate() const;
 
 };
-#endif

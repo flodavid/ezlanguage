@@ -12,7 +12,7 @@ ArrayAccess::ArrayAccess(const string & arrayN, Expression * expression):
 
 ArrayAccess::~ArrayAccess()
 {
-    delete mExpression;
+    if (mExpression) delete mExpression;
 }
 
 

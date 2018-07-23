@@ -1,5 +1,4 @@
-#ifndef BOOLEANEXPRESSION_H
-#define BOOLEANEXPRESSION_H
+#pragma once
 
 #include <string>
 
@@ -19,7 +18,7 @@ class BooleanExpression : public ConditionalExpression {
 
 private:
     Operator* mOperator;
-    const Expression* value;
+    const Expression* mValue;
     // The nodes should be a ConditionalExpression or expression (as string in TranslatedNode)
     const Node * left_part; 
     const Node * right_part;
@@ -74,5 +73,3 @@ public:
      */
     virtual std::string preTranslate() const;
 };
-
-#endif

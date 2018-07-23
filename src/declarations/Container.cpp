@@ -20,6 +20,7 @@ Container::~Container()
     if (mSize) delete mSize;
 }
 
+
 string Container::translateType() const
 {
     return "std::"+ getContainerType() + "<" + CommonVar::translateType() + ">";

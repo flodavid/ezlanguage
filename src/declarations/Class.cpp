@@ -35,7 +35,10 @@ Class::Class(ClassHashed *c, Variable * variables ):
 { }
 
 Class::~Class()
-{ }
+{
+    // if (mVariables) delete mVariables; // TODO check why does it provoc a SIGSEGV
+    if (mClass) delete mClass;
+}
 
 ClassHashed * Class::get_class() const{
     return mClass;

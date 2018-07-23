@@ -14,7 +14,6 @@
 #include "../src/hash_table/VariableHashed.h"
 #include "../src/main.cpp"	 // we start from ../obj because it's important
 #include "../src/modules/Node.h"
-#include "../src/modules/EmptyNode.h"
 
 // Modules
 #include "../src/declarations/Array.h"
@@ -137,7 +136,9 @@ int yycolumn = 1;
 
 // Basic elements
 %type<tree> program
-%type<tree> program.imports program.classes program.variables
+%type<import> program.imports import
+%type<classNode> program.classes class
+%type<var>  program.variables variable
 %type<method> program.methods
 %type<declaration> method.parameters
 %type<param> program.parameters parameter_sequence parameter .parameters parameters
@@ -148,10 +149,9 @@ int yycolumn = 1;
 %type<elseNode> .else
 %type<returnNode> function.return
 %type<text> function.returnedType
-%type<classNode> class
 %type<declaration> declaration
 %type<genericCont> containerDeclaration
-%type<var>  simpleVariable variable variable_construct
+%type<var>  simpleVariable variable_construct
 %type<opeNode> assignmentOperator arithmeticOperator logicalOperator relationalOperator equalityOperator
 %type<functionCall> simpleFunction functionCall stringFunction
 %type<functionCallExpr> functionCallExpr
@@ -161,7 +161,6 @@ int yycolumn = 1;
 %type<expr> arguments .argumentsList argumentElement
 %type<instr> printing input repeat for while // when
 %type<instr> statement statement_sequence .statement_sequence
-%type<tree> import
 %type<text> type .scope // TODO constancy
 %type<condExpr> conditionalExpression boolean
 %type<expr> expression stringExpressions stringExpression integerExpression numericExpression basicExpressions basicExpression
@@ -169,8 +168,8 @@ int yycolumn = 1;
 %type<arrayAccess> containerAccess
 
 // Non basic elements
-%type<expr> objectDotOperator
-%type<tree> streamedExpressions .argumentsSeparated
+%type<expr> objectDotOperator .argumentsSeparated
+%type<tree> streamedExpressions
 %type<expr> .affect
 %type<var> class.variables
 %type<method> class.methods
@@ -188,6 +187,8 @@ int yycolumn = 1;
 
 %start program
 %%
+
+// TODO add modules (replace "program" by "module")
 
 // baseROOT:
 //   PROGRAM NAME next_line imports declaration_arguments program.classes program.variables // 7 emt
@@ -207,24 +208,17 @@ program:
     }
 
     // Symbols naming
-    Node* p_imports = $4;
+    Import* p_imports = $4;
     CommonVar* p_decl_parameters = $6;
-    Node* p_decl_classes = $7;
-    Node* p_decl_vars = $8;
+    Class* p_decl_classes = $7;
+    Variable* p_decl_vars = $8;
     Method* p_decl_methods = $9;
     Instruction* p_prog_instr = $12;
     Main* main= new Main(p_decl_parameters, p_prog_instr);
 
     // Progam declaration and nodes relations
-    Program *racine = new Program($2, p_imports, p_decl_classes);
-    
-    p_decl_classes->addRightChild(p_decl_vars);
-    if (p_decl_methods) {
-    p_decl_vars->addRightChild(p_decl_methods);
-    p_decl_methods->addRightChild(main);
-    } else {
-        p_decl_vars->addRightChild(main);
-    }
+    Program *racine = new Program($2, p_imports, p_decl_classes, p_decl_vars,
+        p_decl_methods, main);
 
     // Translation
     const std::string & translation= racine->translate();
@@ -264,10 +258,13 @@ next_line:
 // import modules or libraries
 program.imports:
   .jump
-  { $$= new EmptyNode; }
+  { $$= nullptr; }
 | program.imports import {
-    $1->addRightChild($2);
-    $$ = $1;
+    if($1) {
+      debug("import declared: "+ $1->getDetails(), AT);
+      $1->addRightChild($2);
+      $$ = $1;
+    } else $$ = $2;
   }
 ;
 
@@ -283,18 +280,20 @@ program.parameters:
 
 program.classes:
   .jump
-  { $$= new TranslatedNode("\n"); }
+  { $$= nullptr; }
 | program.classes class
-	{
-    debug("class declared: "+ $1->getDetails(), AT);
-		$1->addRightChild($2);
-		$$ = $1;
-	}
+  {
+    if($1) {
+      debug("class declared: "+ $1->getDetails(), AT);
+      $1->addRightChild($2);
+      $$ = $1;
+    } else $$ = $2;
+  }
 ;
 
 // declarations_list:
 //   // /* empty */
-//   // { $$ = new EmptyNode; }
+//   // { $$ = nullptr; }
 // program.variables program.methods
 //   {
 //     $1->addRightChild($2);
@@ -333,12 +332,15 @@ import:
 /* declarations_list */
 program.variables:
   /* empty */
-  { $$ = new EmptyNode; }
+  { $$ = nullptr; }
 | program.variables BACK_LINE variable
-	{
-    $1->addRightChild($3);
-	  $$ = $1;
-	}
+  {
+    if($1) {
+      debug("program variable declared: "+ $1->getDetails(), AT);
+      $1->addRightChild($3);
+      $$ = $1;
+    } else $$ = $3;
+  }
 ;
 
 /* declarations_list */
@@ -346,12 +348,12 @@ program.methods:
   /* empty */
   { $$ = nullptr; }
 | program.methods method .jump
-	{
+  {
     if ($1) {
-		$1->addRightChild($2);
-		$$ = $1;
+    $1->addRightChild($2);
+    $$ = $1;
     } else $$ = $2;
-	}
+  }
 ;
 
 parameter_sequence:
@@ -887,22 +889,25 @@ arguments:
 // arguments are separated by commas : they have a comma before, except the first one
 .argumentsList:
   /* empty */ // No argument
-  { $$ = new EmptyNode; }
+  { $$ = nullptr; }
 | argumentElement .argumentsSeparated {// One or more arguments
-    $1->addRightChild($2);
-    $$ = $1;
+    if ($1 != nullptr) {
+      $1->addRightChild($2);
+      $$ = $1;
+    } else $$ = $2;
   }
 ;
 
 .argumentsSeparated:
   /* empty */
-  { $$ = new EmptyNode; }
+  { $$ = nullptr; }
 | .argumentsSeparated COMMA argumentElement
   {
     TranslatedNode* comma= new TranslatedNode(", ", $3);
-
-    $1->addRightChild(comma);
-    $$ = $1;
+    if ($1 != nullptr) {
+      $1->addRightChild(comma);
+      $$ = $1;
+    } else $$ = comma;
   }
 ;
 

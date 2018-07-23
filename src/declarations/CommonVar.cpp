@@ -14,6 +14,7 @@ CommonVar::CommonVar(const string & name, const string & type,
 CommonVar::~CommonVar()
 {
     if(mAffect) delete mAffect;
+    delete hashed;
 }
 
 
