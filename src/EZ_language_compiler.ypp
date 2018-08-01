@@ -135,8 +135,7 @@ int yycolumn = 1;
 %left NE LT LE GT GE MULT DIVISE AND OR XOR NOT MOD POW ABS		// Operators
 
 // Basic elements
-%type<tree> module
-%type<text> module.decl
+%type<text> module.decl program.decl
 %type<import> program.imports import
 %type<classNode> program.classes class
 %type<var>  program.variables variable
@@ -196,7 +195,7 @@ int yycolumn = 1;
 //   }
 // ;
 module:
-  module.decl program.imports .jump program.parameters program.classes program.variables // 8 emt
+  program.decl program.imports .jump program.parameters program.classes program.variables // 8 emt
   // baseROOT
   program.methods NAME BACK_LINE .statement_sequence END lineend END_OF_FILE
   {
@@ -232,8 +231,8 @@ module:
     // output the translation in the output file (should result a valid cpp file)
     fputs(translation.c_str(), yyout);
     
-    return 1; // No other file
-    // return 0; // other file
+    // return 1; // No other file
+    return 0; // other file
   }
   // | baseROOT NAME BACK_LINE statement_sequence END lineend END_OF_FILE
 | module.decl program.imports .jump program.classes program.variables // 6 emt
@@ -269,11 +268,14 @@ module:
   }
 ;
 
-module.decl:
+program.decl:
   PROGRAM NAME next_line {
     $$ = $2;
   }
-| MODULE NAME next_line {
+;
+
+module.decl:
+  MODULE NAME next_line {
     $$ = $2;
   }
 ;
