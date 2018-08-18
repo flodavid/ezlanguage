@@ -613,111 +613,6 @@
       </dict>
       <dict>
         <key>begin</key>
-        <string>^\s*(?=@\s*[[:alpha:]_][[:alnum:]_]*(?:\s*\.\s*[[:alpha:]_][[:alnum:]_]*)*\s*\()</string>
-        <key>comment</key>
-        <string>a decorator may be a function call which returns a decorator.</string>
-        <key>end</key>
-        <string>(\))</string>
-        <key>endCaptures</key>
-        <dict>
-          <key>1</key>
-          <dict>
-            <key>name</key>
-            <string>punctuation.definition.arguments.end.ezlanguage</string>
-          </dict>
-        </dict>
-        <key>name</key>
-        <string>meta.function.decorator.ezlanguage</string>
-        <key>patterns</key>
-        <array>
-          <dict>
-            <key>begin</key>
-            <string>(?=(@)\s*[[:alpha:]_][[:alnum:]_]*(?:\s*\.\s*[[:alpha:]_][[:alnum:]_]*)*\s*\()</string>
-            <key>beginCaptures</key>
-            <dict>
-              <key>1</key>
-              <dict>
-                <key>name</key>
-                <string>punctuation.definition.decorator.ezlanguage</string>
-              </dict>
-            </dict>
-            <key>contentName</key>
-            <string>entity.name.function.decorator.ezlanguage</string>
-            <key>end</key>
-            <string>(?=\s*\()</string>
-            <key>patterns</key>
-            <array>
-              <dict>
-                <key>include</key>
-                <string>#dotted_name</string>
-              </dict>
-            </array>
-          </dict>
-          <dict>
-            <key>begin</key>
-            <string>(\()</string>
-            <key>beginCaptures</key>
-            <dict>
-              <key>1</key>
-              <dict>
-                <key>name</key>
-                <string>punctuation.definition.arguments.begin.ezlanguage</string>
-              </dict>
-            </dict>
-            <key>contentName</key>
-            <string>meta.function.decorator.arguments.ezlanguage</string>
-            <key>end</key>
-            <string>(?=\))</string>
-            <key>patterns</key>
-            <array>
-              <dict>
-                <key>include</key>
-                <string>#keyword_arguments</string>
-              </dict>
-              <dict>
-                <key>include</key>
-                <string>$self</string>
-              </dict>
-            </array>
-          </dict>
-        </array>
-      </dict>
-      <dict>
-        <key>begin</key>
-        <string>^\s*(?=@\s*[[:alpha:]_][[:alnum:]_]*(?:\s*\.\s*[[:alpha:]_][[:alnum:]_]*)*)</string>
-        <key>contentName</key>
-        <string>entity.name.function.decorator.ezlanguage</string>
-        <key>end</key>
-        <string>(?=\s|$\n?|#)</string>
-        <key>name</key>
-        <string>meta.function.decorator.ezlanguage</string>
-        <key>patterns</key>
-        <array>
-          <dict>
-            <key>begin</key>
-            <string>(?=(@)\s*[[:alpha:]_][[:alnum:]_]*(\s*\.\s*[[:alpha:]_][[:alnum:]_]*)*)</string>
-            <key>beginCaptures</key>
-            <dict>
-              <key>1</key>
-              <dict>
-                <key>name</key>
-                <string>punctuation.definition.decorator.ezlanguage</string>
-              </dict>
-            </dict>
-            <key>end</key>
-            <string>(?=\s|$\n?|#)</string>
-            <key>patterns</key>
-            <array>
-              <dict>
-                <key>include</key>
-                <string>#dotted_name</string>
-              </dict>
-            </array>
-          </dict>
-        </array>
-      </dict>
-      <dict>
-        <key>begin</key>
         <string>(?&lt;=\)|\])\s*(\()</string>
         <key>beginCaptures</key>
         <dict>
@@ -1275,7 +1170,7 @@
             <key>end</key>
             <string>\n</string>
             <key>name</key>
-            <string>comment.line.number-sign.ezlanguage</string>
+            <string>comment.line.double-slash.ezlanguage</string>
           </dict>
         </array>
       </dict>
@@ -1292,32 +1187,56 @@
         <array>
           <dict>
             <key>begin</key>
-            <string>^\s*(?=[uU]?[rR]?""")</string>
+            <string>^\s*(?=[uU]?[rR]?/**)</string>
             <key>end</key>
-            <string>(?&lt;=""")</string>
+            <string>(?&lt;=*/)</string>
             <key>name</key>
             <string>comment.block.ezlanguage</string>
             <key>patterns</key>
             <array>
-              <dict>
-                <key>include</key>
-                <string>#string_quoted_double</string>
-              </dict>
+              <!-- <dict>
+                <key>begin</key>
+                <string>/**</string>
+                <key>beginCaptures</key>
+                <dict>
+                  <key>0</key>
+                  <dict>
+                    <key>name</key>
+                    <string>punctuation.definition.comment.ezlanguage</string>
+                  </dict>
+                </dict>
+                <key>end</key>
+                <string>*/</string>
+                <key>name</key>
+                <string>comment.block.ezlanguage</string>
+              </dict> -->
             </array>
           </dict>
           <dict>
             <key>begin</key>
-            <string>^\s*(?=[uU]?[rR]?''')</string>
+            <string>^\s*(?=[uU]?[rR]?/*)</string>
             <key>end</key>
-            <string>(?&lt;=''')</string>
+            <string>(?&lt;=*/)</string>
             <key>name</key>
             <string>comment.block.ezlanguage</string>
             <key>patterns</key>
             <array>
-              <dict>
-                <key>include</key>
-                <string>#string_quoted_single</string>
-              </dict>
+              <!-- <dict>
+                <key>begin</key>
+                <string>/**</string>
+                <key>beginCaptures</key>
+                <dict>
+                  <key>0</key>
+                  <dict>
+                    <key>name</key>
+                    <string>punctuation.definition.comment.ezlanguage</string>
+                  </dict>
+                </dict>
+                <key>end</key>
+                <string>*/</string>
+                <key>name</key>
+                <string>comment.block.ezlanguage</string>
+              </dict> -->
             </array>
           </dict>
         </array>

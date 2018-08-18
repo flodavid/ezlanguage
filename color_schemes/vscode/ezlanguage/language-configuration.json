@@ -13,14 +13,16 @@
     ],
     // symbols that are auto closed when typing
     "autoClosingPairs": [
-        ["{", "}"],
-        ["begin", "end"],
-        ["do", "end"],
-        ["then", "end"],
-        ["[", "]"],
-        ["(", ")"],
-        ["\"", "\""],
-        ["'", "'"]
+        { "open": "{", "close": "}" },
+        { "open": "begin", "close": "end" },
+        { "open": "do", "close": "end" },
+        { "open": "then", "close": "end" },
+        { "open": "[", "close": "]" },
+        { "open": "(", "close": ")" },
+        { "open": "\"", "close": "\"" },
+        { "open": "'", "close": "'" },
+        { "open": "/*", "close": " */", "notIn": ["string"] },
+        { "open": "/**", "close": " */", "notIn": ["string"] }
     ],
     // symbols that that can be used to surround a selection
     "surroundingPairs": [
