@@ -1,5 +1,27 @@
 # Compiler used
-CC = g++-7
+CC = g++
+GCCVERSIONGTEQ5 := $(shell expr `g++ -dumpversion | cut -f1 -d.` \< 5)
+CFLAGS = -g
+
+ifeq "$(GCCVERSIONLT5)" "1"
+    GCC5INSTALLED = $(shell expr `g++-5 -dumpversion | cut -f1 -d.` \= 5)
+	ifeq "$(GCC5INSTALLED)" "1"
+		CC = g++-5
+	else
+		GCC6INSTALLED = $(shell expr `g++-6 -dumpversion | cut -f1 -d.` \= 6)
+		ifeq "$(GCC6INSTALLED)" "1"
+			CC = g++-6
+		else
+			GCC7INSTALLED = $(shell expr `g++-7 -dumpversion | cut -f1 -d.` \= 7)
+			ifeq "$(GCC7INSTALLED)" "1"
+				CC = g++-7
+			else
+				CC = INVALID_G++_VERSION-UPGRADE_TO_g++-5_MIN
+			endif
+		endif
+	endif
+endif
+
 # Compilation flags
 CC_FLAGS = -Wall -std=c++11 -ggdb
 EXT_SRC = 
@@ -9,7 +31,7 @@ CC_MOD_FLAGS = -MM #-MP
 LEX_EXT = lex
 # Lex file interpreter : lexical analysis
 LEX = flex
-LEX_FlAGS =
+LEX_FLAGS =
 
 # Yacc files extension (.XXX)
 YACC_EXT = ypp

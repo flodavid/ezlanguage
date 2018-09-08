@@ -8,7 +8,7 @@
 #include "aide.h"
 #include "./hash_table/ScopeHashTable.h"
 
-#define GPP_EXE "g++-7"
+#define GPP_MINVER "5"
 
 using namespace std;
 
@@ -279,6 +279,29 @@ int exec_cpp(std::string & gppCommand, const std::string & args){
     return system_return;
 }
 
+std::string getGppExe() {
+    std::string GPP_EXE = "g++";
+
+    bool GCCVERSIONLTQ5= system("expr `g++ -dumpversion 2>nul | cut -f1 -d.` \\>= " GPP_MINVER " &>/dev/nul");
+    if (GCCVERSIONLTQ5) {
+        int GCC5INSTALLED = !system("g++-5 -dumpversion &>/dev/nul");
+        if (GCC5INSTALLED) { GPP_EXE = "g++-5"; }
+        else {
+            int GCC6INSTALLED = !system("g++-6 -dumpversion &>/dev/nul");
+            if (GCC6INSTALLED) GPP_EXE = "g++-6";
+            else {
+                int GCC7INSTALLED = !system("g++-7 -dumpversion &>/dev/nul");
+                if (GCC7INSTALLED) GPP_EXE = "g++-7";
+                else {
+                    cerr << "No valid g++ version found, please install g++ version " GPP_MINVER " to 7" << endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+    }
+    return GPP_EXE;
+}
+
 /**
  * Main function
  * @param argc: number of arguments to the compiler
@@ -288,13 +311,14 @@ int exec_cpp(std::string & gppCommand, const std::string & args){
 int main(int argc, char ** argv) {
     cout << endl;
     bool valid_options = true;
+    std::string GPP_EXE = getGppExe();
 
     // array of file extensions handled
     int nb_ext = 2;
     const string ext_ez[] = {".ez", ".ezl"};
 
     // Ligne de commande g++
-    string gpp_command = GPP_EXE " -std=c++11";
+    string gpp_command = GPP_EXE + " -std=c++11";
 
     // vecteurs des fichiers EZ à traiter
     vector<char*> fic_ezl;
@@ -403,10 +427,11 @@ int main(int argc, char ** argv) {
     if (return_code != 0) {
         cerr << "\nParsing to C++ succeeded, but compilation failed. Report the problem."
         "\nHINT: Maybe you used undeclared variable of function, or do not have the correct"
-        " version of g++ installed, the one expected is : '" GPP_EXE "'"<< endl;
+        " version of g++ installed, the one expected is : '" << GPP_EXE << "'"<< endl;
         #if DEBUG
-        cerr << "The g++ version is set by a pre-processor definition of 'GPP_EXE' into"
-        " main.cpp, you may want to change it to correct the problem" << endl;
+        cerr << 
+        // TODO "The g++ version is set by a pre-processor "
+        "definition of 'GPP_EXE' into main.cpp, you may want to change it to correct the problem" << endl;
         #endif
         return EXIT_FAILURE;
     } else return return_code;

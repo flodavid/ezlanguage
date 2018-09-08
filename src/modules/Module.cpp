@@ -28,8 +28,8 @@ string Module::preTranslate() const
 string Module::postTranslate() const {
     // Create a file containing all those general purpose functions
     return 
-"\#ifndef COMMON_FUNCTIONS\n"
-"\#define COMMON_FUNCTIONS\n"
+"\n#ifndef COMMON_FUNCTIONS\n"
+"#define COMMON_FUNCTIONS\n"
 "void "+ INPUT_FUNC_NAME +"(bool* input) {\n"
 "    std::string user_input;\n"
 "    std::cin >> user_input;\n"
@@ -80,6 +80,6 @@ string Module::postTranslate() const {
 "void "+ INPUT_FUNC_NAME +"(std::string* input) {\n"
 "    std::cin >> *input;\n"
 "}\n"
-"\#endif\n"
+"\n#endif\n"
 "\n";
 }
