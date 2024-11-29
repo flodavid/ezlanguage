@@ -1,5 +1,4 @@
-#ifndef CLASSDECLARATION_H
-#define CLASSDECLARATION_H
+#pragma once
 
 #include "HashElement.h"
 
@@ -58,16 +57,16 @@ class ClassHashed : public HashElement {
     * * * * * * * * * * * * * */
 
    /**
-    * Return the name of the base class or the empty string if there is not
-    * @return string@brief
+    * @brief Return the name of the base class or the empty string if there is not
+    * @return string
     * @author Johan Defaye
     */
     std::string getBaseClass() const {return _baseClass;}
 
 
     /**
-     * @brief Set the based class
-     * @param baseClass : name of the based class (string)
+     * @brief Set the base class
+     * @param baseClass : name of the base class (string)
      * @author Johan Defaye
      */
     void setBaseClass(const std::string & baseClass) {_baseClass = baseClass;}
@@ -79,7 +78,6 @@ class ClassHashed : public HashElement {
     * @author Johan Defaye
     */
     void print(std::ostream & flux) const;
-
 
 };
 
@@ -106,5 +104,3 @@ bool operator!=(const ClassHashed & c1, const ClassHashed & c2);
  * @author Johan Defaye
  */
 std::ostream& operator<<(std::ostream &flux, const ClassHashed & element);
-
-#endif
