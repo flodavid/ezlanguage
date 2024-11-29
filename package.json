@@ -2,13 +2,13 @@
     "name": "ezlanguage",
     "displayName": "ezlanguage highlighting",
     "description": "Ezlanguage syntax highlighting",
-    "version": "0.0.2",
+    "version": "0.0.1",
     "publisher": "flodavid",
     "engines": {
         "vscode": "^1.18.0"
     },
     "categories": [
-        "Programming Languages"
+        "Languages"
     ],
     "contributes": {
         "languages": [{

@@ -16,7 +16,7 @@ begin
     procedure hello()
         print "Function into classes working, i have been assigned '" int_member "' for its protection"
     end
-
+    
 end
 
 procedure hello_world()

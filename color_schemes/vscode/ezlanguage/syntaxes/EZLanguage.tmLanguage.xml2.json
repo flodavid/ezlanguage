@@ -1,0 +1,1926 @@
+{
+    "fileTypes": 
+    [
+      "ez",
+      "ezl",
+      "ezlanguage"
+    ],
+    "firstLineMatch": "^program[ \\\\t]+\\\\w+",
+    "keyEquivalent": "^~P",
+    "name": "EZLanguage",
+    "patterns": [
+      {
+        "match": "(?&lt;!|^import\\s)(\\.{3})",
+        "name": "support.type.ellipsis.ezlanguage"
+      },
+      {
+        "include": "#comment"
+      },
+      {
+        "comment": "Match identifiers in ALL_CAPS as constants, except when followed by `.`, `(`, `'`, or `\"`.",
+        "match": "\\b([[:upper:]_][[:upper:][:digit:]_]*)\\b(?![\\.\\(\\'\\\"])",
+        "name": "constant.other.allcaps.ezlanguage"
+      },
+      {
+        "match": "\\b(?i:(\\d+\\.\\d*(e[\\-\\+]?\\d+)?))(?=[^[:alpha:]_])",
+        "name": "constant.numeric.float.ezlanguage"
+      },
+      {
+        "match": "(?&lt;=[^[:alnum:]_])(?i:(\\.\\d+(e[\\-\\+]?\\d+)?))",
+        "name": "constant.numeric.float.ezlanguage"
+      },
+      {
+        "match": "\\b(?i:(\\d+e[\\-\\+]?\\d+))",
+        "name": "constant.numeric.float.ezlanguage"
+      },
+      {
+        "match": "\\b([1-9]+[0-9]*|0)",
+        "name": "constant.numeric.integer.decimal.ezlanguage"
+      },
+      {
+        "match": "\\b(true|false|True|False)\\b",
+        "name": "constant.language.ezlanguage"
+      },
+      {
+        "match": "\\b(global)\\b",
+        "name": "storage.modifier.$1.ezlanguage"
+      },
+      {
+        "match": "\\b(?:(import|include))\\b",
+        "name": "keyword.control.import.$1.ezlanguage"
+      },
+      {
+        "comment": "keyword operators that evaluate to True or False",
+        "match": "\\b(and|in|is|not|or)\\b",
+        "name": "keyword.operator.logical.ezlanguage"
+      },
+      {
+        "match": "&lt;\\=|&gt;\\=|\\=\\=|&lt;|&gt;|\\!\\=",
+        "name": "keyword.operator.comparison.ezlanguage"
+      },
+      {
+        "match": "\\+\\=|-\\=|\\*\\=|/\\=|%\\=|&amp;\\=|\\|\\=|\\^\\=|&gt;&gt;\\=|&lt;&lt;\\=|\\*\\*\\=|@\\=",
+        "name": "keyword.operator.assignment.augmented.ezlanguage"
+      },
+      {
+        "match": "\\+|\\-|\\*|\\*\\*|/|%|&lt;&lt;|&gt;&gt;|&amp;|\\||\\^|~|(?!^)@",
+        "name": "keyword.operator.arithmetic.ezlanguage"
+      },
+      {
+        "match": "\\=",
+        "name": "keyword.operator.assignment.ezlanguage"
+      },
+      {
+        "begin": "^\\s*(class)\\s+(?=[[:alpha:]_][[:alnum:]_]*\\s*\\:)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.type.class.ezlanguage"
+      }
+      },
+        "contentName": "entity.name.type.class.ezlanguage",
+        "end": "\\s*(:)",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.section.class.begin.ezlanguage"
+      }
+      },
+        "name": "meta.class.old-style.ezlanguage",
+        "patterns": 
+        [
+          {
+            "include": "#entity_name_class"
+      }
+    ]
+      },
+      {
+        "begin": "^\\s*(class)\\s+(?=[[:alpha:]_][[:alnum:]_]*\\s*\\()",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.type.class.ezlanguage"
+      }
+      },
+        "end": "(\\))\\s*(?:(\\:)|(.*$\n?))",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.inheritance.end.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "punctuation.section.class.begin.ezlanguage"
+      },
+          "3": 
+          {
+            "name": "invalid.illegal.missing-section-begin.ezlanguage"
+      }
+      },
+        "name": "meta.class.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?=[[:alpha:]_][[:alnum:]_]*)",
+            "contentName": "entity.name.type.class.ezlanguage",
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#entity_name_class"
+      }
+    ]
+      },
+          {
+            "begin": "(\\()",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.inheritance.begin.ezlanguage"
+      }
+      },
+            "contentName": "meta.class.inheritance.ezlanguage",
+            "end": "(?=\\)|:)",
+            "patterns": 
+            [
+              {
+                "begin": "(?&lt;=\\(|,)\\s*",
+                "contentName": "entity.other.inherited-class.ezlanguage",
+                "end": "\\s*(?:(,)|(?=\\)))",
+                "endCaptures": 
+                {
+                  "1": 
+                  {
+                    "name": "punctuation.separator.inheritance.ezlanguage"
+      }
+      },
+                "patterns": 
+                [
+                  {
+                    "include": "$self"
+      }
+    ]
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "begin": "^\\s*(class)\\s+(?=[[:alpha:]_][[:alnum:]_]*)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.type.class.ezlanguage"
+      }
+      },
+        "end": "(\\()|(\\s*$\n?|#.*$\n?)",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.inheritance.begin.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "invalid.illegal.missing-inheritance.ezlanguage"
+      }
+      },
+        "name": "meta.class.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?=[[:alpha:]_][[:alnum:]_]*)",
+            "contentName": "entity.name.type.class.ezlanguage",
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#entity_name_function"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "begin": "\\s*(procedureTODO)\\s+(?=[[:alpha:]_][[:alnum:]_]*\\s*\\()",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.modifier.async.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "storage.type.function.ezlanguage"
+      }
+      },
+        "end": "(\\:)",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.section.function.begin.ezlanguage"
+      }
+      },
+        "name": "meta.function.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?=[[:alpha:]_][[:alnum:]_]*)",
+            "contentName": "entity.name.function.ezlanguage",
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#entity_name_function"
+      }
+    ]
+      },
+          {
+            "begin": "(\\()",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.parameters.begin.ezlanguage"
+      }
+      },
+            "contentName": "meta.function.parameters.ezlanguage",
+            "end": "(?=\\)\\s*(?:\\:|-\\&gt;))",
+            "patterns": 
+            [
+              {
+                "include": "#annotated_arguments"
+      },
+              {
+                "include": "#keyword_arguments"
+      },
+              {
+                "include": "#comment"
+      },
+              {
+                "captures": 
+                {
+                  "1": 
+                  {
+                    "name": "variable.parameter.function.language.ezlanguage"
+      },
+                  "2": 
+                  {
+                    "name": "variable.parameter.function.ezlanguage"
+      },
+                  "3": 
+                  {
+                    "name": "punctuation.separator.parameters.ezlanguage"
+      }
+      },
+                "match": "\\b(?:(self|cls)|([[:alpha:]_][[:alnum:]_]*))\\s*(?:(,)|(?=[\n\\)]))"
+      }
+    ]
+      },
+          {
+            "begin": "(\\))\\s*(\\-&gt;)",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.parameters.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.separator.annotation.result.ezlanguage"
+      }
+      },
+            "end": "(?=\\:)",
+            "patterns": 
+            [
+              {
+                "include": "$self"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "begin": "\\s*(parameters)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.modifier.async.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "storage.type.function.ezlanguage"
+      }
+      },
+        "end": "\\s*($\n?|#.*$\n?|end\n?)"
+      },
+      {
+        "begin": "\\s*(code)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.modifier.async.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "storage.type.function.ezlanguage"
+      }
+      },
+        "end": "\\s*($\n?|#.*$\n?|end\n?)"
+      },
+      {
+        "begin": "\\s*(procedure)\\s+(?=[[:alpha:]_][[:alnum:]_]*)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.modifier.async.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "storage.type.function.ezlanguage"
+      }
+      },
+        "end": "(\\()|\\s*($\n?|#.*$\n?)",
+        "name": "meta.function.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?=[[:alpha:]_][[:alnum:]_]*)",
+            "contentName": "entity.name.function.ezlanguage",
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#entity_name_function"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "begin": "\\s*(function)\\s+(?=[[:alpha:]_][[:alnum:]_]*)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.modifier.async.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "storage.type.function.ezlanguage"
+      }
+      },
+        "end": "(\\()|\\s*($\n?|#.*$\n?)",
+        "name": "meta.function.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?=[[:alpha:]_][[:alnum:]_]*)",
+            "contentName": "entity.name.function.ezlanguage",
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#entity_name_function"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "comment": "Keywords that delimit flow blocks or alter flow from within a       block. This block should be matched *after* meta.function.ezlanguage to let 'async def' be matched *first*.",
+        "match": "(?x) \\b(elif | else | then | for | if | return | while | when | begin | end | do | or | program | (yield(?:\\s+from)?))\\b",
+        "name": "keyword.control.flow.ezlanguage"
+      },
+      {
+        "begin": "(lambda)(?=\\s+|:)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "storage.type.function.inline.ezlanguage"
+      }
+      },
+        "end": "(\\:)",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.parameters.end.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "punctuation.section.function.begin.ezlanguage"
+      },
+          "3": 
+          {
+            "name": "invalid.illegal.missing-section-begin.ezlanguage"
+      }
+      },
+        "name": "meta.function.inline.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "\\s+",
+            "contentName": "meta.function.inline.parameters.ezlanguage",
+            "end": "(?=\\:)",
+            "patterns": 
+            [
+              {
+                "include": "#keyword_arguments"
+      },
+              {
+                "captures": 
+                {
+                  "1": 
+                  {
+                    "name": "variable.parameter.function.ezlanguage"
+      },
+                  "2": 
+                  {
+                    "name": "punctuation.separator.parameters.ezlanguage"
+      }
+      },
+                "match": "\\b([[:alpha:]_][[:alnum:]_]*)\\s*(?:(,)|(?=[\n\\)\\:]))"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "begin": "(?&lt;=\\)|\\])\\s*(\\()",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.arguments.begin.ezlanguage"
+      }
+      },
+        "contentName": "meta.function-call.arguments.ezlanguage",
+        "end": "(\\))",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.arguments.end.ezlanguage"
+      }
+      },
+        "name": "meta.function-call.ezlanguage",
+        "patterns": 
+        [
+          {
+            "include": "#keyword_arguments"
+      },
+          {
+            "include": "$self"
+      }
+    ]
+      },
+      {
+        "include": "#builtin_types"
+      },
+      {
+        "include": "#builtin_functions_name"
+      },
+      {
+        "include": "#builtin_functions_call"
+      },
+      {
+        "include": "#errors_warnings_exceptions"
+      },
+      {
+        "include": "#magic_function_names"
+      },
+      {
+        "include": "#magic_function_calls"
+      },
+      {
+        "include": "#docstrings"
+      },
+      {
+        "include": "#magic_variable_names"
+      },
+      {
+        "include": "#language_variables"
+      },
+      {
+        "include": "#generic_object_names"
+      },
+      {
+        "begin": "(?:\\.)?([[:alpha:]_][[:alnum:]_]*)\\s*(?=(\\())",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "meta.function-call.generic.ezlanguage"
+      }
+      },
+        "end": "(\\))",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.arguments.end.ezlanguage"
+      }
+      },
+        "name": "meta.function-call.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(\\()",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.arguments.begin.ezlanguage"
+      }
+      },
+            "contentName": "meta.function-call.arguments.ezlanguage",
+            "end": "(?=\\))",
+            "patterns": 
+            [
+              {
+                "include": "#keyword_arguments"
+      },
+              {
+                "include": "$self"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "comment": "Py2 print statement that should only be matched after function calls",
+        "match": "(?&lt;!\\.)\\b(print)(?=\\s|$)",
+        "name": "keyword.other.print.ezlanguage"
+      },
+      {
+        "begin": "(?=[[:alpha:]_][[:alnum:]_]*(?:\\s*\\.\\s*[[:alpha:]_][[:alnum:]_]*)*\\s*\\[)",
+        "end": "(\\])",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.arguments.end.ezlanguage"
+      }
+      },
+        "name": "meta.item-access.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?=[[:alpha:]_][[:alnum:]_]*(?:\\s*\\.\\s*[[:alpha:]_][[:alnum:]_]*)*\\s*\\[)",
+            "end": "(?=\\s*\\[)",
+            "patterns": 
+            [
+              {
+                "include": "#dotted_name"
+      }
+    ]
+      },
+          {
+            "begin": "(\\[)",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.arguments.begin.ezlanguage"
+      }
+      },
+            "contentName": "meta.item-access.arguments.ezlanguage",
+            "end": "(?=\\])",
+            "patterns": 
+            [
+              {
+                "include": "$self"
+      }
+    ]
+      },
+          {
+            "begin": "\\G",
+            "end": "(?=\\[)",
+            "patterns": 
+            [
+              {
+                "include": "#dotted_name"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "captures": 
+        {
+          "1": 
+          {
+            "name": "storage.type.class.ezlanguage"
+      }
+      },
+        "match": "\\b(class)\\b"
+      },
+      {
+        "include": "#line_continuation"
+      },
+      {
+        "include": "#string_quoted_single"
+      },
+      {
+        "include": "#string_quoted_double"
+      },
+      {
+        "include": "#dotted_name"
+      },
+      {
+        "begin": "(\\()",
+        "end": "(\\))",
+        "patterns": 
+        [
+          {
+            "include": "$self"
+      }
+    ]
+      },
+      {
+        "captures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.list.begin.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "meta.empty-list.ezlanguage"
+      },
+          "3": 
+          {
+            "name": "punctuation.definition.list.end.ezlanguage"
+      }
+      },
+        "match": "(\\[)(\\s*(\\]))\\b"
+      },
+      {
+        "begin": "(\\[)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.list.begin.ezlanguage"
+      }
+      },
+        "end": "(\\])",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.list.end.ezlanguage"
+      }
+      },
+        "name": "meta.structure.list.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?&lt;=\\[|\\,)\\s*(?![\\],])",
+            "contentName": "meta.structure.list.item.ezlanguage",
+            "end": "\\s*(?:(,)|(?=\\]))",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.separator.list.ezlanguage"
+      }
+      },
+            "patterns": 
+            [
+              {
+                "include": "$self"
+      }
+    ]
+      }
+    ]
+      },
+      {
+        "captures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.dictionary.begin.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "meta.empty-dictionary.ezlanguage"
+      },
+          "3": 
+          {
+            "name": "punctuation.definition.dictionary.end.ezlanguage"
+      }
+      },
+        "match": "(\\{)(\\s*(\\}))",
+        "name": "meta.structure.dictionary.ezlanguage"
+      },
+      {
+        "begin": "(\\{)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.dictionary.begin.ezlanguage"
+      }
+      },
+        "end": "(\\})",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.definition.dictionary.end.ezlanguage"
+      }
+      },
+        "name": "meta.structure.dictionary.ezlanguage",
+        "patterns": 
+        [
+          {
+            "begin": "(?&lt;=\\{|\\,|^)\\s*(?![\\},])",
+            "contentName": "meta.structure.dictionary.key.ezlanguage",
+            "end": "\\s*(?:(?=\\})|(\\:))",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.separator.valuepair.dictionary.ezlanguage"
+      }
+      },
+            "patterns": 
+            [
+              {
+                "include": "$self"
+      }
+    ]
+      },
+          {
+            "begin": "(?&lt;=\\:|^)\\s*",
+            "contentName": "meta.structure.dictionary.value.ezlanguage",
+            "end": "\\s*(?:(?=\\})|(,))",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.separator.dictionary.ezlanguage"
+      }
+      },
+            "patterns": 
+            [
+              {
+                "include": "$self"
+      }
+    ]
+      }
+    ]
+      }
+    ],
+    "repository": {
+      "builtin_functions_call": 
+      {
+        "patterns": 
+        [
+          {
+            "begin": "(?x)(?&lt;!\\.)\\b( __import__ | abs | boolean | string | bytearray | bytes | complex | exec | file | float | input | integer | array | list | long | map | max | next | open | pow | print | property | range | type | set )\\b\\s*(?=\\()",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "support.function.builtin.call.ezlanguage"
+              }
+            },
+            "end": "(\\))",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.arguments.end.ezlanguage"
+      }
+      },
+            "name": "meta.function-call.ezlanguage",
+            "patterns": 
+            [
+              {
+                "begin": "(?=[[:alpha:]_][[:alnum:]_]*(?:\\s*\\.\\s*[[:alpha:]_][[:alnum:]_]*)*\\s*\\()",
+                "end": "(?=\\s*\\()",
+                "patterns": 
+                [
+                  {
+                    "include": "#dotted_name"
+      }
+    ]
+      },
+              {
+                "begin": "(\\()",
+                "beginCaptures": 
+                {
+                  "1": 
+                  {
+                    "name": "punctuation.definition.arguments.begin.ezlanguage"
+      }
+      },
+                "contentName": "meta.function-call.arguments.ezlanguage",
+                "end": "(?=\\))",
+                "patterns": 
+                [
+                  {
+                    "include": "#keyword_arguments"
+      },
+                  {
+                    "include": "$self"
+      }
+    ]
+      }
+    ]
+      }
+    ]
+      },
+      "builtin_functions_name": 
+      {
+        "match": "(?x)(?&lt;!\\.|@)\\b(__import__ | abs | boolean | string | bytearray | bytes | complex | dir | exec | file | float | input | integer | len | list | locals | long | map | array | max | next | open | pow | print | property | range | type | set )\\b\\s*(?!(\\())",
+        "name": "support.function.builtin.name.ezlanguage"
+      },
+      "builtin_types": 
+      {
+        "comment": "These are standard types of language",
+        "match": "(?x)(?&lt;!\\.)\\b( array | boolean | bytearray | bytes | complex | float | string | map | vector | list | integer | long | range | set )\\b(?!(\\s*\\())",
+        "name": "support.type.ezlanguage"
+      },
+      "comment": 
+      {
+        "begin": "(^[ \\t]+)?(?=//)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.whitespace.comment.leading.ezlanguage"
+      }
+      },
+        "end": "(?!\\G)",
+        "patterns": 
+        [
+          {
+            "begin": "//",
+            "beginCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.comment.ezlanguage"
+      }
+      },
+            "end": "\n",
+            "name": "comment.line.double-slash.ezlanguage"
+      }
+    ]
+      },
+      "constant_placeholder": 
+      {
+        "match": "(?i:(%(\\([[:lower:]_]+\\))?#?0?\\-?[ ]?\\+?([0-9]*|\\*)(\\.([0-9]*|\\*))?[hL]?[[:lower:]%])|(\\{([!\\[\\].:\\w ]+)?\\}))",
+        "name": "constant.other.placeholder.ezlanguage"
+      },
+      "docstrings": 
+      {
+        "patterns": 
+        [
+          {
+            "begin": "^\\s*(?=[uU]?[rR]?\"\"\")",
+            "end": "(?&lt;=\"\"\")",
+            "name": "comment.block.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#string_quoted_double"
+      }
+    ]
+      },
+          {
+            "begin": "^\\s*(?=[uU]?[rR]?''')",
+            "end": "(?&lt;=''')",
+            "name": "comment.block.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#string_quoted_single"
+      }
+    ]
+      }
+    ]
+      },
+      "dotted_name": 
+      {
+        "begin": "(?=(?:\\.(?!\\s+import)\\s*)?[[:alpha:]_][[:alnum:]_]*(?:\\s*\\.\\s*[[:alpha:]_][[:alnum:]_]*)*)",
+        "end": "(?![[:alnum:]_\\.\\s])|(?=(?&lt;!\\.)\\s+[^.])|$",
+        "patterns": 
+        [
+          {
+            "begin": "(\\.)(?=[[:alpha:]_][[:alnum:]_]*)",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "meta.dot.ezlanguage"
+      }
+      },
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#builtin_functions_name"
+      },
+              {
+                "include": "#magic_function_names"
+      },
+              {
+                "include": "#magic_variable_names"
+      },
+              {
+                "include": "#generic_names"
+      },
+              {
+                "include": "#illegal_names"
+      }
+    ]
+      },
+          {
+            "begin": "(?&lt;!\\.)(?=[[:alpha:]_][[:alnum:]_]*)",
+            "end": "(?![[:alnum:]_])",
+            "patterns": 
+            [
+              {
+                "include": "#builtin_types"
+      },
+              {
+                "include": "#builtin_functions_name"
+      },
+              {
+                "include": "#builtin_functions_call"
+      },
+              {
+                "include": "#errors_warnings_exceptions"
+      },
+              {
+                "include": "#magic_function_names"
+      },
+              {
+                "include": "#magic_function_calls"
+      },
+              {
+                "include": "#magic_variable_names"
+      },
+              {
+                "include": "#language_variables"
+      },
+              {
+                "include": "#generic_names"
+      },
+              {
+                "include": "#illegal_names"
+      }
+    ]
+      }
+    ]
+      },
+      "entity_name_class": 
+      {
+        "patterns": 
+        [
+          {
+            "include": "#generic_names"
+      },
+          {
+            "include": "#illegal_names"
+      }
+    ]
+      },
+      "entity_name_function": 
+      {
+        "patterns": 
+        [
+          {
+            "include": "#builtin_functions_name"
+      },
+          {
+            "include": "#magic_function_names"
+      },
+          {
+            "include": "#illegal_names"
+      }
+    ]
+      },
+      "escaped_char": 
+      {
+        "captures": 
+        {
+          "1": 
+          {
+            "name": "constant.character.escape.hex.ezlanguage"
+      },
+          "10": 
+          {
+            "name": "constant.character.escape.linefeed.ezlanguage"
+      },
+          "11": 
+          {
+            "name": "constant.character.escape.return.ezlanguage"
+      },
+          "12": 
+          {
+            "name": "constant.character.escape.tab.ezlanguage"
+      },
+          "13": 
+          {
+            "name": "constant.character.escape.vertical-tab.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "constant.character.escape.octal.ezlanguage"
+      },
+          "3": 
+          {
+            "name": "constant.character.escape.newline.ezlanguage"
+      },
+          "4": 
+          {
+            "name": "constant.character.escape.backslash.ezlanguage"
+      },
+          "5": 
+          {
+            "name": "constant.character.escape.double-quote.ezlanguage"
+      },
+          "6": 
+          {
+            "name": "constant.character.escape.single-quote.ezlanguage"
+      },
+          "7": 
+          {
+            "name": "constant.character.escape.bell.ezlanguage"
+      },
+          "8": 
+          {
+            "name": "constant.character.escape.backspace.ezlanguage"
+      },
+          "9": 
+          {
+            "name": "constant.character.escape.formfeed.ezlanguage"
+      }
+      },
+        "match": "(\\\\x[\\h]{2})|(\\\\[0-7]{3})|(\\\\\n)|(\\\\\\\\)|(\\\\\\\")|(\\\\')|(\\\\a)|(\\\\b)|(\\\\f)|(\\\n)|(\\\\r)|(\\\\t)|(\\\\v)"
+      },
+      "escaped_char_raw_double": 
+      {
+        "match": "\\\\\"",
+        "name": "constant.character.escape.quote.ezlanguage"
+      },
+      "escaped_char_raw_single": 
+      {
+        "match": "\\\\'",
+        "name": "constant.character.escape.quote.ezlanguage"
+      },
+      "generic_names": 
+      {
+        "match": "[[:alpha:]_][[:alnum:]_]*",
+        "name": "meta.identifier.ezlanguage"
+      },
+      "generic_object_names": 
+      {
+        "match": "(\\.\\b([[:alpha:]_][[:alnum:]_]*)\\b(?!\\(|\\[)|\\b([[:alpha:]_][[:alnum:]_]*)\\b\\.)"
+      },
+      "illegal_names": 
+      {
+        "comment": "from Lib/keyword.py, in kwlist.",
+        "match": "(?x)\\b ( true | false | False | None | True | and | as | class | begin | end | do | step | elif | else | then | exec | for | from | global | local | if | of | program | module | import | in | is | not | or | print | return | while | with)\\b",
+        "name": "invalid.illegal.name.ezlanguage"
+      },
+      "keyword_arguments": 
+      {
+        "begin": "\\b([[:alpha:]_][[:alnum:]_]*)\\s*(=)(?!=)",
+        "beginCaptures": 
+        {
+          "1": 
+          {
+            "name": "variable.parameter.function.keyword.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "keyword.operator.assignment.ezlanguage"
+      }
+      },
+        "end": "\\s*(?:(,)|(?=[\\)\\:]))",
+        "endCaptures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.separator.parameters.ezlanguage"
+      }
+      },
+        "patterns": 
+        [
+          {
+            "include": "$self"
+      }
+    ]
+      },
+      "language_variables": 
+      {
+        "captures": 
+        {
+          "1": 
+          {
+            "name": "variable.language.ezlanguage"
+      }
+      },
+        "match": "(?&lt;!\\.)\\b(self|cls)\\b(?:\\.|\\()?"
+      },
+      "line_continuation": 
+      {
+        "captures": 
+        {
+          "1": 
+          {
+            "name": "punctuation.separator.continuation.line.ezlanguage"
+      },
+          "2": 
+          {
+            "name": "invalid.illegal.unexpected-text.ezlanguage"
+      }
+      },
+        "match": "(\\\\)(.*)$\n?"
+      },
+      "magic_function_calls": 
+      {
+        "patterns": 
+        [
+          {
+            "begin": "(?x)(\\.)?\\b(__(?: abs | and | boolean | bytes | complex | contains | copy | dir | div | divmod | exit | float | floor | get | hash | long | mod | new | next | nonzero | or | pos | pow | set | sizeof | xor)__)\\s*(?=(\\())",
+            "beginCaptures": 
+            {
+              "2": 
+              {
+                "name": "support.function.magic.call.ezlanguage"
+      },
+              "4": 
+              {
+                "name": "punctuation.definition.arguments.begin.ezlanguage"
+      }
+      },
+            "end": "(\\))",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.arguments.end.ezlanguage"
+      }
+      },
+            "name": "meta.function-call.ezlanguage",
+            "patterns": 
+            [
+              {
+                "begin": "(?=[[:alpha:]_][[:alnum:]_]*(?:\\s*\\.\\s*[[:alpha:]_][[:alnum:]_]*)*\\s*\\()",
+                "end": "(?=\\s*\\()",
+                "patterns": 
+                [
+                  {
+                    "include": "#dotted_name"
+      }
+    ]
+      },
+              {
+                "begin": "(\\()",
+                "beginCaptures": 
+                {
+                  "1": 
+                  {
+                    "name": "punctuation.definition.arguments.begin.ezlanguage"
+      }
+      },
+                "contentName": "meta.function-call.arguments.ezlanguage",
+                "end": "(?=\\))",
+                "patterns": 
+                [
+                  {
+                    "include": "#keyword_arguments"
+      },
+                  {
+                    "include": "$self"
+      }
+    ]
+      }
+    ]
+      }
+    ]
+      },
+      "magic_function_names": 
+      {
+        "captures": 
+        {
+          "2": 
+          {
+            "name": "support.function.magic.name.ezlanguage"
+      }
+      },
+        "comment": "These methods have magic interpretation by ezlanguage and are generally called indirectly through syntactic constructs.",
+        "match": "(?x)(procedure|function|\\.)?\\s*\\b(__(?:abs | and | boolean | bytes | complex | contains | copy | dir | div | divmod | exit | float | floor | get | hash | long | mod | new | next | nonzero | or | pos | pow | set | sizeof | xor)__)\\b"
+      },
+      "magic_variable_names": 
+      {
+        "captures": 
+        {
+          "2": 
+          {
+            "name": "support.variable.magic.ezlanguage"
+      }
+      },
+        "comment": "magic attributes which a class/module may have.",
+        "match": "(?x)(\\.)?\\b(__(?:annotations | class | code | debug | doc | file )__) \\b"
+      },
+      "regular_expressions": 
+      {
+        "comment": "Changed disabled to 1 to turn off syntax highlighting in “r” strings.",
+        "disabled": 0,
+        "patterns": 
+        [
+          {
+            "include": "source.regexp.ezlanguage"
+      }
+    ]
+      },
+      "string_quoted_double": 
+      {
+        "patterns": 
+        [
+          {
+            "begin": "([uU]r)(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "single quoted unicode-raw string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.unicode-raw-regex.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      },
+              {
+                "include": "#regular_expressions"
+      }
+    ]
+      },
+          {
+            "begin": "([uU]R)(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "single quoted unicode-raw string without regular expression highlighting",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.unicode-raw.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      }
+    ]
+      },
+          {
+            "begin": "([bB]r)(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "single quoted bytes-raw string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.bytes-raw-regex.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      },
+              {
+                "include": "#regular_expressions"
+      }
+    ]
+      },
+          {
+            "begin": "([bB]R)(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "single quoted bytes-raw string without regular expression highlighting",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.bytes-raw.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      }
+    ]
+      },
+          {
+            "begin": "(r)(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted raw string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.raw-regex.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      },
+              {
+                "include": "#regular_expressions"
+      }
+    ]
+      },
+          {
+            "begin": "(R)(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted raw string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.raw.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      }
+    ]
+      },
+          {
+            "begin": "([uU])(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted unicode string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.unicode.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_unicode_char"
+      },
+              {
+                "include": "#escaped_char"
+      }
+    ]
+      },
+          {
+            "begin": "([bB])(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted bytes string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.bytes.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_unicode_char"
+      },
+              {
+                "include": "#escaped_char"
+      }
+    ]
+      },
+          {
+            "captures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      },
+              "3": 
+              {
+                "patterns": 
+                [
+                  {
+                    "include": "#constant_placeholder"
+      },
+                  {
+                    "include": "#escaped_char_raw_double"
+      },
+                  {
+                    "include": "#regular_expressions"
+      }
+    ]
+      },
+              "4": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "comment": "double-quoted raw string",
+            "match": "([uU]r)(\")((?:[^\"\\\\]|\\\\.)*)(\")",
+            "name": "string.quoted.double.single-line.unicode-raw-regex.ezlanguage"
+      },
+          {
+            "begin": "([uU]R)(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double-quoted raw string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.unicode-raw.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      }
+    ]
+      },
+          {
+            "begin": "([bB]r)(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double-quoted raw string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.bytes-raw-regex.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      },
+              {
+                "include": "#regular_expressions"
+      }
+    ]
+      },
+          {
+            "begin": "([bB]R)(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double-quoted raw string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.bytes-raw.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      }
+    ]
+      },
+          {
+            "captures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      },
+              "3": 
+              {
+                "patterns": 
+                [
+                  {
+                    "include": "#constant_placeholder"
+      },
+                  {
+                    "include": "#escaped_char_raw_double"
+      },
+                  {
+                    "include": "#regular_expressions"
+      }
+    ]
+      },
+              "4": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "comment": "double-quoted raw string",
+            "match": "(r)(\")((?:[^\"\\\\]|\\\\.)*)(\")",
+            "name": "string.quoted.double.single-line.raw-regex.ezlanguage"
+      },
+          {
+            "begin": "(R)(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double-quoted raw string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.raw.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_char_raw_double"
+      }
+    ]
+      },
+          {
+            "begin": "([uU])(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted unicode string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.unicode.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_unicode_char"
+      },
+              {
+                "include": "#escaped_char"
+      }
+    ]
+      },
+          {
+            "begin": "([bB])(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "storage.type.string.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted bytes string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.bytes.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_unicode_char"
+      },
+              {
+                "include": "#escaped_char"
+      }
+    ]
+      },
+          {
+            "begin": "(\"\"\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted string",
+            "end": "\"\"\"",
+            "endCaptures": 
+            {
+              "0": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.block.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_unicode_char"
+      },
+              {
+                "include": "#escaped_char"
+      }
+    ]
+      },
+          {
+            "begin": "(\")",
+            "beginCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.begin.ezlanguage"
+      }
+      },
+            "comment": "double quoted string",
+            "end": "(\")|(\n)",
+            "endCaptures": 
+            {
+              "1": 
+              {
+                "name": "punctuation.definition.string.end.ezlanguage"
+      },
+              "2": 
+              {
+                "name": "invalid.illegal.unclosed-string.ezlanguage"
+      }
+      },
+            "name": "string.quoted.double.single-line.ezlanguage",
+            "patterns": 
+            [
+              {
+                "include": "#constant_placeholder"
+      },
+              {
+                "include": "#escaped_unicode_char"
+      },
+              {
+                "include": "#escaped_char"
+      }
+    ]
+      }
+    ]
+      },
+      "strings": 
+      {
+        "patterns": 
+        [
+          {
+            "include": "#string_quoted_double"
+      },
+          {
+            "include": "#string_quoted_single"
+      }
+    ]
+      }
+    },
+    "scopeName": "source.ezlanguage",
+    "uuid": "G43DB5B2-7D08-11D9-A709-000D93B6E43C"
+}

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="0.2">
+<plist version="1.0">
   <dict>
     <key>fileTypes</key>
     <array>
@@ -9,7 +9,9 @@
       <string>ezlanguage</string>
     </array>
     <key>firstLineMatch</key>
-    <string>^program[ \\t]+\\w+</string>
+    <string>^#!/.*\ezlanguage[\d\.]*\b</string>
+    <key>keyEquivalent</key>
+    <string>^~P</string>
     <key>name</key>
     <string>EZLanguage</string>
     <key>patterns</key>
@@ -532,8 +534,9 @@
         </string>
         <key>match</key>
         <string>(?x) \b(
-            elif | else | then | for | if | while | when | begin | end | do | or |
-            program | return | returns | (yield(?:\s+from)?)
+          elif | else | then | for | if | return | while | when | begin | end | do | or |
+          program |
+          (yield(?:\s+from)?)
           )\b
         </string>
         <key>name</key>
@@ -1184,32 +1187,56 @@
         <array>
           <dict>
             <key>begin</key>
-            <string>^\s*(?=[uU]?[rR]?""")</string>
+            <string>^\s*(?=[uU]?[rR]?/**)</string>
             <key>end</key>
-            <string>(?&lt;=""")</string>
+            <string>(?&lt;=*/)</string>
             <key>name</key>
             <string>comment.block.ezlanguage</string>
             <key>patterns</key>
             <array>
-              <dict>
-                <key>include</key>
-                <string>#string_quoted_double</string>
-              </dict>
+              <!-- <dict>
+                <key>begin</key>
+                <string>/**</string>
+                <key>beginCaptures</key>
+                <dict>
+                  <key>0</key>
+                  <dict>
+                    <key>name</key>
+                    <string>punctuation.definition.comment.ezlanguage</string>
+                  </dict>
+                </dict>
+                <key>end</key>
+                <string>*/</string>
+                <key>name</key>
+                <string>comment.block.ezlanguage</string>
+              </dict> -->
             </array>
           </dict>
           <dict>
             <key>begin</key>
-            <string>^\s*(?=[uU]?[rR]?''')</string>
+            <string>^\s*(?=[uU]?[rR]?/*)</string>
             <key>end</key>
-            <string>(?&lt;=''')</string>
+            <string>(?&lt;=*/)</string>
             <key>name</key>
             <string>comment.block.ezlanguage</string>
             <key>patterns</key>
             <array>
-              <dict>
-                <key>include</key>
-                <string>#string_quoted_single</string>
-              </dict>
+              <!-- <dict>
+                <key>begin</key>
+                <string>/**</string>
+                <key>beginCaptures</key>
+                <dict>
+                  <key>0</key>
+                  <dict>
+                    <key>name</key>
+                    <string>punctuation.definition.comment.ezlanguage</string>
+                  </dict>
+                </dict>
+                <key>end</key>
+                <string>*/</string>
+                <key>name</key>
+                <string>comment.block.ezlanguage</string>
+              </dict> -->
             </array>
           </dict>
         </array>
@@ -1444,14 +1471,14 @@
       <key>illegal_names</key>
       <dict>
         <key>comment</key>
-        <string>reserved names</string>
+        <string>from Lib/keyword.py, in kwlist.</string>
         <key>match</key>
         <string>(?x)
           \b (
-            true | false | False | None | True | and | as | class | begin | end | do | step |
-            elif | else | then | exec | for | from | global | local | if | of | program | module |
-            import | in | is | not | or | print | return | returns | while | with
-          )\b</string>
+          true | false | False | None | True | and | as | class | begin | end | do | step |
+          elif | else | then | exec | for | from | global | local | if | of | program | module |
+          import | in | is | not | or | print | return | while | with)
+          \b</string>
         <key>name</key>
         <string>invalid.illegal.name.ezlanguage</string>
       </dict>
